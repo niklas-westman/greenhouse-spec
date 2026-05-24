@@ -1,8 +1,11 @@
 # Installation Into Another Repo
 
 Use this guide from the target repository where Greenhouse should be installed.
-The examples assume the Greenhouse source checkout is a sibling path available
-at `../greenhouse/code/greenhouse-spec`. Adjust the path for the target repo.
+The current V1 distribution model is a local checkout of this package. It is not
+yet an npm-published package.
+
+The examples assume the Greenhouse source checkout is available at
+`../greenhouse/code/greenhouse-spec`. Adjust the path for the target repo.
 
 ## Build Greenhouse First
 
@@ -19,18 +22,22 @@ The CLI entrypoint after build is:
 dist/cli.js
 ```
 
-## Plant The Contract
+## Initialize The Target Repo
 
 From the target repo:
 
 ```bash
-node ../greenhouse/code/greenhouse-spec/dist/cli.js plant --dry-run
-node ../greenhouse/code/greenhouse-spec/dist/cli.js plant
+node ../greenhouse/code/greenhouse-spec/dist/cli.js init --dry-run
+node ../greenhouse/code/greenhouse-spec/dist/cli.js init
+node ../greenhouse/code/greenhouse-spec/dist/cli.js status
 ```
 
-`plant` creates `.greenhouse/` with roots, generated indexes, templates,
-scripts, evidence, and report folders. It should not overwrite authored files
-unless `--force-authored` is explicitly used.
+`init` creates `.greenhouse/` with roots, generated indexes, templates, scripts,
+evidence, report folders, and install metadata. It should not overwrite
+authored files unless `--force-authored` is explicitly used.
+
+`plant` remains available as the lower-level install primitive, but normal
+installation should use `init`.
 
 ## Inspect And Review Proposals
 
@@ -68,6 +75,19 @@ or, after reviewing all adoptable entries:
 node ../greenhouse/code/greenhouse-spec/dist/cli.js adopt-proposals --all-adoptable
 ```
 
+## Update An Existing Install
+
+When Greenhouse itself changes, run this from the target repo:
+
+```bash
+node ../greenhouse/code/greenhouse-spec/dist/cli.js update --dry-run
+node ../greenhouse/code/greenhouse-spec/dist/cli.js update
+node ../greenhouse/code/greenhouse-spec/dist/cli.js status
+```
+
+`update` refreshes generated indexes, helper scripts, templates, and install
+metadata. It preserves authored roots such as `.greenhouse/roots/**`.
+
 ## Package Scripts
 
 Greenhouse should normally propose these scripts for package-based repos:
@@ -92,7 +112,7 @@ scripts instead of overwriting them.
 Run:
 
 ```bash
-node ../greenhouse/code/greenhouse-spec/dist/cli.js tend --check
+node ../greenhouse/code/greenhouse-spec/dist/cli.js status
 node ../greenhouse/code/greenhouse-spec/dist/cli.js doctor
 node ../greenhouse/code/greenhouse-spec/dist/cli.js verify --changed --dry-run
 ```
@@ -100,10 +120,11 @@ node ../greenhouse/code/greenhouse-spec/dist/cli.js verify --changed --dry-run
 When package scripts are installed, the same checks usually become:
 
 ```bash
-pnpm check:tend
+pnpm greenhouse status
 pnpm check:greenhouse
 pnpm check:changed --dry-run
 ```
 
-The install is healthy when `tend --check` and `doctor` pass, and changed-file
-verification selects scoped commands instead of unrelated broad fallback work.
+The install is healthy when `status` passes, `doctor` has no errors, and
+changed-file verification selects scoped commands instead of unrelated broad
+fallback work.

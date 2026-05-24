@@ -3,6 +3,7 @@ import { join, relative } from "node:path";
 
 import { ZodError, type ZodType } from "zod";
 
+import { pruneGeneratedRecords } from "../evidence/prune.js";
 import { commandIndexSchema } from "../schemas/command-index.js";
 import {
   contextManifestSchema,
@@ -10,11 +11,13 @@ import {
 } from "../schemas/context-manifest.js";
 import { parseYamlWithSchema } from "../schemas/common.js";
 import { evidenceIndexSchema } from "../schemas/evidence-index.js";
-import { projectSchema } from "../schemas/project.js";
+import { failureSignaturesSchema } from "../schemas/failure-signatures.js";
+import { projectSchema, type ProjectConfig } from "../schemas/project.js";
 import { repoMapSchema, type RepoMap } from "../schemas/repo-map.js";
 import { repoShapeSchema } from "../schemas/repo-shape.js";
 import { validationSchema } from "../schemas/validation.js";
 import { validationProposalsSchema } from "../schemas/validation-proposals.js";
+import { GREENHOUSE_TEMPLATE_VERSION } from "../version.js";
 import {
   mvpInstalledDirectories,
   mvpInstalledTreePaths,
@@ -40,6 +43,7 @@ export type DoctorReport = {
 export type RunDoctorOptions = {
   cwd: string;
   writeReport?: boolean;
+  noPrune?: boolean;
 };
 
 const schemaFiles: Array<{ path: string; schema: ZodType<unknown> }> = [
@@ -70,6 +74,10 @@ const schemaFiles: Array<{ path: string; schema: ZodType<unknown> }> = [
   {
     path: "grown/evidence-index.yaml",
     schema: evidenceIndexSchema,
+  },
+  {
+    path: "grown/failure-signatures.yaml",
+    schema: failureSignaturesSchema,
   },
   {
     path: "context/manifest.yaml",
@@ -126,6 +134,10 @@ export function runDoctor(options: RunDoctorOptions): DoctorReport {
     validateGeneratedSourceSeparation(cwd, parsed.repoMap, findings);
   }
 
+  if (parsed.project) {
+    validateProjectMetadata(cwd, parsed.project, findings);
+  }
+
   validatePackageAliases(cwd, findings);
 
   const report: DoctorReport = {
@@ -137,6 +149,9 @@ export function runDoctor(options: RunDoctorOptions): DoctorReport {
 
   if (options.writeReport) {
     report.writtenReportPath = writeDoctorReport(report);
+    if (!options.noPrune) {
+      pruneGeneratedRecords({ cwd });
+    }
   }
 
   return report;
@@ -177,8 +192,8 @@ function validateSchemaFiles(
   cwd: string,
   greenhousePath: string,
   findings: DoctorFinding[],
-): { manifest?: ContextManifest; repoMap?: RepoMap } {
-  const parsed: { manifest?: ContextManifest; repoMap?: RepoMap } = {};
+): { manifest?: ContextManifest; repoMap?: RepoMap; project?: ProjectConfig } {
+  const parsed: { manifest?: ContextManifest; repoMap?: RepoMap; project?: ProjectConfig } = {};
 
   for (const schemaFile of schemaFiles) {
     const path = join(greenhousePath, schemaFile.path);
@@ -189,6 +204,9 @@ function validateSchemaFiles(
 
     try {
       const result = readYaml(path, schemaFile.schema);
+      if (schemaFile.path === "project.yaml") {
+        parsed.project = result as ProjectConfig;
+      }
       if (schemaFile.path === "context/manifest.yaml") {
         parsed.manifest = result as ContextManifest;
       }
@@ -245,6 +263,41 @@ function validateGeneratedSourceSeparation(
         path: formatPath(cwd, join(cwd, ".greenhouse/grown/repo-map.yaml")),
       });
     }
+  }
+}
+
+function validateProjectMetadata(
+  cwd: string,
+  project: ProjectConfig,
+  findings: DoctorFinding[],
+): void {
+  const metadata = project.greenhouse;
+  const missing = [
+    "installed_version",
+    "template_version",
+    "install_mode",
+    "cli_command",
+  ].filter((key) => metadata[key as keyof typeof metadata] === undefined);
+
+  if (missing.length > 0) {
+    findings.push({
+      severity: "warning",
+      check: "project-metadata",
+      message: `Missing Greenhouse install metadata: ${missing.join(", ")}. Run greenhouse-spec update.`,
+      path: formatPath(cwd, join(cwd, ".greenhouse/project.yaml")),
+    });
+  }
+
+  if (
+    metadata.template_version !== undefined &&
+    metadata.template_version !== GREENHOUSE_TEMPLATE_VERSION
+  ) {
+    findings.push({
+      severity: "warning",
+      check: "template-version",
+      message: `Installed template version ${metadata.template_version} differs from current ${GREENHOUSE_TEMPLATE_VERSION}. Run greenhouse-spec update.`,
+      path: formatPath(cwd, join(cwd, ".greenhouse/project.yaml")),
+    });
   }
 }
 

@@ -23,6 +23,11 @@ export const projectSchema = z.object({
     created_at: z.union([z.string().min(1), z.date()]),
     last_inspected_at: z.union([z.string().min(1), z.date()]).nullable(),
     mode_default: modeSchema,
+    installed_version: z.string().min(1).optional(),
+    template_version: z.number().int().positive().optional(),
+    install_mode: z.enum(["local-checkout"]).optional(),
+    cli_command: z.string().min(1).optional(),
+    last_updated_at: z.union([z.string().min(1), z.date()]).nullable().optional(),
   }),
 });
 

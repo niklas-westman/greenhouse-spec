@@ -208,6 +208,37 @@ describe("validation routing and evidence", () => {
     );
   });
 
+  it("recognizes common uppercase React app entrypoints as app patches", () => {
+    const route = routeValidation({
+      changedFiles: ["src/App.tsx"],
+      validation: {
+        schema_version: 1,
+        defaults: {
+          required: [
+            { id: "format:check", command: "pnpm format:check" },
+            { id: "typecheck", command: "pnpm typecheck" },
+            { id: "test", command: "pnpm test" },
+            { id: "test:cli", command: "pnpm test:cli" },
+          ],
+          recommended: [],
+          manual: [],
+        },
+      },
+    });
+
+    expect(route.mode).toBe("patch");
+    expect(route.commands.map((command) => command.command)).toEqual([
+      "pnpm format:check",
+      "pnpm typecheck",
+      "pnpm test",
+    ]);
+    expect(route.commands.map((command) => command.reason)).toEqual([
+      "Inferred app patch route.",
+      "Inferred app patch route.",
+      "Inferred app patch route.",
+    ]);
+  });
+
   it("combines app and CLI patch validation when both areas change", () => {
     const route = routeValidation({
       changedFiles: ["src/app.tsx", "src/cli/main.ts"],

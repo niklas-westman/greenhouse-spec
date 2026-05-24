@@ -80,6 +80,18 @@ indexes and current verification output first. Open specific evidence files only
 when continuing a related change, debugging validation, or investigating tend
 recommendations.
 
+## Repeated Failures
+
+Greenhouse generates `.greenhouse/grown/failure-signatures.yaml` from recent
+evidence. It records failed command signatures that appear in evidence so future
+reports can say when a current failure resembles a previous one.
+
+This is explanatory only:
+
+- Matching failures still fail validation.
+- Greenhouse does not skip commands because a failure is known.
+- The generated index is disposable and does not represent human acceptance.
+
 ## Good Routing Outcome
 
 A healthy route is scoped but not weak:

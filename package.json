@@ -29,7 +29,9 @@
     "test:templates": "vitest run tests/templates.test.ts",
     "test:tend": "vitest run tests/tend.test.ts",
     "test:validation": "vitest run tests/validation.test.ts",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test:evidence": "vitest run tests/evidence.test.ts",
+    "test:lifecycle": "vitest run tests/lifecycle.test.ts"
   },
   "dependencies": {
     "commander": "^14.0.3",

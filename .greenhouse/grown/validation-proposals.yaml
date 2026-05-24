@@ -1,6 +1,6 @@
 schema_version: 1
 managed_by: greenhouse-spec
-generated_at: 2026-05-24T15:28:40.650Z
+generated_at: 2026-05-24T20:09:47.284Z
 proposals:
   - id: validation-route:readme-md
     kind: validation-route
@@ -343,6 +343,75 @@ proposals:
         required:
           - id: test:inspect
             command: pnpm test:inspect
+          - id: typecheck
+            command: pnpm typecheck
+        recommended: []
+        manual: []
+  - id: validation-route:src-lifecycle
+    kind: validation-route
+    status: applied
+    confidence: high
+    reason: Greenhouse lifecycle commands detected.
+    safe: true
+    target:
+      path: .greenhouse/roots/validation.yaml
+    validation_route:
+      pattern: src/lifecycle/**
+      rule:
+        managed_by: greenhouse-spec
+        origin: repo-shape
+        proposal_id: validation-route:src-lifecycle
+        confidence: high
+        mode: patch
+        required:
+          - id: test:lifecycle
+            command: pnpm test:lifecycle
+          - id: typecheck
+            command: pnpm typecheck
+        recommended: []
+        manual: []
+  - id: validation-route:src-status
+    kind: validation-route
+    status: applied
+    confidence: high
+    reason: Greenhouse status runner detected.
+    safe: true
+    target:
+      path: .greenhouse/roots/validation.yaml
+    validation_route:
+      pattern: src/status/**
+      rule:
+        managed_by: greenhouse-spec
+        origin: repo-shape
+        proposal_id: validation-route:src-status
+        confidence: high
+        mode: patch
+        required:
+          - id: test:lifecycle
+            command: pnpm test:lifecycle
+          - id: typecheck
+            command: pnpm typecheck
+        recommended: []
+        manual: []
+  - id: validation-route:src-evidence
+    kind: validation-route
+    status: applied
+    confidence: high
+    reason: Greenhouse evidence maintenance detected.
+    safe: true
+    target:
+      path: .greenhouse/roots/validation.yaml
+    validation_route:
+      pattern: src/evidence/**
+      rule:
+        managed_by: greenhouse-spec
+        origin: repo-shape
+        proposal_id: validation-route:src-evidence
+        confidence: high
+        mode: patch
+        required:
+          - id: test:evidence
+            command: pnpm test:evidence
           - id: typecheck
             command: pnpm typecheck
         recommended: []

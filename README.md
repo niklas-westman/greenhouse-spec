@@ -54,24 +54,37 @@ docs/operating-playbook.md     day-to-day usage and drift repair loop
 - Lets human-owned rules be adopted only when they already match Greenhouse.
 - Routes changed files to scoped validation commands.
 - Writes validation evidence without forcing agents to read every old report.
+- Prunes old generated evidence/report files so the folder stays bounded.
 - Blocks before push with `tend --check` when structural drift needs attention.
 
 ## Core Loop
 
 ```bash
-greenhouse-spec tend --check
+greenhouse-spec status
+greenhouse-spec init --dry-run
+greenhouse-spec init
+greenhouse-spec update --dry-run
+greenhouse-spec update
 greenhouse-spec inspect
 greenhouse-spec proposals
 greenhouse-spec apply-proposals --safe --dry-run
 greenhouse-spec apply-proposals --safe
 greenhouse-spec adopt-proposals --id <proposal-id>
-greenhouse-spec doctor
 greenhouse-spec verify --changed --write-evidence
 ```
 
 The normal intent is:
 
 ```text
+status
+  One read-only health report for install state, drift, changed-file routing, and latest evidence.
+
+init
+  Install the base Greenhouse contract in a new target repo.
+
+update
+  Refresh generated intelligence, helper scripts, templates, and install metadata.
+
 tend --check
   Is the repo structurally aligned?
 
@@ -89,6 +102,10 @@ adopt-proposals
 
 verify --changed --write-evidence
   Run scoped validation and record proof.
+
+failure signatures
+  Explain repeated validation failures from generated evidence without changing
+  pass/fail behavior.
 ```
 
 ## The `.greenhouse` Folder
@@ -106,6 +123,7 @@ verify --changed --write-evidence
     repo-shape.yaml
     command-index.yaml
     validation-proposals.yaml
+    failure-signatures.yaml
     risk-index.yaml
     evidence-index.yaml
 
@@ -160,8 +178,17 @@ skipped
 ## Commands
 
 ```text
-plant
+status
+  Show one read-only repo health report.
+
+init
   Install the base .greenhouse contract and initial generated indexes.
+
+update
+  Refresh generated indexes, helper scripts, templates, and install metadata.
+
+plant
+  Lower-level install primitive kept for compatibility.
 
 inspect
   Discover repo shape and rewrite .greenhouse/grown/**.

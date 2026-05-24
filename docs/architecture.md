@@ -34,6 +34,9 @@ src/validation/*
 src/verify/*
   Coordinates validation selection, execution, and evidence writing.
 
+src/evidence/*
+  Writes evidence, evidence indexes, generated failure signatures, and pruning.
+
 src/doctor/*
   Checks that installed Greenhouse files are internally consistent.
 
@@ -70,6 +73,10 @@ tend --check
 
 verify
   maps changed files to validation commands and optionally writes evidence
+
+failure signatures
+  generated from recent evidence to explain repeated failures without changing
+  validation pass/fail behavior
 ```
 
 ## Ownership Zones

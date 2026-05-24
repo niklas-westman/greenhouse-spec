@@ -7,11 +7,13 @@ import { discoverAgentFiles } from "../discovery/agent-files.js";
 import { discoverCommandIndex } from "../discovery/scripts.js";
 import { detectPackageManager } from "../discovery/package-manager.js";
 import { hasDependency, readPackageJson } from "../discovery/package-json.js";
+import { greenhouseCommandForRepo } from "../native-scripts/package-script-proposals.js";
 import { discoverRepoMap } from "../discovery/repo-map.js";
 import { discoverRepoShape } from "../discovery/repo-shape.js";
 import { discoverRiskIndex } from "../discovery/risks.js";
 import { buildValidationProposals } from "../proposals/build-proposals.js";
 import { buildEvidenceIndex } from "../evidence/evidence-index.js";
+import { buildFailureSignatures } from "../evidence/failure-signatures.js";
 import { findPackageRoot } from "../filesystem/package-root.js";
 import {
   applySafeWrites,
@@ -19,6 +21,11 @@ import {
   type SafeWriteResult,
 } from "../filesystem/safe-write.js";
 import { mvpInstalledDirectories } from "../templates/installed-tree.js";
+import {
+  GREENHOUSE_INSTALL_MODE,
+  GREENHOUSE_SPEC_VERSION,
+  GREENHOUSE_TEMPLATE_VERSION,
+} from "../version.js";
 
 export type PlantOptions = {
   cwd: string;
@@ -124,6 +131,7 @@ function buildPlantWrites(cwd: string): PlannedWrite[] {
       agent_files: discoverAgentFiles(cwd),
     })),
     generated("grown/evidence-index.yaml", yaml(buildEvidenceIndex(cwd))),
+    generated("grown/failure-signatures.yaml", yaml(buildFailureSignatures(cwd))),
     generated(
       "grown/last-inspection.md",
       [
@@ -191,6 +199,11 @@ function projectYaml(cwd: string): string {
       created_at: new Date().toISOString().slice(0, 10),
       last_inspected_at: null,
       mode_default: "growth",
+      installed_version: GREENHOUSE_SPEC_VERSION,
+      template_version: GREENHOUSE_TEMPLATE_VERSION,
+      install_mode: GREENHOUSE_INSTALL_MODE,
+      cli_command: greenhouseCommandForRepo(cwd),
+      last_updated_at: null,
     },
   });
 }

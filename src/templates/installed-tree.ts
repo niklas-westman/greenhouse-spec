@@ -10,6 +10,7 @@ export const mvpInstalledTreePaths = [
   "grown/risk-index.yaml",
   "grown/agent-index.yaml",
   "grown/evidence-index.yaml",
+  "grown/failure-signatures.yaml",
   "grown/last-inspection.md",
   "context/manifest.yaml",
   "scripts/check-changed.mjs",

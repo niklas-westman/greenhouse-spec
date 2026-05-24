@@ -1,13 +1,17 @@
 #!/usr/bin/env node
 import { Command } from "commander";
 
+import { registerEvidenceCommand } from "./commands/evidence.js";
+import { registerInitCommand } from "./commands/init.js";
 import { registerAdoptProposalsCommand } from "./commands/adopt-proposals.js";
 import { registerApplyProposalsCommand } from "./commands/apply-proposals.js";
 import { registerDoctorCommand } from "./commands/doctor.js";
 import { registerInspectCommand } from "./commands/inspect.js";
 import { registerPlantCommand } from "./commands/plant.js";
+import { registerStatusCommand } from "./commands/status.js";
 import { registerProposalsCommand } from "./commands/proposals.js";
 import { registerTendCommand } from "./commands/tend.js";
+import { registerUpdateCommand } from "./commands/update.js";
 import { registerVerifyCommand } from "./commands/verify.js";
 
 export function createProgram(): Command {
@@ -18,7 +22,10 @@ export function createProgram(): Command {
     .description("Install and maintain repo-local AI agent context.")
     .version("0.1.0");
 
+  registerInitCommand(program);
   registerPlantCommand(program);
+  registerUpdateCommand(program);
+  registerStatusCommand(program);
   registerDoctorCommand(program);
   registerInspectCommand(program);
   registerVerifyCommand(program);
@@ -26,6 +33,7 @@ export function createProgram(): Command {
   registerAdoptProposalsCommand(program);
   registerApplyProposalsCommand(program);
   registerTendCommand(program);
+  registerEvidenceCommand(program);
 
   return program;
 }

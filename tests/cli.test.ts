@@ -10,10 +10,14 @@ describe("greenhouse-spec CLI", () => {
       "adopt-proposals",
       "apply-proposals",
       "doctor",
+      "evidence",
+      "init",
       "inspect",
       "plant",
       "proposals",
+      "status",
       "tend",
+      "update",
       "verify",
     ]);
   });
@@ -21,7 +25,10 @@ describe("greenhouse-spec CLI", () => {
   it("shows MVP commands in help output", () => {
     const help = createProgram().helpInformation();
 
+    expect(help).toContain("init");
     expect(help).toContain("plant");
+    expect(help).toContain("update");
+    expect(help).toContain("status");
     expect(help).toContain("doctor");
     expect(help).toContain("inspect");
     expect(help).toContain("verify");
@@ -29,5 +36,6 @@ describe("greenhouse-spec CLI", () => {
     expect(help).toContain("adopt-proposals");
     expect(help).toContain("apply-proposals");
     expect(help).toContain("tend");
+    expect(help).toContain("evidence");
   });
 });

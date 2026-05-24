@@ -9,6 +9,7 @@ import { discoverRepoMap } from "../discovery/repo-map.js";
 import { discoverRepoShape } from "../discovery/repo-shape.js";
 import { discoverRiskIndex } from "../discovery/risks.js";
 import { buildEvidenceIndex } from "../evidence/evidence-index.js";
+import { buildFailureSignatures } from "../evidence/failure-signatures.js";
 import {
   applySafeWrites,
   type PlannedWrite,
@@ -133,6 +134,7 @@ function buildGrownPlan(cwd: string): {
         agent_files: discoverAgentFiles(cwd),
       })),
       grownWrite("evidence-index.yaml", yaml(buildEvidenceIndex(cwd))),
+      grownWrite("failure-signatures.yaml", yaml(buildFailureSignatures(cwd))),
       grownWrite(
         "last-inspection.md",
         [

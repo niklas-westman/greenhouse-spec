@@ -7,13 +7,13 @@ This is the practical loop for using Greenhouse in a repo after installation.
 Run:
 
 ```bash
-greenhouse-spec tend --check
+greenhouse-spec status
 greenhouse-spec verify --changed --dry-run
 ```
 
-If `tend --check` passes, the repo has no known structural Greenhouse drift.
-If `verify --changed --dry-run` selects scoped commands, validation routing is
-behaving as expected for the current diff.
+If `status` passes, the install is healthy, there is no known structural
+Greenhouse drift, and changed-file routing can be explained without running
+commands.
 
 ## Before Push
 
@@ -64,7 +64,7 @@ conflict proposal
 After resolving drift:
 
 ```bash
-greenhouse-spec tend --check
+greenhouse-spec status
 greenhouse-spec doctor
 greenhouse-spec verify --changed --dry-run
 ```
@@ -96,20 +96,22 @@ package instead of adding one-off target repo instructions.
 Use this sequence:
 
 ```bash
-greenhouse-spec plant --dry-run
-greenhouse-spec plant
+greenhouse-spec init --dry-run
+greenhouse-spec init
+greenhouse-spec status
 greenhouse-spec inspect
 greenhouse-spec proposals
 greenhouse-spec apply-proposals --safe --dry-run
 greenhouse-spec apply-proposals --safe
-greenhouse-spec tend --check
+greenhouse-spec status
 greenhouse-spec doctor
 greenhouse-spec verify --changed --dry-run
 ```
 
 Evaluate whether the generated routes are both scoped and sufficient. A new repo
 shape should improve Greenhouse's general detection only when the behavior is
-useful beyond that one repo.
+useful beyond that one repo. For existing installs, use `greenhouse-spec update
+--dry-run` before `greenhouse-spec update` to refresh helpers and metadata.
 
 ## Agent Rules Of Thumb
 

@@ -12,6 +12,7 @@ export function registerVerifyCommand(program: Command): void {
     .option("--paths <paths...>", "Verify specific paths.")
     .option("--dry-run", "Explain selected validation without running commands.")
     .option("--write-evidence", "Write verification evidence.")
+    .option("--no-prune", "Do not prune old generated evidence/report files after writing evidence.")
     .action(
       (options: {
         cwd: string;
@@ -20,6 +21,7 @@ export function registerVerifyCommand(program: Command): void {
         mode?: string;
         paths?: string[];
         writeEvidence?: boolean;
+        prune?: boolean;
       }) => {
         const report = runVerify({
           cwd: options.cwd,
@@ -28,6 +30,7 @@ export function registerVerifyCommand(program: Command): void {
           mode: options.mode,
           paths: options.paths,
           writeEvidence: options.writeEvidence,
+          noPrune: options.prune === false,
         });
 
         console.log(formatVerifyReport(report));

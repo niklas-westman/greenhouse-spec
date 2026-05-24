@@ -1,6 +1,6 @@
 schema_version: 1
 managed_by: greenhouse-spec
-generated_at: 2026-05-24T15:28:40.635Z
+generated_at: 2026-05-24T20:09:47.269Z
 package_manager: pnpm
 commands:
   - id: build
@@ -118,3 +118,13 @@ commands:
     source: package.json
     purpose: TypeScript validation
     confidence: high
+  - id: test:evidence
+    command: pnpm test:evidence
+    source: package.json
+    purpose: "package script: vitest run tests/evidence.test.ts"
+    confidence: medium
+  - id: test:lifecycle
+    command: pnpm test:lifecycle
+    source: package.json
+    purpose: "package script: vitest run tests/lifecycle.test.ts"
+    confidence: medium

@@ -1,9 +1,18 @@
-import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
-import { join, relative } from "node:path";
+import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { dirname, join, relative } from "node:path";
+
+import { stringify as stringifyYaml } from "yaml";
 
 import type { EvidenceIndex } from "../schemas/evidence-index.js";
 
 const maxRecentEvidenceEntries = 20;
+
+export function writeEvidenceIndex(cwd: string): string {
+  const indexPath = join(cwd, ".greenhouse", "grown", "evidence-index.yaml");
+  mkdirSync(dirname(indexPath), { recursive: true });
+  writeFileSync(indexPath, stringifyYaml(buildEvidenceIndex(cwd), { lineWidth: 0 }), "utf8");
+  return indexPath;
+}
 
 export function buildEvidenceIndex(cwd: string): EvidenceIndex {
   const evidenceDirectory = join(cwd, ".greenhouse", "evidence");

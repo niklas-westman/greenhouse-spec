@@ -45,13 +45,14 @@ Authored roots are protected. Mutation happens through explicit commands.
 
 Greenhouse V1 focuses on:
 
-- Installing a small `.greenhouse/` contract.
+- Installing and updating a small `.greenhouse/` contract.
 - Discovering repo shape, scripts, docs, risks, and generated outputs.
 - Proposing missing package scripts and validation routes.
 - Applying safe additive changes and managed route updates.
 - Adopting matching human-owned routes into Greenhouse ownership.
+- Running one read-only `status` command for repo health.
 - Running a conservative `tend --check` gate before push.
-- Routing changed files to validation commands and writing evidence.
+- Routing changed files to validation commands and writing bounded evidence.
 
 Greenhouse does not yet convert every tend/evidence learning into structured
 proposals. That is a future evolution of the same proposal system.

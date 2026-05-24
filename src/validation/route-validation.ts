@@ -423,12 +423,15 @@ function isAppSourcePath(file: string): boolean {
     return false;
   }
 
+  const normalizedFile = file.replace(/\\/g, "/");
+  const lowerFile = normalizedFile.toLowerCase();
+
   return (
-    file === "src/app.tsx" ||
-    file === "src/app.ts" ||
-    file === "src/main.tsx" ||
-    file === "src/main.ts" ||
-    file.startsWith("src/components/") ||
+    lowerFile === "src/app.tsx" ||
+    lowerFile === "src/app.ts" ||
+    lowerFile === "src/main.tsx" ||
+    lowerFile === "src/main.ts" ||
+    normalizedFile.startsWith("src/components/") ||
     file.startsWith("src/features/") ||
     file.startsWith("src/hooks/") ||
     file.startsWith("src/layouts/") ||

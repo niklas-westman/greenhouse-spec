@@ -3,6 +3,10 @@ import { join } from "node:path";
 
 import { parse as parseYaml } from "yaml";
 
+import {
+  annotateRepeatedFailures,
+  type FailureAnnotation,
+} from "../evidence/failure-signatures.js";
 import { writeEvidence } from "../evidence/write-evidence.js";
 import { parseYamlWithSchema } from "../schemas/common.js";
 import { validationSchema } from "../schemas/validation.js";
@@ -29,6 +33,7 @@ export type VerifyOptions = {
   mode?: string;
   paths?: string[];
   writeEvidence?: boolean;
+  noPrune?: boolean;
 };
 
 export type VerifyReport = {
@@ -37,6 +42,7 @@ export type VerifyReport = {
   dryRun: boolean;
   route: ValidationRoute;
   commandResults: CommandExecutionResult[];
+  failureAnnotations: FailureAnnotation[];
   evidencePath?: string;
   classification: ChangedFileClassification;
 };
@@ -69,12 +75,17 @@ export function runVerify(options: VerifyOptions): VerifyReport {
         runValidationCommand(options.cwd, command.command),
       );
   const ok = commandResults.every((result) => result.result !== "fail");
+  const failureAnnotations = annotateRepeatedFailures({
+    cwd: options.cwd,
+    commandResults,
+  });
   const report: VerifyReport = {
     cwd: options.cwd,
     ok,
     dryRun: Boolean(options.dryRun),
     route,
     commandResults,
+    failureAnnotations,
     classification,
   };
 
@@ -83,6 +94,8 @@ export function runVerify(options: VerifyOptions): VerifyReport {
       cwd: options.cwd,
       route,
       commandResults,
+      failureAnnotations,
+      noPrune: options.noPrune,
     }).path;
   }
 
@@ -154,8 +167,23 @@ export function formatVerifyReport(report: VerifyReport): string {
       const result = report.commandResults.find(
         (item) => item.command === command.command,
       );
+      const annotation = report.failureAnnotations.find(
+        (item) => item.command === command.command,
+      );
+      const annotationText = annotation ? ` - ${annotation.message}` : "";
       lines.push(
-        `- ${result?.result ?? "not_run"}: ${command.command} (${command.reason})`,
+        `- ${result?.result ?? "not_run"}: ${command.command} (${command.reason})${annotationText}`,
+      );
+    }
+  }
+
+  lines.push("", "## Repeated failures", "");
+  if (report.failureAnnotations.length === 0) {
+    lines.push("- none");
+  } else {
+    for (const annotation of report.failureAnnotations) {
+      lines.push(
+        `- ${annotation.command}: ${annotation.message} (${annotation.signatureId})`,
       );
     }
   }

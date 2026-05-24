@@ -111,6 +111,13 @@ export function proposePackageScripts(cwd: string): PackageScriptProposal[] {
   return proposals;
 }
 
+export function greenhouseCommandForRepo(cwd: string, args = ""): string {
+  const packageJson = readPackageJson(cwd);
+  return packageJson?.name === "greenhouse-spec"
+    ? selfHostedGreenhouseCommand(args)
+    : localGreenhouseCommand(cwd, args);
+}
+
 function localGreenhouseCommand(cwd: string, args: string): string {
   const packageRoot = findPackageRoot(import.meta.url);
   const cliPath = relative(cwd, `${packageRoot}/dist/cli.js`).replace(/\\/g, "/");

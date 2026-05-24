@@ -281,6 +281,45 @@ paths:
     manual:
       - id: greenhouse-self-config-review
         prompt: Review Greenhouse self-bootstrap and package validation changes.
+  src/lifecycle/**:
+    managed_by: greenhouse-spec
+    origin: repo-shape
+    proposal_id: validation-route:src-lifecycle
+    confidence: high
+    mode: patch
+    required:
+      - id: test:lifecycle
+        command: pnpm test:lifecycle
+      - id: typecheck
+        command: pnpm typecheck
+    recommended: []
+    manual: []
+  src/status/**:
+    managed_by: greenhouse-spec
+    origin: repo-shape
+    proposal_id: validation-route:src-status
+    confidence: high
+    mode: patch
+    required:
+      - id: test:lifecycle
+        command: pnpm test:lifecycle
+      - id: typecheck
+        command: pnpm typecheck
+    recommended: []
+    manual: []
+  src/evidence/**:
+    managed_by: greenhouse-spec
+    origin: repo-shape
+    proposal_id: validation-route:src-evidence
+    confidence: high
+    mode: patch
+    required:
+      - id: test:evidence
+        command: pnpm test:evidence
+      - id: typecheck
+        command: pnpm typecheck
+    recommended: []
+    manual: []
 risks: {}
 blocked:
   destructive:

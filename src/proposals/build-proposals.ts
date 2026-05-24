@@ -327,6 +327,9 @@ function buildGreenhouseSpecSeedProposals(
   route("src/doctor/**", "test:doctor", "Greenhouse doctor detected.");
   route("src/discovery/**", "test:discovery", "Greenhouse discovery layer detected.");
   route("src/inspect/**", "test:inspect", "Greenhouse inspect runner detected.");
+  route("src/lifecycle/**", "test:lifecycle", "Greenhouse lifecycle commands detected.");
+  route("src/status/**", "test:lifecycle", "Greenhouse status runner detected.");
+  route("src/evidence/**", "test:evidence", "Greenhouse evidence maintenance detected.");
   route("src/native-scripts/**", "test:native-scripts", "Greenhouse package script proposals detected.");
 
   for (const pattern of ["package.json", "pnpm-lock.yaml", "tsconfig.json"]) {

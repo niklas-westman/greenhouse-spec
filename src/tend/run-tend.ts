@@ -9,6 +9,11 @@ import {
 import { join } from "node:path";
 
 import { discoverRepoShape } from "../discovery/repo-shape.js";
+import {
+  readFailureSignatures,
+  repeatedFailureSummaries,
+} from "../evidence/failure-signatures.js";
+import { pruneGeneratedRecords } from "../evidence/prune.js";
 import { buildValidationProposals } from "../proposals/build-proposals.js";
 import type { ValidationProposal } from "../schemas/validation-proposals.js";
 import { getChangedFiles } from "../validation/changed-files.js";
@@ -25,6 +30,7 @@ export type TendReport = {
   changedFiles: string[];
   latestEvidencePath: string | null;
   proposals: TendProposal[];
+  repeatedFailures: ReturnType<typeof repeatedFailureSummaries>;
   selfTending?: {
     total: number;
     pending: number;
@@ -41,13 +47,16 @@ export type TendReport = {
   writtenReportPath?: string;
 };
 
-export function runTend(options: { cwd: string; check?: boolean }): TendReport {
+export function runTend(options: { cwd: string; check?: boolean; noPrune?: boolean }): TendReport {
   const changedFiles = safeChangedFiles(options.cwd);
   const latestEvidencePath = findLatestEvidence(options.cwd);
   const latestEvidence = latestEvidencePath
     ? readFileSync(latestEvidencePath, "utf8")
     : "";
   const proposals = buildProposals(changedFiles, latestEvidence);
+  const repeatedFailures = repeatedFailureSummaries(
+    readFailureSignatures(options.cwd),
+  );
   const report: TendReport = {
     cwd: options.cwd,
     ok: true,
@@ -55,6 +64,7 @@ export function runTend(options: { cwd: string; check?: boolean }): TendReport {
     changedFiles,
     latestEvidencePath,
     proposals,
+    repeatedFailures,
   };
 
   if (options.check) {
@@ -65,6 +75,9 @@ export function runTend(options: { cwd: string; check?: boolean }): TendReport {
 
   if (proposals.length > 0) {
     report.writtenReportPath = writeTendReport(report);
+    if (!options.noPrune) {
+      pruneGeneratedRecords({ cwd: options.cwd });
+    }
   }
 
   return report;
@@ -100,6 +113,17 @@ export function formatTendReport(report: TendReport): string {
   } else {
     for (const proposal of report.proposals) {
       lines.push(`- ${proposal.kind}: ${proposal.message}`);
+    }
+  }
+
+  lines.push("", "## Repeated failures", "");
+  if (report.repeatedFailures.length === 0) {
+    lines.push("- none");
+  } else {
+    for (const failure of report.repeatedFailures) {
+      lines.push(
+        `- ${failure.command}: seen ${failure.count} times, last ${failure.lastSeenAt} (${failure.normalizedFailure})`,
+      );
     }
   }
 

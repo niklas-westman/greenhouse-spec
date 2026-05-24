@@ -1,6 +1,13 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
+import { writeEvidenceIndex } from "./evidence-index.js";
+import {
+  failureExcerpt,
+  type FailureAnnotation,
+  writeFailureSignatures,
+} from "./failure-signatures.js";
+import { pruneGeneratedRecords } from "./prune.js";
 import type { CommandExecutionResult } from "../validation/run-command.js";
 import type { ValidationRoute } from "../validation/route-validation.js";
 
@@ -12,6 +19,8 @@ export function writeEvidence(options: {
   cwd: string;
   route: ValidationRoute;
   commandResults: CommandExecutionResult[];
+  failureAnnotations?: FailureAnnotation[];
+  noPrune?: boolean;
 }): EvidenceWriteResult {
   const evidenceDirectory = join(options.cwd, ".greenhouse", "evidence");
   mkdirSync(evidenceDirectory, { recursive: true });
@@ -20,12 +29,19 @@ export function writeEvidence(options: {
   const evidencePath = join(evidenceDirectory, `${timestamp}-verify.md`);
   writeFileSync(evidencePath, formatEvidence(options), "utf8");
 
+  if (!options.noPrune) {
+    pruneGeneratedRecords({ cwd: options.cwd });
+  }
+  writeEvidenceIndex(options.cwd);
+  writeFailureSignatures(options.cwd);
+
   return { path: evidencePath };
 }
 
 function formatEvidence(options: {
   route: ValidationRoute;
   commandResults: CommandExecutionResult[];
+  failureAnnotations?: FailureAnnotation[];
 }): string {
   const lines = [
     `# Verification: verify-${new Date().toISOString().slice(0, 10)}`,
@@ -44,7 +60,19 @@ function formatEvidence(options: {
   ];
 
   for (const result of options.commandResults) {
-    const notes = result.output ? summarize(result.output) : "";
+    const annotation = options.failureAnnotations?.find(
+      (item) => item.command === result.command,
+    );
+    const notes = [
+      annotation?.message,
+      result.output
+        ? result.result === "fail"
+          ? failureExcerpt(result.output)
+          : summarize(result.output)
+        : "",
+    ]
+      .filter(Boolean)
+      .join(" ");
     lines.push(`| \`${result.command}\` | ${result.result} | ${notes} |`);
   }
 

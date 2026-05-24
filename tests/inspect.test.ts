@@ -133,6 +133,38 @@ describe("inspect", () => {
     );
   });
 
+  it("refreshes the failure signature index from recent failed evidence", () => {
+    const repo = createTinyNodeRepo();
+    runPlant({ cwd: repo });
+    writeFileSync(
+      join(repo, ".greenhouse", "evidence", "2026-05-23-fail.md"),
+      [
+        "# Verification: app-patch",
+        "",
+        "## Commands run",
+        "",
+        "| Command | Result | Notes |",
+        "|---|---:|---|",
+        "| `pnpm test` | fail | TypeError: localStorage.clear is not a function |",
+        "",
+      ].join("\n"),
+    );
+
+    runInspect({ cwd: repo });
+
+    const failureIndex = readGreenhouseYaml(
+      repo,
+      "grown/failure-signatures.yaml",
+    );
+    expect(failureIndex.signatures).toContainEqual(
+      expect.objectContaining({
+        command: "pnpm test",
+        count: 1,
+        normalized_failure: "localstorage.clear is not a function",
+      }),
+    );
+  });
+
   it("works on Declarion-lite, Marwes-lite, and tiny Node fixtures", () => {
     const repos = [
       createDeclarionLiteRepo(),

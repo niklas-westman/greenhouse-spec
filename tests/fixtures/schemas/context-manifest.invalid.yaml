@@ -1,0 +1,10 @@
+schema_version: 1
+
+context:
+  - id: source-traceability
+    type: rule
+    path: rules/source-traceability.md
+    activation:
+      mode: risk
+    budget:
+      max_tokens: 1000

@@ -1,0 +1,36 @@
+schema_version: 1
+managed_by: greenhouse-spec
+generated_at: 2026-05-23T00:00:00.000Z
+proposals:
+  - id: package-script:check:greenhouse
+    kind: package-script
+    status: pending
+    confidence: high
+    reason: Package script is missing.
+    safe: true
+    target:
+      path: package.json
+    package_script:
+      name: check:greenhouse
+      command: node ../greenhouse/code/greenhouse-spec/dist/cli.js doctor
+  - id: validation-route:frontend-react-src
+    kind: validation-route
+    status: adoptable
+    confidence: medium
+    reason: Frontend package detected.
+    safe: true
+    target:
+      path: .greenhouse/roots/validation.yaml
+    validation_route:
+      pattern: frontend-react/src/**
+      rule:
+        managed_by: greenhouse-spec
+        origin: repo-shape
+        proposal_id: validation-route:frontend-react-src
+        confidence: medium
+        mode: patch
+        required:
+          - id: test:frontend
+            command: pnpm --dir frontend-react test
+        recommended: []
+        manual: []

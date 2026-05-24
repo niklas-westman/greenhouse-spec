@@ -1,0 +1,7 @@
+schema_version: 1
+managed_by: greenhouse-spec
+generated_at: 1970-01-01T00:00:00Z
+policy:
+  agent_reading: Do not bulk-read evidence. Read specific evidence only when continuing a change, debugging validation, or following a tend/report pointer.
+  retention: Keep recent evidence indexed here; archive or prune old records when they no longer help future validation decisions.
+recent: []

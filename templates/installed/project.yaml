@@ -1,0 +1,22 @@
+schema_version: 1
+profile_version: 1
+
+repo:
+  name: unknown
+  description: Repository initialized with greenhouse-spec
+  type:
+    - app
+  default_branch: null
+
+stack:
+  package_manager: null
+  languages: []
+  runtimes: {}
+  frameworks: []
+  test_runners: []
+
+greenhouse:
+  folder: .greenhouse
+  created_at: 1970-01-01
+  last_inspected_at: null
+  mode_default: growth

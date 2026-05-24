@@ -1,0 +1,40 @@
+schema_version: 1
+
+context:
+  - id: validation-discipline
+    type: rule
+    path: rules/validation-discipline.md
+    activation:
+      mode: always
+    budget:
+      max_tokens: 600
+
+  - id: source-traceability
+    type: rule
+    path: rules/source-traceability.md
+    activation:
+      mode: risk
+      risks:
+        - financial-calculation
+    budget:
+      max_tokens: 1000
+
+  - id: official-sources
+    type: doc
+    path: docs/official-sources.md
+    activation:
+      mode: keyword
+      keywords:
+        - tax
+    budget:
+      max_tokens: 2000
+
+  - id: review-tax-source-change
+    type: skill
+    path: skills/review-tax-source-change/SKILL.md
+    activation:
+      mode: path
+      paths:
+        - src/engine/sources/**
+    budget:
+      max_tokens: 3000

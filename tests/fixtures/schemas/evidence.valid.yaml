@@ -1,0 +1,16 @@
+schema_version: 1
+change_id: 2026-05-22-readme-typo
+change_mode: patch
+changed_files:
+  - README.md
+risks: []
+context_loaded:
+  - validation-discipline
+commands:
+  - command: pnpm typecheck
+    result: pass
+    notes: Clean
+manual_checks: []
+skipped_validation: null
+regressions_or_gaps: []
+durable_learnings: []

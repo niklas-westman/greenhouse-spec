@@ -1,0 +1,61 @@
+schema_version: 1
+
+defaults:
+  required:
+    - id: typecheck
+      command: pnpm typecheck
+    - id: test
+      command: pnpm test
+  recommended:
+    - id: build
+      command: pnpm build
+
+timeouts:
+  default_seconds: 300
+  long_seconds: 900
+
+modes:
+  patch:
+    required:
+      - id: changed-scope
+        command: greenhouse-spec verify --changed
+
+  growth:
+    required:
+      - id: typecheck
+        command: pnpm typecheck
+      - id: test
+        command: pnpm test
+
+  guarded:
+    required:
+      - id: typecheck
+        command: pnpm typecheck
+      - id: test
+        command: pnpm test
+      - id: build
+        command: pnpm build
+    manual:
+      - id: human-risk-review
+        prompt: Human must review guarded risk notes before merge.
+
+paths:
+  "src/engine/sru/**":
+    mode: guarded
+    required:
+      - id: sru-tests
+        command: pnpm exec vitest run src/engine/sru
+
+risks:
+  financial-calculation:
+    mode: guarded
+    required:
+      - id: calculation-tests
+        command: pnpm exec vitest run src/engine
+
+blocked:
+  destructive:
+    patterns:
+      - "rm -rf"
+      - "git reset --hard"
+    action: ask-human

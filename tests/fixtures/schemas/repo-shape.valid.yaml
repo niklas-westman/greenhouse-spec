@@ -1,0 +1,36 @@
+schema_version: 1
+managed_by: greenhouse-spec
+generated_at: 2026-05-23T00:00:00.000Z
+confidence: medium
+shape:
+  - workspace
+  - java-maven
+  - polyglot
+package_manager: pnpm
+packages:
+  - path: .
+    name: sourcer-workspace
+    kind:
+      - root
+    languages: []
+    frameworks: []
+    commands:
+      test: pnpm test
+    confidence: high
+java_modules:
+  - path: backend-java-serverless/
+    artifact_id: backend-java
+    build_tool: maven
+    commands:
+      build: cd backend-java-serverless && mvn package
+      test: cd backend-java-serverless && mvn test
+    confidence: medium
+generated:
+  - path: backend-java-serverless/target/
+    reason: Maven build output
+    confidence: high
+gaps:
+  - id: polyglot-routing-review
+    severity: info
+    message: Polyglot repos usually need path-specific validation routes instead of broad root defaults.
+    paths: []

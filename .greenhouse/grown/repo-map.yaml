@@ -1,0 +1,27 @@
+schema_version: 1
+managed_by: greenhouse-spec
+generated_at: 2026-05-24T15:28:40.620Z
+confidence: medium
+source:
+  - path: src/
+    kind: application-source
+    confidence: high
+tests:
+  - path: tests/**/*.{test,spec}.ts
+    runner: vitest
+    confidence: medium
+docs:
+  - path: README.md
+    authority: high
+  - path: docs/
+    authority: medium
+generated:
+  - path: dist/
+    reason: build output
+agent_files:
+  - path: AGENTS.md
+    present: false
+  - path: CLAUDE.md
+    present: false
+  - path: .cursor/rules/
+    present: false

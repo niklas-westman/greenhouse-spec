@@ -202,6 +202,35 @@ describe("doctor", () => {
     expect(report.findings).toEqual([]);
   });
 
+  it("accepts self-hosted greenhouse package script aliases", () => {
+    const repo = createFixtureRepo();
+    writeFileSync(
+      join(repo, "package.json"),
+      JSON.stringify(
+        {
+          scripts: {
+            greenhouse: "pnpm build && node dist/cli.js",
+            "check:greenhouse": "pnpm greenhouse doctor",
+            "check:changed": "pnpm greenhouse verify --changed",
+            "check:changed:evidence":
+              "pnpm greenhouse verify --changed --write-evidence",
+            "validate:scope": "pnpm greenhouse verify --paths",
+            tend: "pnpm greenhouse tend",
+            "check:tend": "pnpm greenhouse tend --check",
+          },
+        },
+        null,
+        2,
+      ),
+      "utf8",
+    );
+
+    const report = runDoctor({ cwd: repo });
+
+    expect(report.ok).toBe(true);
+    expect(report.findings).toEqual([]);
+  });
+
   it("writes a doctor report when requested", () => {
     const repo = createFixtureRepo();
 

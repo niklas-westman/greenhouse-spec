@@ -69,6 +69,32 @@ describe("tend", () => {
     expect(existsSync(report.writtenReportPath ?? "")).toBe(true);
   });
 
+  it("ignores unchecked durable learning checkboxes", () => {
+    const repo = createRepo();
+    writeFileSync(
+      join(repo, ".greenhouse", "evidence", "2026-05-24-pass.md"),
+      [
+        "# Verification",
+        "",
+        "## Commands run",
+        "",
+        "| Command | Result | Notes |",
+        "|---|---:|---|",
+        "| `pnpm test` | pass | ok |",
+        "",
+        "## Durable learnings",
+        "",
+        "- [ ] propose validation update",
+        "",
+      ].join("\n"),
+    );
+
+    const report = runTend({ cwd: repo });
+
+    expect(report.proposals).toEqual([]);
+    expect(report.writtenReportPath).toBeUndefined();
+  });
+
   it("proposes a specific docs routing update for fallback failure on docs-only changes", () => {
     const repo = createRepo();
     initGitRepo(repo);

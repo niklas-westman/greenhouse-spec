@@ -1,0 +1,37 @@
+schema_version: 1
+managed_by: greenhouse-spec
+generated_at: 2026-05-24T15:28:40.634Z
+confidence: high
+shape:
+  - single-package
+package_manager: pnpm
+packages:
+  - path: .
+    name: greenhouse-spec
+    kind:
+      - cli
+    languages:
+      - typescript
+    frameworks:
+      - vitest
+    commands:
+      build: pnpm build
+      lint: null
+      test: pnpm test
+      typecheck: pnpm typecheck
+    confidence: high
+java_modules: []
+generated:
+  - path: .greenhouse/grown/
+    reason: Greenhouse generated index output
+    confidence: high
+  - path: .greenhouse/evidence/
+    reason: Greenhouse generated validation evidence
+    confidence: high
+  - path: .greenhouse/reports/
+    reason: Greenhouse generated reports
+    confidence: high
+  - path: dist/
+    reason: JavaScript build output
+    confidence: high
+gaps: []

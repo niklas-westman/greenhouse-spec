@@ -268,6 +268,7 @@ function buildRouteProposals(
     );
   }
 
+  proposals.push(...buildGreenhouseSpecSeedProposals(cwd, validation, rootScripts));
   proposals.push(...buildSinglePackageSeedProposals(cwd, validation, rootScripts));
 
   return proposals.filter(
@@ -275,6 +276,78 @@ function buildRouteProposals(
       proposal.kind === "validation-route" &&
       proposal.validation_route.rule.required.length > 0,
   );
+}
+
+function buildGreenhouseSpecSeedProposals(
+  cwd: string,
+  validation: ValidationConfig | null,
+  scripts: Record<string, string>,
+): ValidationProposal[] {
+  const packageJson = readPackageJson(cwd);
+  if (packageJson?.name !== "greenhouse-spec") {
+    return [];
+  }
+
+  const proposals: ValidationProposal[] = [];
+  const typecheck = scriptCommand(scripts, "typecheck");
+  const check = scriptCommand(scripts, "check");
+
+  const route = (
+    pattern: string,
+    testScript: string,
+    reason: string,
+    mode: "patch" | "growth" | "guarded" = "patch",
+  ) => {
+    proposals.push(
+      routeProposal(validation, {
+        pattern,
+        mode,
+        required: compactCommands([
+          command(testScript, scriptCommand(scripts, testScript)),
+          command("typecheck", typecheck),
+        ]),
+        reason,
+        confidence: "high",
+      }),
+    );
+  };
+
+  route("README.md", "test:templates", "Greenhouse docs entrypoint detected.");
+  route("docs/**", "test:templates", "Greenhouse docs folder detected.");
+  route("src/cli.ts", "test:cli", "Greenhouse CLI entrypoint detected.");
+  route("src/commands/**", "test:cli", "Greenhouse command adapters detected.");
+  route("src/schemas/**", "test:schemas", "Greenhouse schemas detected.");
+  route("src/proposals/**", "test:proposals", "Greenhouse proposal engine detected.");
+  route("src/validation/**", "test:validation", "Greenhouse validation router detected.");
+  route("src/verify/**", "test:validation", "Greenhouse verify runner detected.");
+  route("src/plant/**", "test:plant", "Greenhouse plant runner detected.");
+  route("templates/**", "test:templates", "Greenhouse installed templates detected.");
+  route("src/templates/**", "test:templates", "Greenhouse template registry detected.");
+  route("src/tend/**", "test:tend", "Greenhouse tend gate detected.");
+  route("src/doctor/**", "test:doctor", "Greenhouse doctor detected.");
+  route("src/discovery/**", "test:discovery", "Greenhouse discovery layer detected.");
+  route("src/inspect/**", "test:inspect", "Greenhouse inspect runner detected.");
+  route("src/native-scripts/**", "test:native-scripts", "Greenhouse package script proposals detected.");
+
+  for (const pattern of ["package.json", "pnpm-lock.yaml", "tsconfig.json"]) {
+    proposals.push(
+      routeProposal(validation, {
+        pattern,
+        mode: "guarded",
+        required: compactCommands([command("check", check)]),
+        manual: [
+          {
+            id: "greenhouse-self-config-review",
+            prompt: "Review Greenhouse self-bootstrap and package validation changes.",
+          },
+        ],
+        reason: `Greenhouse package config detected at ${pattern}.`,
+        confidence: "high",
+      }),
+    );
+  }
+
+  return proposals;
 }
 
 function buildSinglePackageSeedProposals(

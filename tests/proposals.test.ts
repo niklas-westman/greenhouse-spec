@@ -90,6 +90,27 @@ describe("structured proposals", () => {
     );
   });
 
+  it("generates validation seed proposals for greenhouse-spec itself", () => {
+    const repo = createGreenhouseSpecLikeRepo();
+    runPlant({ cwd: repo });
+    runInspect({ cwd: repo });
+
+    const routePatterns = readValidationProposals(repo).proposals
+      .filter((proposal) => proposal.kind === "validation-route")
+      .map((proposal) => proposal.validation_route.pattern);
+
+    expect(routePatterns).toEqual(
+      expect.arrayContaining([
+        "src/proposals/**",
+        "src/validation/**",
+        "src/plant/**",
+        "src/schemas/**",
+        "templates/**",
+        "package.json",
+      ]),
+    );
+  });
+
   it("safe dry-run reports intended changes without mutating files", () => {
     const repo = createSourcerLikeRepo();
     runPlant({ cwd: repo });
@@ -443,6 +464,61 @@ function createMilibryLikeRepo(): string {
       "@playwright/test": "1.50.0",
       typescript: "5.6.3",
       vite: "5.4.10",
+      vitest: "2.1.4",
+    },
+  });
+  return repo;
+}
+
+function createGreenhouseSpecLikeRepo(): string {
+  const repo = createTempRepo("greenhouse-spec");
+  for (const directory of [
+    "docs",
+    "src/commands",
+    "src/discovery",
+    "src/doctor",
+    "src/inspect",
+    "src/native-scripts",
+    "src/plant",
+    "src/proposals",
+    "src/schemas",
+    "src/templates",
+    "src/tend",
+    "src/validation",
+    "src/verify",
+    "templates/installed",
+  ]) {
+    mkdirSync(join(repo, directory), { recursive: true });
+  }
+  writeFileSync(join(repo, "README.md"), "# greenhouse-spec\n");
+  writeFileSync(join(repo, "pnpm-lock.yaml"), "lockfileVersion: '9.0'\n");
+  writeFileSync(join(repo, "tsconfig.json"), "{}\n");
+  writeFileSync(join(repo, "src", "cli.ts"), "export {}\n");
+  writeFileSync(join(repo, "src", "proposals", "build-proposals.ts"), "export {}\n");
+  writeFileSync(join(repo, "src", "validation", "route-validation.ts"), "export {}\n");
+  writeFileSync(join(repo, "src", "plant", "run-plant.ts"), "export {}\n");
+  writeFileSync(join(repo, "src", "schemas", "validation.ts"), "export {}\n");
+  writePackageJson(repo, {
+    name: "greenhouse-spec",
+    scripts: {
+      build: "tsc -p tsconfig.json",
+      check: "pnpm typecheck && pnpm test && pnpm build",
+      test: "vitest run",
+      "test:cli": "vitest run tests/cli.test.ts",
+      "test:discovery": "vitest run tests/discovery.test.ts",
+      "test:doctor": "vitest run tests/doctor.test.ts",
+      "test:inspect": "vitest run tests/inspect.test.ts",
+      "test:native-scripts": "vitest run tests/native-scripts.test.ts",
+      "test:plant": "vitest run tests/plant.test.ts",
+      "test:proposals": "vitest run tests/proposals.test.ts",
+      "test:schemas": "vitest run tests/schemas.test.ts",
+      "test:templates": "vitest run tests/templates.test.ts",
+      "test:tend": "vitest run tests/tend.test.ts",
+      "test:validation": "vitest run tests/validation.test.ts",
+      typecheck: "tsc -p tsconfig.json --noEmit",
+    },
+    devDependencies: {
+      typescript: "5.6.3",
       vitest: "2.1.4",
     },
   });

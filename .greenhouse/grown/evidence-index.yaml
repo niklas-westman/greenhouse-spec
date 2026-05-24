@@ -1,0 +1,13 @@
+schema_version: 1
+managed_by: greenhouse-spec
+generated_at: 2026-05-24T15:28:40.654Z
+policy:
+  agent_reading: Do not bulk-read evidence. Read specific evidence only when continuing a change, debugging validation, or following a tend/report pointer.
+  retention: Keep recent evidence indexed here; archive or prune old records when they no longer help future validation decisions.
+recent:
+  - path: evidence/2026-05-24T15-28-21-384Z-verify.md
+    modified_at: 2026-05-24T15:28:21.385Z
+    summary: "Verification: verify-2026-05-24; mode guarded; files src/doctor/run-doctor.ts, src/native-scripts/package-script-proposals.ts, src/proposals/build-proposals.ts, src/tend/run-tend.ts, tests/doctor.test.ts, tests/native-scripts.test.ts, tests"
+  - path: evidence/2026-05-24T15-26-54-798Z-verify.md
+    modified_at: 2026-05-24T15:26:54.799Z
+    summary: "Verification: verify-2026-05-24; mode guarded; files src/doctor/run-doctor.ts, src/native-scripts/package-script-proposals.ts, src/proposals/build-proposals.ts, tests/doctor.test.ts, tests/native-scripts.test.ts, tests/proposals.test.ts, pa"

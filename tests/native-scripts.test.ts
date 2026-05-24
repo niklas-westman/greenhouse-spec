@@ -159,6 +159,50 @@ describe("native scripts", () => {
     ).toBe(true);
   });
 
+  it("proposes self-hosted greenhouse aliases for greenhouse-spec", () => {
+    const repo = createRepo({
+      name: "greenhouse-spec",
+      scripts: {
+        build: "tsc -p tsconfig.json",
+      },
+    });
+
+    expect(proposePackageScripts(repo)).toEqual(
+      expect.arrayContaining([
+        {
+          name: "greenhouse",
+          command: "pnpm build && node dist/cli.js",
+          status: "add",
+        },
+        {
+          name: "check:greenhouse",
+          command: "pnpm greenhouse doctor",
+          status: "add",
+        },
+        {
+          name: "check:tend",
+          command: "pnpm greenhouse tend --check",
+          status: "add",
+        },
+      ]),
+    );
+  });
+
+  it("accepts self-hosted greenhouse aliases", () => {
+    expect(
+      isAcceptedGreenhouseAlias(
+        "pnpm build && node dist/cli.js",
+        "greenhouse-spec",
+      ),
+    ).toBe(true);
+    expect(
+      isAcceptedGreenhouseAlias(
+        "pnpm greenhouse verify --changed --write-evidence",
+        "greenhouse-spec verify --changed --write-evidence",
+      ),
+    ).toBe(true);
+  });
+
   it("reports collisions instead of overwriting existing scripts", () => {
     const repo = createRepo({
       scripts: {

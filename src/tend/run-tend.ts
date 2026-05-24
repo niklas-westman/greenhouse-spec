@@ -175,7 +175,7 @@ function buildProposals(
   const lowerEvidence = evidence.toLowerCase();
 
   if (
-    lowerEvidence.includes("propose validation update") ||
+    lowerEvidence.includes("- [x] propose validation update") ||
     lowerEvidence.includes("| fail |") ||
     lowerEvidence.includes(" result: fail")
   ) {

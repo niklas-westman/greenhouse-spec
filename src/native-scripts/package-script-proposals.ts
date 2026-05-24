@@ -42,10 +42,14 @@ const baseAliases: Array<{ name: string; args: string }> = [
 ];
 
 export function proposePackageScripts(cwd: string): PackageScriptProposal[] {
-  const scripts = readPackageJson(cwd)?.scripts ?? {};
+  const packageJson = readPackageJson(cwd);
+  const scripts = packageJson?.scripts ?? {};
+  const selfHosted = packageJson?.name === "greenhouse-spec";
   const aliases = baseAliases.map((alias) => ({
     name: alias.name,
-    command: localGreenhouseCommand(cwd, alias.args),
+    command: selfHosted
+      ? selfHostedGreenhouseCommand(alias.args)
+      : localGreenhouseCommand(cwd, alias.args),
     bareCommand: alias.args ? `greenhouse-spec ${alias.args}` : "greenhouse-spec",
   }));
   const proposals: PackageScriptProposal[] = [];
@@ -114,6 +118,10 @@ function localGreenhouseCommand(cwd: string, args: string): string {
   return args ? `${command} ${args}` : command;
 }
 
+function selfHostedGreenhouseCommand(args: string): string {
+  return args ? `pnpm greenhouse ${args}` : "pnpm build && node dist/cli.js";
+}
+
 export function isAcceptedGreenhouseAlias(
   actualCommand: string,
   expectedCommand: string,
@@ -123,6 +131,16 @@ export function isAcceptedGreenhouseAlias(
   }
 
   const expectedArgs = expectedCommand.replace(/^greenhouse-spec\s*/, "").trim();
+
+  if (expectedArgs === "" && actualCommand === "pnpm build && node dist/cli.js") {
+    return true;
+  }
+
+  const selfHostedMatch = actualCommand.match(/^pnpm greenhouse(?:\s+(.*))?$/);
+  if (selfHostedMatch) {
+    return (selfHostedMatch[1]?.trim() ?? "") === expectedArgs;
+  }
+
   const localCliMatch = actualCommand.match(
     /^node\s+(?:"([^"]*greenhouse-spec\/dist\/cli\.js)"|'([^']*greenhouse-spec\/dist\/cli\.js)'|([^\s]*greenhouse-spec\/dist\/cli\.js))(?:\s+(.*))?$/,
   );

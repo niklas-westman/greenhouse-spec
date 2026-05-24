@@ -282,6 +282,16 @@ function isAcceptedGreenhouseAlias(
   }
 
   const expectedArgs = expectedCommand.replace(/^greenhouse-spec\s*/, "").trim();
+
+  if (expectedArgs === "" && actualCommand === "pnpm build && node dist/cli.js") {
+    return true;
+  }
+
+  const selfHostedMatch = actualCommand.match(/^pnpm greenhouse(?:\s+(.*))?$/);
+  if (selfHostedMatch) {
+    return (selfHostedMatch[1]?.trim() ?? "") === expectedArgs;
+  }
+
   const localCliMatch = actualCommand.match(
     /^node\s+(?:"([^"]*greenhouse-spec\/dist\/cli\.js)"|'([^']*greenhouse-spec\/dist\/cli\.js)'|([^\s]*greenhouse-spec\/dist\/cli\.js))(?:\s+(.*))?$/,
   );

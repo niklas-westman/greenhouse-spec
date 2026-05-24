@@ -1,0 +1,120 @@
+schema_version: 1
+managed_by: greenhouse-spec
+generated_at: 2026-05-24T15:28:40.635Z
+package_manager: pnpm
+commands:
+  - id: build
+    command: pnpm build
+    source: package.json
+    purpose: production build
+    confidence: high
+  - id: check
+    command: pnpm check
+    source: package.json
+    purpose: full local validation
+    confidence: high
+  - id: greenhouse
+    command: pnpm greenhouse
+    source: package.json
+    purpose: "package script: pnpm build && node dist/cli.js"
+    confidence: medium
+  - id: check:greenhouse
+    command: pnpm check:greenhouse
+    source: package.json
+    purpose: "package script: pnpm greenhouse doctor"
+    confidence: medium
+  - id: check:changed
+    command: pnpm check:changed
+    source: package.json
+    purpose: "package script: pnpm greenhouse verify --changed"
+    confidence: medium
+  - id: check:changed:evidence
+    command: pnpm check:changed:evidence
+    source: package.json
+    purpose: "package script: pnpm greenhouse verify --changed --write-evidence"
+    confidence: medium
+  - id: validate:scope
+    command: pnpm validate:scope
+    source: package.json
+    purpose: "package script: pnpm greenhouse verify --paths"
+    confidence: medium
+  - id: tend
+    command: pnpm tend
+    source: package.json
+    purpose: "package script: pnpm greenhouse tend"
+    confidence: medium
+  - id: check:tend
+    command: pnpm check:tend
+    source: package.json
+    purpose: "package script: pnpm greenhouse tend --check"
+    confidence: medium
+  - id: prepush
+    command: pnpm prepush
+    source: package.json
+    purpose: "package script: pnpm check:tend && pnpm check:changed:evidence"
+    confidence: medium
+  - id: test
+    command: pnpm test
+    source: package.json
+    purpose: test suite
+    confidence: high
+  - id: test:cli
+    command: pnpm test:cli
+    source: package.json
+    purpose: CLI smoke validation
+    confidence: high
+  - id: test:discovery
+    command: pnpm test:discovery
+    source: package.json
+    purpose: "package script: vitest run tests/discovery.test.ts"
+    confidence: medium
+  - id: test:doctor
+    command: pnpm test:doctor
+    source: package.json
+    purpose: "package script: vitest run tests/doctor.test.ts"
+    confidence: medium
+  - id: test:inspect
+    command: pnpm test:inspect
+    source: package.json
+    purpose: "package script: vitest run tests/inspect.test.ts"
+    confidence: medium
+  - id: test:native-scripts
+    command: pnpm test:native-scripts
+    source: package.json
+    purpose: "package script: vitest run tests/native-scripts.test.ts"
+    confidence: medium
+  - id: test:plant
+    command: pnpm test:plant
+    source: package.json
+    purpose: "package script: vitest run tests/plant.test.ts"
+    confidence: medium
+  - id: test:proposals
+    command: pnpm test:proposals
+    source: package.json
+    purpose: "package script: vitest run tests/proposals.test.ts"
+    confidence: medium
+  - id: test:schemas
+    command: pnpm test:schemas
+    source: package.json
+    purpose: "package script: vitest run tests/schemas.test.ts"
+    confidence: medium
+  - id: test:templates
+    command: pnpm test:templates
+    source: package.json
+    purpose: "package script: vitest run tests/templates.test.ts"
+    confidence: medium
+  - id: test:tend
+    command: pnpm test:tend
+    source: package.json
+    purpose: "package script: vitest run tests/tend.test.ts"
+    confidence: medium
+  - id: test:validation
+    command: pnpm test:validation
+    source: package.json
+    purpose: "package script: vitest run tests/validation.test.ts"
+    confidence: medium
+  - id: typecheck
+    command: pnpm typecheck
+    source: package.json
+    purpose: TypeScript validation
+    confidence: high

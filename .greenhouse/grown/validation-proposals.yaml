@@ -1,0 +1,441 @@
+schema_version: 1
+managed_by: greenhouse-spec
+generated_at: 2026-05-24T15:28:40.650Z
+proposals:
+  - id: validation-route:readme-md
+    kind: validation-route
+    status: applied
+    confidence: high
+    reason: Greenhouse docs entrypoint detected.
+    safe: true
+    target:
+      path: .greenhouse/roots/validation.yaml
+    validation_route:
+      pattern: README.md
+      rule:
+        managed_by: greenhouse-spec
+        origin: repo-shape
+        proposal_id: validation-route:readme-md
+        confidence: high
+        mode: patch
+        required:
+          - id: test:templates
+            command: pnpm test:templates
+          - id: typecheck
+            command: pnpm typecheck
+        recommended: []
+        manual: []
+  - id: validation-route:docs
+    kind: validation-route
+    status: applied
+    confidence: high
+    reason: Greenhouse docs folder detected.
+    safe: true
+    target:
+      path: .greenhouse/roots/validation.yaml
+    validation_route:
+      pattern: docs/**
+      rule:
+        managed_by: greenhouse-spec
+        origin: repo-shape
+        proposal_id: validation-route:docs
+        confidence: high
+        mode: patch
+        required:
+          - id: test:templates
+            command: pnpm test:templates
+          - id: typecheck
+            command: pnpm typecheck
+        recommended: []
+        manual: []
+  - id: validation-route:src-cli-ts
+    kind: validation-route
+    status: applied
+    confidence: high
+    reason: Greenhouse CLI entrypoint detected.
+    safe: true
+    target:
+      path: .greenhouse/roots/validation.yaml
+    validation_route:
+      pattern: src/cli.ts
+      rule:
+        managed_by: greenhouse-spec
+        origin: repo-shape
+        proposal_id: validation-route:src-cli-ts
+        confidence: high
+        mode: patch
+        required:
+          - id: test:cli
+            command: pnpm test:cli
+          - id: typecheck
+            command: pnpm typecheck
+        recommended: []
+        manual: []
+  - id: validation-route:src-commands
+    kind: validation-route
+    status: applied
+    confidence: high
+    reason: Greenhouse command adapters detected.
+    safe: true
+    target:
+      path: .greenhouse/roots/validation.yaml
+    validation_route:
+      pattern: src/commands/**
+      rule:
+        managed_by: greenhouse-spec
+        origin: repo-shape
+        proposal_id: validation-route:src-commands
+        confidence: high
+        mode: patch
+        required:
+          - id: test:cli
+            command: pnpm test:cli
+          - id: typecheck
+            command: pnpm typecheck
+        recommended: []
+        manual: []
+  - id: validation-route:src-schemas
+    kind: validation-route
+    status: applied
+    confidence: high
+    reason: Greenhouse schemas detected.
+    safe: true
+    target:
+      path: .greenhouse/roots/validation.yaml
+    validation_route:
+      pattern: src/schemas/**
+      rule:
+        managed_by: greenhouse-spec
+        origin: repo-shape
+        proposal_id: validation-route:src-schemas
+        confidence: high
+        mode: patch
+        required:
+          - id: test:schemas
+            command: pnpm test:schemas
+          - id: typecheck
+            command: pnpm typecheck
+        recommended: []
+        manual: []
+  - id: validation-route:src-proposals
+    kind: validation-route
+    status: applied
+    confidence: high
+    reason: Greenhouse proposal engine detected.
+    safe: true
+    target:
+      path: .greenhouse/roots/validation.yaml
+    validation_route:
+      pattern: src/proposals/**
+      rule:
+        managed_by: greenhouse-spec
+        origin: repo-shape
+        proposal_id: validation-route:src-proposals
+        confidence: high
+        mode: patch
+        required:
+          - id: test:proposals
+            command: pnpm test:proposals
+          - id: typecheck
+            command: pnpm typecheck
+        recommended: []
+        manual: []
+  - id: validation-route:src-validation
+    kind: validation-route
+    status: applied
+    confidence: high
+    reason: Greenhouse validation router detected.
+    safe: true
+    target:
+      path: .greenhouse/roots/validation.yaml
+    validation_route:
+      pattern: src/validation/**
+      rule:
+        managed_by: greenhouse-spec
+        origin: repo-shape
+        proposal_id: validation-route:src-validation
+        confidence: high
+        mode: patch
+        required:
+          - id: test:validation
+            command: pnpm test:validation
+          - id: typecheck
+            command: pnpm typecheck
+        recommended: []
+        manual: []
+  - id: validation-route:src-verify
+    kind: validation-route
+    status: applied
+    confidence: high
+    reason: Greenhouse verify runner detected.
+    safe: true
+    target:
+      path: .greenhouse/roots/validation.yaml
+    validation_route:
+      pattern: src/verify/**
+      rule:
+        managed_by: greenhouse-spec
+        origin: repo-shape
+        proposal_id: validation-route:src-verify
+        confidence: high
+        mode: patch
+        required:
+          - id: test:validation
+            command: pnpm test:validation
+          - id: typecheck
+            command: pnpm typecheck
+        recommended: []
+        manual: []
+  - id: validation-route:src-plant
+    kind: validation-route
+    status: applied
+    confidence: high
+    reason: Greenhouse plant runner detected.
+    safe: true
+    target:
+      path: .greenhouse/roots/validation.yaml
+    validation_route:
+      pattern: src/plant/**
+      rule:
+        managed_by: greenhouse-spec
+        origin: repo-shape
+        proposal_id: validation-route:src-plant
+        confidence: high
+        mode: patch
+        required:
+          - id: test:plant
+            command: pnpm test:plant
+          - id: typecheck
+            command: pnpm typecheck
+        recommended: []
+        manual: []
+  - id: validation-route:templates
+    kind: validation-route
+    status: applied
+    confidence: high
+    reason: Greenhouse installed templates detected.
+    safe: true
+    target:
+      path: .greenhouse/roots/validation.yaml
+    validation_route:
+      pattern: templates/**
+      rule:
+        managed_by: greenhouse-spec
+        origin: repo-shape
+        proposal_id: validation-route:templates
+        confidence: high
+        mode: patch
+        required:
+          - id: test:templates
+            command: pnpm test:templates
+          - id: typecheck
+            command: pnpm typecheck
+        recommended: []
+        manual: []
+  - id: validation-route:src-templates
+    kind: validation-route
+    status: applied
+    confidence: high
+    reason: Greenhouse template registry detected.
+    safe: true
+    target:
+      path: .greenhouse/roots/validation.yaml
+    validation_route:
+      pattern: src/templates/**
+      rule:
+        managed_by: greenhouse-spec
+        origin: repo-shape
+        proposal_id: validation-route:src-templates
+        confidence: high
+        mode: patch
+        required:
+          - id: test:templates
+            command: pnpm test:templates
+          - id: typecheck
+            command: pnpm typecheck
+        recommended: []
+        manual: []
+  - id: validation-route:src-tend
+    kind: validation-route
+    status: applied
+    confidence: high
+    reason: Greenhouse tend gate detected.
+    safe: true
+    target:
+      path: .greenhouse/roots/validation.yaml
+    validation_route:
+      pattern: src/tend/**
+      rule:
+        managed_by: greenhouse-spec
+        origin: repo-shape
+        proposal_id: validation-route:src-tend
+        confidence: high
+        mode: patch
+        required:
+          - id: test:tend
+            command: pnpm test:tend
+          - id: typecheck
+            command: pnpm typecheck
+        recommended: []
+        manual: []
+  - id: validation-route:src-doctor
+    kind: validation-route
+    status: applied
+    confidence: high
+    reason: Greenhouse doctor detected.
+    safe: true
+    target:
+      path: .greenhouse/roots/validation.yaml
+    validation_route:
+      pattern: src/doctor/**
+      rule:
+        managed_by: greenhouse-spec
+        origin: repo-shape
+        proposal_id: validation-route:src-doctor
+        confidence: high
+        mode: patch
+        required:
+          - id: test:doctor
+            command: pnpm test:doctor
+          - id: typecheck
+            command: pnpm typecheck
+        recommended: []
+        manual: []
+  - id: validation-route:src-discovery
+    kind: validation-route
+    status: applied
+    confidence: high
+    reason: Greenhouse discovery layer detected.
+    safe: true
+    target:
+      path: .greenhouse/roots/validation.yaml
+    validation_route:
+      pattern: src/discovery/**
+      rule:
+        managed_by: greenhouse-spec
+        origin: repo-shape
+        proposal_id: validation-route:src-discovery
+        confidence: high
+        mode: patch
+        required:
+          - id: test:discovery
+            command: pnpm test:discovery
+          - id: typecheck
+            command: pnpm typecheck
+        recommended: []
+        manual: []
+  - id: validation-route:src-inspect
+    kind: validation-route
+    status: applied
+    confidence: high
+    reason: Greenhouse inspect runner detected.
+    safe: true
+    target:
+      path: .greenhouse/roots/validation.yaml
+    validation_route:
+      pattern: src/inspect/**
+      rule:
+        managed_by: greenhouse-spec
+        origin: repo-shape
+        proposal_id: validation-route:src-inspect
+        confidence: high
+        mode: patch
+        required:
+          - id: test:inspect
+            command: pnpm test:inspect
+          - id: typecheck
+            command: pnpm typecheck
+        recommended: []
+        manual: []
+  - id: validation-route:src-native-scripts
+    kind: validation-route
+    status: applied
+    confidence: high
+    reason: Greenhouse package script proposals detected.
+    safe: true
+    target:
+      path: .greenhouse/roots/validation.yaml
+    validation_route:
+      pattern: src/native-scripts/**
+      rule:
+        managed_by: greenhouse-spec
+        origin: repo-shape
+        proposal_id: validation-route:src-native-scripts
+        confidence: high
+        mode: patch
+        required:
+          - id: test:native-scripts
+            command: pnpm test:native-scripts
+          - id: typecheck
+            command: pnpm typecheck
+        recommended: []
+        manual: []
+  - id: validation-route:package-json
+    kind: validation-route
+    status: applied
+    confidence: high
+    reason: Greenhouse package config detected at package.json.
+    safe: true
+    target:
+      path: .greenhouse/roots/validation.yaml
+    validation_route:
+      pattern: package.json
+      rule:
+        managed_by: greenhouse-spec
+        origin: repo-shape
+        proposal_id: validation-route:package-json
+        confidence: high
+        mode: guarded
+        required:
+          - id: check
+            command: pnpm check
+        recommended: []
+        manual:
+          - id: greenhouse-self-config-review
+            prompt: Review Greenhouse self-bootstrap and package validation changes.
+  - id: validation-route:pnpm-lock-yaml
+    kind: validation-route
+    status: applied
+    confidence: high
+    reason: Greenhouse package config detected at pnpm-lock.yaml.
+    safe: true
+    target:
+      path: .greenhouse/roots/validation.yaml
+    validation_route:
+      pattern: pnpm-lock.yaml
+      rule:
+        managed_by: greenhouse-spec
+        origin: repo-shape
+        proposal_id: validation-route:pnpm-lock-yaml
+        confidence: high
+        mode: guarded
+        required:
+          - id: check
+            command: pnpm check
+        recommended: []
+        manual:
+          - id: greenhouse-self-config-review
+            prompt: Review Greenhouse self-bootstrap and package validation changes.
+  - id: validation-route:tsconfig-json
+    kind: validation-route
+    status: applied
+    confidence: high
+    reason: Greenhouse package config detected at tsconfig.json.
+    safe: true
+    target:
+      path: .greenhouse/roots/validation.yaml
+    validation_route:
+      pattern: tsconfig.json
+      rule:
+        managed_by: greenhouse-spec
+        origin: repo-shape
+        proposal_id: validation-route:tsconfig-json
+        confidence: high
+        mode: guarded
+        required:
+          - id: check
+            command: pnpm check
+        recommended: []
+        manual:
+          - id: greenhouse-self-config-review
+            prompt: Review Greenhouse self-bootstrap and package validation changes.

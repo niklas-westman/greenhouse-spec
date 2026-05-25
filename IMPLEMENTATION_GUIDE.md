@@ -19,7 +19,7 @@ This guide MUST be updated during implementation:
 - [ ] Update test coverage map as tests are written.
 
 Last updated: 2026-05-25
-Current phase: 1
+Current phase: 2
 
 ---
 
@@ -230,7 +230,7 @@ Status: Complete - 2026-05-25
 
 Goal: Make `greenhouse-spec tend` feel like a trustworthy finish-line report.
 Depends on: Phase 0
-Status: Not started
+Status: Complete - 2026-05-25
 
 #### Inputs
 
@@ -258,25 +258,38 @@ Status: Not started
 
 #### Tasks
 
-- [ ] Add tests for concise passing `tend` output.
+- [x] Add tests for concise passing `tend` output.
   - Tool: edit
   - Verify: `pnpm test:tend`
 
-- [ ] Add tests for warning/degraded `tend` output with impact warnings or manual checks.
+- [x] Add tests for warning/degraded `tend` output with impact warnings or manual checks.
   - Tool: edit
   - Verify: `pnpm test:tend`
 
-- [ ] Add tests for failing `tend` output naming the blocking validation or structural cause.
+- [x] Add tests for failing `tend` output naming the blocking validation or structural cause.
   - Tool: edit
   - Verify: `pnpm test:tend`
 
-- [ ] Refactor `formatTendReport` into state-first sections: State, Changed, Validation, Impact, Evidence, Proposals, Repeated Failures, Next.
+- [x] Refactor `formatTendReport` into state-first sections: State, Changed, Validation, Impact, Evidence, Proposals, Repeated Failures, Next.
   - Tool: edit
   - Verify: `pnpm test:tend`
 
-- [ ] Keep detailed routing explanations out of `tend`; point to `verify --changed --dry-run` when needed.
+- [x] Keep detailed routing explanations out of `tend`; point to `verify --changed --dry-run` when needed.
   - Tool: edit
   - Verify: `pnpm test:tend`
+
+#### Phase Notes
+
+- Completed on 2026-05-25.
+- Runtime behavior was preserved; this phase changed the rendered report shape.
+- `formatTendReport` now starts with `State`, keeps validation compact, hides
+  successful install/self-tending internals by default, and ends with `Next`.
+- Failing reports name the first blocking cause.
+- Before/after comparison is recorded in
+  `docs/tending-reliability-baseline.md`.
+- Running `tend --no-prune` to capture the after snapshot produced generated
+  evidence/report artifacts as expected; those generated artifacts were removed
+  before committing the phase.
 
 #### Tests for This Phase
 
@@ -290,11 +303,11 @@ Status: Not started
 
 #### Phase Exit Criteria
 
-- [ ] `pnpm test:tend` passes.
-- [ ] `pnpm test:cli` passes.
-- [ ] `pnpm typecheck` passes.
-- [ ] Before/after output comparison is recorded.
-- [ ] Guide updated with completion notes.
+- [x] `pnpm test:tend` passes.
+- [x] `pnpm test:cli` passes.
+- [x] `pnpm typecheck` passes.
+- [x] Before/after output comparison is recorded.
+- [x] Guide updated with completion notes.
 
 ---
 
@@ -820,7 +833,7 @@ pnpm alignment:check
 | Phase | Title | Status | Tests | Validation | Completed |
 |---|---|---|---|---|---|
 | 0 | Baseline And Output Snapshots | Complete | pass | pass | 2026-05-25 |
-| 1 | Product-Grade `tend` Report | Not started | pending | pending | - |
+| 1 | Product-Grade `tend` Report | Complete | pass | pass | 2026-05-25 |
 | 2 | Dry-Run Explanation Reliability | Not started | pending | pending | - |
 | 3 | Impact Severity Discipline | Not started | pending | pending | - |
 | 4 | Evidence Summary And Prune Reliability | Not started | pending | pending | - |

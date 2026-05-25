@@ -113,8 +113,11 @@ describe("tend", () => {
         severity: "warning",
       }),
     );
-    expect(output).toContain("## Impact warnings");
+    expect(output).toContain("State: warning");
+    expect(output).toContain("## Impact");
     expect(output).toContain("package.json changed; setup docs");
+    expect(output).toContain("## Next");
+    expect(output).toContain("review impact warnings before finishing");
     expect(report.writes.authoredRootsMutated).toBe(false);
     expect(report.writes.packageScriptsMutated).toBe(false);
   });
@@ -143,6 +146,12 @@ describe("tend", () => {
       }),
     );
     expect(existsSync(report.writes.evidencePath ?? "")).toBe(true);
+
+    const output = formatTendReport(report);
+    expect(output).toContain("State: fail");
+    expect(output).toContain("Blocking: selected validation failed.");
+    expect(output).toContain("- fail: pnpm test");
+    expect(output).toContain("fix failed validation command(s), then rerun greenhouse-spec tend");
   });
 
   it("does not execute validation when install health fails", () => {
@@ -440,28 +449,31 @@ describe("tend", () => {
     const output = formatTendReport(runTend({ cwd: repo, check: true }));
 
     expect(output).toContain("Flow: structural-check");
-    expect(output).toContain("Status: fail");
+    expect(output).toContain("State: fail");
+    expect(output).toContain("Blocking: structural drift blocks tending.");
     expect(output).toContain("not run: tend --check is structural-only");
     expect(output).toContain("greenhouse-spec inspect");
     expect(output).toContain("greenhouse-spec apply-proposals --safe --dry-run");
     expect(output).toContain("greenhouse-spec adopt-proposals --id <proposal-id>");
   });
 
-  it("default report prints composed validation results", () => {
+  it("default report is state-first and concise when tending passes", () => {
     const repo = createReadyRepo();
     initGitRepo(repo);
 
     const output = formatTendReport(runTend({ cwd: repo }));
 
-    expect(output).toContain("Flow: finish-gate");
-    expect(output).toContain("Status: pass");
-    expect(output).toContain("## Install health");
-    expect(output).toContain("pass: doctor found no issues");
-    expect(output).toContain("## Self-tending gate");
+    expect(output).toMatch(/^# Greenhouse Tend\n\nState: pass\nFlow: finish-gate\n/);
+    expect(output).toContain("## Changed");
+    expect(output).toContain("- none");
+    expect(output).toContain("## Validation");
     expect(output).toContain(
       "not run: No validation commands were selected because no non-generated files were routed.",
     );
-    expect(output).toContain("evidence written: no");
+    expect(output).toContain("## Next");
+    expect(output).toContain("- no action needed");
+    expect(output).not.toContain("## Install health");
+    expect(output).not.toContain("Total proposals:");
   });
 });
 

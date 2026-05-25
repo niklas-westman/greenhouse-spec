@@ -186,6 +186,12 @@ validation, executes selected validation commands, writes evidence when
 commands run, reports repeated failure context, includes impact warnings, and
 summarizes proposals.
 
+The default report is state-first and action-oriented. It starts with `State`,
+`Flow`, and the repository path, then groups the result into `Changed`,
+`Validation`, `Impact`, `Evidence`, `Proposals`, `Repeated Failures`, and
+`Next`. Passing reports collapse successful internal checks; failing reports
+name the first blocking cause and end with the next useful action.
+
 With `--check`, runs fresh discovery in memory and fails if any pending,
 adoptable, or conflict proposal exists.
 

@@ -172,3 +172,47 @@ The first runtime implementation phase should begin from a clean worktree with:
 - `docs/tending-reliability-baseline.md`
 
 committed together.
+
+## Phase 1 After Snapshot: `greenhouse-spec tend`
+
+After Phase 1, `tend` keeps the same behavior but renders as a finish-line
+report:
+
+```text
+# Greenhouse Tend
+
+State: warning
+Flow: finish-gate
+
+Changed:
+  5 files
+
+Validation:
+  pass: pnpm test:templates
+  pass: pnpm typecheck
+  pass: pnpm test:tend
+
+Impact:
+  none
+
+Evidence:
+  written: .greenhouse/evidence/2026-05-25T18-15-18-148Z-verify.md
+
+Proposals:
+  context: Documentation changed; consider whether context manifest entries should be proposed.
+  structural drift: none
+
+Repeated Failures:
+  none
+
+Next:
+  review durable proposals before finishing
+```
+
+Product improvement:
+
+- State is the first thing an agent sees.
+- Validation results are compact and command-oriented.
+- Successful install/self-tending internals are collapsed.
+- The report ends with the next useful action.
+- Detailed route reasoning remains in `verify --changed --dry-run`.

@@ -139,6 +139,22 @@ It composes the repo-tending flow:
 It can write evidence and reports, but it does not silently update authored
 roots or package scripts. Structural repairs go through proposals.
 
+The report is state-first and grouped for agent use:
+
+```text
+State
+Changed
+Validation
+Impact
+Evidence
+Proposals
+Repeated Failures
+Next
+```
+
+Passing reports collapse successful internal detail. Failing reports name the
+blocking cause and end with the next useful command or action.
+
 ### `greenhouse-spec tend --check`
 
 `tend --check` is the structural-only gate for CI, pre-push, or debugging.

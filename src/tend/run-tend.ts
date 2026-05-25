@@ -228,51 +228,41 @@ function maybeWriteProposalReport(
 
 export function formatTendReport(report: TendReport): string {
   const lines = [
-    "# Greenhouse Tend Report",
+    "# Greenhouse Tend",
     "",
-    `Repository: ${report.cwd}`,
+    `State: ${report.state}`,
     `Flow: ${report.flow}`,
-    `Status: ${report.state}`,
+    `Repository: ${report.cwd}`,
+    ...(report.state === "fail" ? [`Blocking: ${firstBlockingCause(report)}`] : []),
     "",
-    "## Changed files",
+    "## Changed",
     "",
   ];
 
   if (report.changedFiles.length === 0) {
     lines.push("- none");
   } else {
+    lines.push(`- ${report.changedFiles.length} file${report.changedFiles.length === 1 ? "" : "s"}`);
     for (const file of report.changedFiles) {
       lines.push(`- ${file}`);
     }
   }
 
-  lines.push("", "## Install health", "");
-  if (!report.doctor) {
-    lines.push("- skipped");
-  } else if (report.doctor.findings.length === 0) {
-    lines.push("- pass: doctor found no issues");
-  } else {
-    for (const finding of report.doctor.findings) {
-      lines.push(`- ${finding.severity}: ${finding.check} - ${finding.message}`);
-    }
-  }
-
-  lines.push("", "## Evidence", "");
-  lines.push(report.latestEvidencePath ? `- ${report.latestEvidencePath}` : "- none");
-
   lines.push("", "## Validation", "");
   if (report.validation.executed) {
-    lines.push(
-      `- executed: ${report.validation.commands.length === 0 ? "none" : report.validation.commands.join(", ")}`,
-    );
+    const results = report.verify?.commandResults ?? [];
+    for (const command of report.validation.commands) {
+      const result = results.find((item) => item.command === command)?.result ?? "not_run";
+      lines.push(`- ${result}: ${command}`);
+    }
   } else {
     lines.push(`- not run: ${report.validation.reason}`);
   }
-  lines.push(
-    `- evidence written: ${report.validation.evidenceWritten ? report.writes.evidencePath ?? "yes" : "no"}`,
-  );
+  if (report.verify?.route.manualChecks.length) {
+    lines.push(`- manual checks: ${report.verify.route.manualChecks.length}`);
+  }
 
-  lines.push("", "## Impact warnings", "");
+  lines.push("", "## Impact", "");
   if (report.impactWarnings.length === 0) {
     lines.push("- none");
   } else {
@@ -283,17 +273,40 @@ export function formatTendReport(report: TendReport): string {
     }
   }
 
+  lines.push("", "## Evidence", "");
+  if (report.validation.evidenceWritten) {
+    lines.push(`- written: ${report.writes.evidencePath ?? "yes"}`);
+  } else if (report.latestEvidencePath) {
+    lines.push(`- latest: ${report.latestEvidencePath}`);
+    lines.push("- written: no");
+  } else {
+    lines.push("- none");
+  }
+
   lines.push("", "## Proposals", "");
 
   if (report.proposals.length === 0) {
-    lines.push("No durable greenhouse updates needed.");
+    lines.push("- none");
   } else {
     for (const proposal of report.proposals) {
       lines.push(`- ${proposal.kind}: ${proposal.message}`);
     }
   }
 
-  lines.push("", "## Repeated failures", "");
+  if (report.selfTending) {
+    if (report.selfTending.blocking.length === 0) {
+      lines.push("- structural drift: none");
+    } else {
+      lines.push(`- structural drift: ${report.selfTending.blocking.length} blocking proposal(s)`);
+      for (const proposal of report.selfTending.blocking) {
+        lines.push(
+          `- ${proposal.status}: ${proposal.id} (${proposal.kind}, ${proposal.target}) - ${proposal.reason}`,
+        );
+      }
+    }
+  }
+
+  lines.push("", "## Repeated Failures", "");
   if (report.repeatedFailures.length === 0) {
     lines.push("- none");
   } else {
@@ -304,34 +317,9 @@ export function formatTendReport(report: TendReport): string {
     }
   }
 
-  if (report.selfTending) {
-    lines.push("", "## Self-tending gate", "");
-    lines.push(`Total proposals: ${report.selfTending.total}`);
-    lines.push(`Pending: ${report.selfTending.pending}`);
-    lines.push(`Adoptable: ${report.selfTending.adoptable}`);
-    lines.push(`Conflicts: ${report.selfTending.conflicts}`);
-    lines.push("");
-
-    if (report.selfTending.blocking.length === 0) {
-      lines.push("No structural drift found.");
-    } else {
-      lines.push("Blocking proposals:");
-      for (const proposal of report.selfTending.blocking) {
-        lines.push(
-          `- ${proposal.status}: ${proposal.id} (${proposal.kind}, ${proposal.target}) - ${proposal.reason}`,
-        );
-      }
-      lines.push(
-        "",
-        "Next commands:",
-        "- greenhouse-spec inspect",
-        "- greenhouse-spec proposals",
-        "- greenhouse-spec apply-proposals --safe --dry-run",
-        "- greenhouse-spec apply-proposals --safe",
-        "- greenhouse-spec adopt-proposals --id <proposal-id>",
-        "- greenhouse-spec tend",
-      );
-    }
+  lines.push("", "## Next", "");
+  for (const action of nextActions(report)) {
+    lines.push(`- ${action}`);
   }
 
   if (report.writtenReportPath) {
@@ -340,6 +328,64 @@ export function formatTendReport(report: TendReport): string {
 
   lines.push("");
   return lines.join("\n");
+}
+
+function firstBlockingCause(report: TendReport): string {
+  if (report.doctor && !report.doctor.ok) {
+    return "install/root health failed.";
+  }
+  if (report.selfTending && report.selfTending.blocking.length > 0) {
+    return "structural drift blocks tending.";
+  }
+  if (report.validation.executed && !report.ok) {
+    return "selected validation failed.";
+  }
+  return report.validation.reason;
+}
+
+function nextActions(report: TendReport): string[] {
+  if (report.doctor && !report.doctor.ok) {
+    return ["fix install/root health findings, then rerun greenhouse-spec tend"];
+  }
+
+  if (report.selfTending && report.selfTending.blocking.length > 0) {
+    return [
+      "greenhouse-spec inspect",
+      "greenhouse-spec proposals",
+      "greenhouse-spec apply-proposals --safe --dry-run",
+      "greenhouse-spec apply-proposals --safe",
+      "greenhouse-spec adopt-proposals --id <proposal-id>",
+      "greenhouse-spec tend",
+    ];
+  }
+
+  if (report.validation.executed && !report.ok) {
+    return ["fix failed validation command(s), then rerun greenhouse-spec tend"];
+  }
+
+  if (report.verify?.route.manualChecks.length) {
+    return ["review manual checks, then rerun greenhouse-spec tend if code changes"];
+  }
+
+  if (report.impactWarnings.length > 0) {
+    return ["review impact warnings before finishing"];
+  }
+
+  if (report.repeatedFailures.length > 0) {
+    return ["review repeated failure context before assuming validation baseline is healthy"];
+  }
+
+  if (report.proposals.length > 0) {
+    return ["review durable proposals before finishing"];
+  }
+
+  if (!report.validation.executed && report.validation.reason.includes("No validation commands")) {
+    return ["no action needed"];
+  }
+
+  return report.validation.evidenceWritten
+    ? ["no action needed"]
+    : ["run greenhouse-spec tend when ready to finish work"];
 }
 
 function buildSelfTendingCheck(cwd: string): NonNullable<TendReport["selfTending"]> {

@@ -39,6 +39,9 @@ greenhouse-spec tend
 `status` is advisory and read-only. `tend` is the everyday finish gate: it
 checks install/root health, structural drift, changed-file validation, impact
 warnings, repeated failures, evidence writing, and proposals in one command.
+The report is intentionally state-first and ends with a `Next` section so an
+agent can act without reading generated YAML. Use `verify --changed --dry-run`
+when the route selection needs deeper explanation.
 For CI or structural-only debugging, use `greenhouse-spec tend --check`.
 
 Package-based repos should usually expose this as:

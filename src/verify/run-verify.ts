@@ -116,6 +116,10 @@ function readCommandIndex(cwd: string) {
 }
 
 export function formatVerifyReport(report: VerifyReport): string {
+  const consideredFiles = report.route.allChangedFiles ?? report.route.changedFiles;
+  const commandCount = report.route.commands.length;
+  const manualCheckCount = report.route.manualChecks.length;
+  const validationAction = report.dryRun ? "selected" : "executed";
   const lines = [
     "# Greenhouse Verify Report",
     "",
@@ -124,14 +128,39 @@ export function formatVerifyReport(report: VerifyReport): string {
     `Run mode: ${report.dryRun ? "dry-run" : "execute"}`,
     `Status: ${report.ok ? "pass" : "fail"}`,
     "",
-    "## Changed files",
+    "## Agent takeaway",
+    "",
+    `- Coverage: ${report.route.changedFiles.length}/${consideredFiles.length} file(s) routed for validation.`,
+    `- Validation: ${commandCount === 0 ? "no commands selected" : `${commandCount} ${pluralize("command", commandCount)} ${validationAction}`}.`,
+    `- Manual checks: ${manualCheckCount === 0 ? "none" : `${manualCheckCount} pending`}.`,
+    `- Next: ${formatVerifyNextStep(report)}`,
+    "",
+    "## Validation plan",
     "",
   ];
 
-  if ((report.route.allChangedFiles ?? report.route.changedFiles).length === 0) {
+  if (report.route.commands.length === 0) {
+    lines.push(`- skipped: ${report.route.skippedValidation}`);
+  } else {
+    for (const command of report.route.commands) {
+      const result = report.commandResults.find(
+        (item) => item.command === command.command,
+      );
+      lines.push(`- ${command.command} [${result?.result ?? "not_run"}]`);
+      lines.push(`  - why: ${command.reason}`);
+    }
+  }
+
+  lines.push(
+    "",
+    "## Changed files",
+    "",
+  );
+
+  if (consideredFiles.length === 0) {
     lines.push("- none");
   } else {
-    for (const file of report.route.allChangedFiles ?? report.route.changedFiles) {
+    for (const file of consideredFiles) {
       lines.push(`- ${file}`);
     }
   }
@@ -219,6 +248,32 @@ export function formatVerifyReport(report: VerifyReport): string {
 
   lines.push("");
   return lines.join("\n");
+}
+
+function formatVerifyNextStep(report: VerifyReport): string {
+  if (!report.ok) {
+    return "fix failed command(s), then rerun greenhouse-spec tend.";
+  }
+
+  if (report.dryRun && report.route.commands.length > 0) {
+    return "run greenhouse-spec tend for the normal finish gate, or rerun verify without --dry-run.";
+  }
+
+  if (report.dryRun) {
+    return "no validation command is needed for these inputs.";
+  }
+
+  if (report.evidencePath) {
+    return report.route.manualChecks.length > 0
+      ? "review pending manual checks."
+      : "validation evidence is written.";
+  }
+
+  return "rerun with --write-evidence before finishing work.";
+}
+
+function pluralize(word: string, count: number): string {
+  return count === 1 ? word : `${word}s`;
 }
 
 function readValidationConfig(cwd: string) {

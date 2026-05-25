@@ -560,6 +560,11 @@ describe("validation routing and evidence", () => {
       message: 'Matched risk "generated-output-contract".',
     });
     expect(formatVerifyReport(report)).toContain("## Route explanation");
+    expect(formatVerifyReport(report)).toContain("## Agent takeaway");
+    expect(formatVerifyReport(report)).toContain(
+      "- Coverage: 1/1 file(s) routed for validation.",
+    );
+    expect(formatVerifyReport(report)).toContain("## Validation plan");
     expect(formatVerifyReport(report)).toContain(
       '- path-rule: Matched path rule "src/engine/sru/**".',
     );

@@ -235,7 +235,10 @@ Impact warnings are stale-assumption signals, not automatic edits. They call out
 cases such as package scripts affecting setup docs, CLI source affecting CLI
 docs, API specs affecting generated clients, generated-output edits, workspace
 config changes, CI workflow changes, and source changes that fell back to broad
-validation instead of a scoped route.
+validation instead of a scoped route. Each warning includes a resolution hint.
+Blocking warnings, including selected `pnpm` validation commands that reference
+missing package scripts, fail `status` and `tend` until the command or route is
+repaired.
 
 Important options:
 

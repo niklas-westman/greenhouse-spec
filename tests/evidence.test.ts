@@ -268,6 +268,7 @@ describe("failure signatures", () => {
           affected: ["README.md"],
           reason:
             "package.json changed; setup docs and Greenhouse validation roots may describe stale scripts.",
+          resolution: "Review setup docs and validation roots.",
         },
       ],
       tending: {
@@ -282,7 +283,11 @@ describe("failure signatures", () => {
     const evidence = readFileSync(result.path, "utf8");
 
     expect(evidence).toContain("## Impact warnings");
+    expect(evidence).toContain(
+      "| Severity | Kind | Changed files | Affected | Reason | Resolution |",
+    );
     expect(evidence).toContain("| warning | documentation-drift | package.json");
+    expect(evidence).toContain("Review setup docs and validation roots.");
     expect(evidence).toContain("## Route reasons");
     expect(evidence).toContain(
       "| `pnpm check:greenhouse` | inferred-route (repo-config) | Inferred repository configuration route. |",
@@ -435,6 +440,7 @@ describe("evidence index", () => {
           changedFiles: ["package.json"],
           affected: ["README.md"],
           reason: "package.json changed; setup docs may be stale.",
+          resolution: "Review setup docs.",
         },
       ],
       tending: {

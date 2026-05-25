@@ -19,7 +19,7 @@ This guide MUST be updated during implementation:
 - [ ] Update test coverage map as tests are written.
 
 Last updated: 2026-05-25
-Current phase: 3
+Current phase: 4
 
 ---
 
@@ -397,7 +397,7 @@ Status: Complete - 2026-05-25
 
 Goal: Normalize impact warning behavior so warnings are useful without becoming ceremony.
 Depends on: Phase 2
-Status: Not started
+Status: Complete - 2026-05-25
 
 #### Inputs
 
@@ -427,21 +427,35 @@ Status: Not started
 
 #### Tasks
 
-- [ ] Add a resolution or next-action field to impact warnings if needed.
+- [x] Add a resolution or next-action field to impact warnings if needed.
   - Tool: edit
   - Verify: `pnpm test:impact`
 
-- [ ] Add tests for severity behavior in `status` and `tend`.
+- [x] Add tests for severity behavior in `status` and `tend`.
   - Tool: edit
   - Verify: `pnpm test:lifecycle && pnpm test:tend`
 
-- [ ] Ensure impact warnings in evidence include enough context for future agents.
+- [x] Ensure impact warnings in evidence include enough context for future agents.
   - Tool: edit
   - Verify: `pnpm test:evidence`
 
-- [ ] Keep docs drift non-blocking unless the rule is explicitly guarded/blocking.
+- [x] Keep docs drift non-blocking unless the rule is explicitly guarded/blocking.
   - Tool: edit
   - Verify: `pnpm test:impact`
+
+#### Phase Notes
+
+- Completed on 2026-05-25.
+- `ImpactWarning` now includes a `resolution` string that is shown in verbose
+  status, `tend`, `verify --dry-run`, and evidence.
+- Advisory/warning documentation drift remains non-blocking.
+- Guarded impact warnings remain review-oriented.
+- Blocking impact warnings now fail `status` and the default `tend` finish
+  gate.
+- Added a practical blocking detector for selected simple `pnpm` validation
+  commands that reference missing root `package.json` scripts.
+- `tend` now stops before validation execution when blocking impact warnings
+  prove the validation plan itself is stale.
 
 #### Tests for This Phase
 
@@ -454,11 +468,11 @@ Status: Not started
 
 #### Phase Exit Criteria
 
-- [ ] `pnpm test:impact` passes.
-- [ ] `pnpm test:lifecycle` passes.
-- [ ] `pnpm test:tend` passes.
-- [ ] `pnpm test:evidence` passes.
-- [ ] `pnpm typecheck` passes.
+- [x] `pnpm test:impact` passes.
+- [x] `pnpm test:lifecycle` passes.
+- [x] `pnpm test:tend` passes.
+- [x] `pnpm test:evidence` passes.
+- [x] `pnpm typecheck` passes.
 
 ---
 
@@ -761,7 +775,7 @@ Unit done when:
 |---|---|---|---|---|
 | `tend` finish report | Complete | pass | pass | State-first finish report |
 | `verify --changed --dry-run` explanation | Complete | pass | pass | Detailed diagnostic layer |
-| Impact warning wording/severity | Not started | pending | pending | Model exists; discipline needs hardening |
+| Impact warning wording/severity | Complete | pass | pass | Resolution hints and blocking command drift |
 | Evidence prune/index summary | Not started | pending | pending | Preserve useful local memory |
 | Proposal review output | Not started | pending | pending | Make decisions readable without YAML |
 | Fixture alignment scenarios | Not started | pending | pending | CI-safe confidence |
@@ -850,7 +864,7 @@ pnpm alignment:check
 | 0 | Baseline And Output Snapshots | Complete | pass | pass | 2026-05-25 |
 | 1 | Product-Grade `tend` Report | Complete | pass | pass | 2026-05-25 |
 | 2 | Dry-Run Explanation Reliability | Complete | pass | pass | 2026-05-25 |
-| 3 | Impact Severity Discipline | Not started | pending | pending | - |
+| 3 | Impact Severity Discipline | Complete | pass | pass | 2026-05-25 |
 | 4 | Evidence Summary And Prune Reliability | Not started | pending | pending | - |
 | 5 | Proposal Review UX Reliability | Not started | pending | pending | - |
 | 6 | Portable Fixture Alignment | Not started | pending | pending | - |

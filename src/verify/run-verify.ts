@@ -106,8 +106,16 @@ export function runVerify(options: VerifyOptions): VerifyReport {
       affected: [".greenhouse/roots/validation.yaml"],
       reason:
         "source files used fallback validation; if this is a new repo area, add a scoped validation route.",
+      resolution:
+        "Add a scoped validation route for the new source area or confirm the fallback route is intentional.",
     });
   }
+  impactWarnings.push(
+    ...detectMissingPackageScriptImpacts({
+      cwd: options.cwd,
+      route,
+    }),
+  );
   const report: VerifyReport = {
     cwd: options.cwd,
     ok,
@@ -194,6 +202,7 @@ export function formatVerifyReport(report: VerifyReport): string {
       lines.push(`- ${warning.severity}: ${warning.reason}`);
       lines.push(`  - changed: ${warning.changedFiles.join(", ")}`);
       lines.push(`  - affected: ${warning.affected.join(", ")}`);
+      lines.push(`  - resolution: ${warning.resolution}`);
     }
   }
 
@@ -290,6 +299,91 @@ export function formatVerifyReport(report: VerifyReport): string {
 
   lines.push("");
   return lines.join("\n");
+}
+
+function detectMissingPackageScriptImpacts(options: {
+  cwd: string;
+  route: ValidationRoute;
+}): ImpactWarning[] {
+  const scripts = readPackageScripts(options.cwd);
+  if (!scripts) {
+    return [];
+  }
+
+  return options.route.commands
+    .map((command): ImpactWarning | null => {
+      const scriptName = simplePnpmScript(command.command);
+      if (!scriptName || scripts[scriptName]) {
+        return null;
+      }
+
+      return {
+        id: `impact.missing-package-script.${scriptName}`,
+        severity: "blocking" as const,
+        kind: "validation-route-drift" as const,
+        changedFiles: options.route.allChangedFiles ?? options.route.changedFiles,
+        affected: [
+          "package.json",
+          ".greenhouse/roots/validation.yaml",
+          `command: ${command.command}`,
+        ],
+        reason: `selected validation command "${command.command}" references missing package script "${scriptName}".`,
+        resolution: `Add package script "${scriptName}" to package.json or update .greenhouse/roots/validation.yaml to a command that exists.`,
+      };
+    })
+    .filter((warning): warning is ImpactWarning => warning !== null);
+}
+
+function readPackageScripts(cwd: string): Record<string, string> | null {
+  const packageJsonPath = join(cwd, "package.json");
+  if (!existsSync(packageJsonPath)) {
+    return null;
+  }
+
+  try {
+    const parsed = JSON.parse(readFileSync(packageJsonPath, "utf8")) as {
+      scripts?: Record<string, string>;
+    };
+    return parsed.scripts ?? {};
+  } catch {
+    return null;
+  }
+}
+
+function simplePnpmScript(command: string): string | null {
+  const parts = command.trim().split(/\s+/);
+  if (parts[0] !== "pnpm") {
+    return null;
+  }
+
+  if (parts.length === 2 && isScriptName(parts[1])) {
+    return parts[1];
+  }
+
+  if (parts.length === 3 && parts[1] === "run" && isScriptName(parts[2])) {
+    return parts[2];
+  }
+
+  return null;
+}
+
+function isScriptName(value: string | undefined): value is string {
+  const pnpmBuiltins = new Set([
+    "add",
+    "audit",
+    "dlx",
+    "exec",
+    "install",
+    "link",
+    "remove",
+    "update",
+  ]);
+  return (
+    typeof value === "string" &&
+    value.length > 0 &&
+    !value.startsWith("-") &&
+    !pnpmBuiltins.has(value)
+  );
 }
 
 function formatImpactSummary(warnings: ImpactWarning[]): string {

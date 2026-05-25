@@ -143,6 +143,12 @@ Warnings are severity-based. Advisory and warning findings keep the finish gate
 visible without mutating docs. Guarded and blocking findings require review or
 repair before the repo should be treated as fully tended.
 
+Every warning includes a resolution hint. `blocking` warnings fail `status` and
+the default `tend` finish gate. One practical blocking case is a selected
+validation command such as `pnpm test` when `package.json` no longer defines the
+`test` script; Greenhouse stops before executing validation and asks for either
+the package script or the validation route to be repaired.
+
 `docs.yaml` does not authorize silent prose edits. It only improves impact
 targeting so an agent can see which docs deserve review.
 

@@ -277,6 +277,8 @@ Impact warnings are quiet signals surfaced in `status`, `tend`,
 Current examples:
 
 - `package.json` scripts changed: setup docs or validation roots may be stale.
+- Selected `pnpm` validation script is missing: package scripts or validation
+  routes must be repaired before tending can finish.
 - CLI source changed: CLI docs/help examples may be stale.
 - API specs changed: generated clients or API docs may need review.
 - Env/config schema changed: `.env.example` or deployment docs may be stale.
@@ -288,8 +290,10 @@ Current examples:
 When `.greenhouse/roots/docs.yaml` exists, Greenhouse uses its doc ownership map
 to name repo-specific docs that may be stale.
 
-Impact warnings are severity-based. They do not automatically block every
-change, and Greenhouse does not silently rewrite human prose.
+Impact warnings are severity-based and include resolution hints. Advisory and
+warning findings stay non-blocking, guarded findings require review language,
+and blocking findings fail `status`/`tend` until resolved. Greenhouse does not
+silently rewrite human prose.
 
 ## Evidence
 
@@ -303,6 +307,7 @@ It records:
 - Route reasons.
 - Manual checks.
 - Impact warnings.
+- Resolution hints for stale assumptions.
 - Pass/fail results.
 - Bounded and redacted failure excerpts.
 - Tending state when evidence is written by `tend`.

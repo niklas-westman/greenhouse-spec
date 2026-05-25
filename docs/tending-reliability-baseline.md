@@ -266,3 +266,32 @@ Product improvement:
   product validation routing.
 - The report is now a more reliable diagnostic companion to the shorter
   `tend` finish gate.
+
+## Phase 3 After Snapshot: Impact Severity Discipline
+
+After Phase 3, impact warnings carry explicit resolution hints and blocking
+warnings affect repo health:
+
+```text
+Impact:
+  blocking: selected validation command "pnpm test" references missing package script "test".
+    resolution: Add package script "test" to package.json or update .greenhouse/roots/validation.yaml.
+
+Status:
+  State: fail
+  Next: review blocking impact warnings before finishing work
+
+Tend:
+  State: fail
+  Blocking: blocking impact warnings must be resolved.
+  Validation: not run
+```
+
+Product improvement:
+
+- Advisory and warning documentation drift remains visible but non-blocking.
+- Guarded findings remain review-oriented and do not silently mutate docs.
+- Blocking findings now stop `tend` before executing validation when the
+  validation plan itself is known stale.
+- Evidence records include impact warning resolutions, giving future agents a
+  repair path without opening generated YAML.

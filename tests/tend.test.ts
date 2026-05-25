@@ -122,6 +122,51 @@ describe("tend", () => {
     expect(report.writes.packageScriptsMutated).toBe(false);
   });
 
+  it("fails before validation when impact warnings are blocking", () => {
+    const repo = createReadyRepo();
+    const packagePath = join(repo, "package.json");
+    const packageJson = JSON.parse(readFileSync(packagePath, "utf8")) as {
+      scripts: Record<string, string>;
+    };
+    mkdirSync(join(repo, "src"), { recursive: true });
+    writeFileSync(join(repo, "src", "app.ts"), "export const app = 1;\n");
+    initGitRepo(repo);
+    delete packageJson.scripts.test;
+    writeFileSync(
+      packagePath,
+      JSON.stringify(
+        {
+          name: "tend-fixture",
+          scripts: packageJson.scripts,
+        },
+        null,
+        2,
+      ),
+      "utf8",
+    );
+    writeFileSync(join(repo, "src", "app.ts"), "export const app = 2;\n");
+
+    const report = runTend({ cwd: repo });
+    const output = formatTendReport(report);
+
+    expect(report.ok).toBe(false);
+    expect(report.state).toBe("fail");
+    expect(report.validation.executed).toBe(false);
+    expect(report.validation.evidenceWritten).toBe(false);
+    expect(report.validation.reason).toBe(
+      "blocking impact warnings must be resolved; validation was not run.",
+    );
+    expect(report.impactWarnings).toContainEqual(
+      expect.objectContaining({
+        id: "impact.missing-package-script.test",
+        severity: "blocking",
+      }),
+    );
+    expect(output).toContain("Blocking: blocking impact warnings must be resolved.");
+    expect(output).toContain("resolve blocking impact warnings");
+    expect(report.writes.evidencePath).toBeNull();
+  });
+
   it("fails when selected validation fails and still writes evidence", () => {
     const repo = createReadyRepo({
       test: "node -e \"process.exit(1)\"",

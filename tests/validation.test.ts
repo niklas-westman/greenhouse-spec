@@ -720,7 +720,35 @@ describe("validation routing and evidence", () => {
     expect(output).toContain("## Impact");
     expect(output).toContain("- summary: 1 guarded");
     expect(output).toContain("source files used fallback validation");
+    expect(output).toContain("Add a scoped validation route");
     expect(output).toContain("- fallback-default:");
+  });
+
+  it("flags selected pnpm validation commands that reference missing package scripts", () => {
+    const repo = createVerifyRepo();
+    writeValidationConfig(repo, "pnpm missing-script");
+
+    const report = runVerify({
+      cwd: repo,
+      paths: ["README.md"],
+      dryRun: true,
+    });
+    const output = formatVerifyReport(report);
+
+    expect(report.impactWarnings).toContainEqual(
+      expect.objectContaining({
+        id: "impact.missing-package-script.missing-script",
+        severity: "blocking",
+        kind: "validation-route-drift",
+        resolution: expect.stringContaining(
+          'Add package script "missing-script" to package.json',
+        ),
+      }),
+    );
+    expect(output).toContain("- summary: 1 blocking");
+    expect(output).toContain(
+      'selected validation command "pnpm missing-script" references missing package script "missing-script"',
+    );
   });
 
   it("writes evidence with selected commands and skipped validation notes", () => {

@@ -15,6 +15,7 @@ export type ImpactWarning = {
   changedFiles: string[];
   affected: string[];
   reason: string;
+  resolution: string;
 };
 
 export function detectChangeImpact(options: {
@@ -46,6 +47,8 @@ export function detectChangeImpact(options: {
     ],
     reason:
       "package.json changed; setup docs and Greenhouse validation roots may describe stale scripts.",
+    resolution:
+      "Review affected setup/validation docs and validation roots; update stale command references or leave evidence that behavior did not change.",
   });
 
   add({
@@ -55,6 +58,8 @@ export function detectChangeImpact(options: {
     changedFiles: changedFiles.filter(isCliSource),
     affected: docs(["cli"], ["README.md", "docs/cli.md"]),
     reason: "CLI source changed; CLI docs, examples, or help text may be stale.",
+    resolution:
+      "Review affected CLI docs and help examples if command behavior or flags changed.",
   });
 
   add({
@@ -68,6 +73,8 @@ export function detectChangeImpact(options: {
     ],
     reason:
       "API contract changed; generated clients/server stubs and API docs may need regeneration or review.",
+    resolution:
+      "Regenerate or review generated API outputs and API docs before treating the change as fully tended.",
   });
 
   add({
@@ -78,6 +85,8 @@ export function detectChangeImpact(options: {
     affected: [".env.example", ...docs(["env", "deployment", "setup"], ["docs/deployment.md", "README.md"])],
     reason:
       "environment or configuration schema changed; setup and deployment docs may be stale.",
+    resolution:
+      "Review `.env.example` and affected setup/deployment docs for required variable or config changes.",
   });
 
   add({
@@ -92,6 +101,8 @@ export function detectChangeImpact(options: {
     ],
     reason:
       "workspace configuration changed; repo shape, package scopes, and validation routes may need refresh.",
+    resolution:
+      "Run `greenhouse-spec inspect` and review validation proposals or route ownership for changed workspace scope.",
   });
 
   add({
@@ -105,6 +116,8 @@ export function detectChangeImpact(options: {
     ],
     reason:
       "CI workflow changed; local validation docs and Greenhouse routes may need review.",
+    resolution:
+      "Review affected validation docs and Greenhouse routes against the updated CI workflow.",
   });
 
   add({
@@ -114,6 +127,8 @@ export function detectChangeImpact(options: {
     changedFiles: changedFiles.filter(isTauriPath),
     affected: docs(["desktop"], ["docs/desktop.md", "README.md"]),
     reason: "Tauri/Rust desktop files changed; packaging or desktop runtime docs may be affected.",
+    resolution:
+      "Review desktop/runtime docs if packaging, permissions, or native runtime behavior changed.",
   });
 
   add({
@@ -126,6 +141,8 @@ export function detectChangeImpact(options: {
     affected: ["source generator", ".greenhouse/roots/validation.yaml"],
     reason:
       "generated output changed; verify the source generator or boundary rule instead of treating generated files as authored source.",
+    resolution:
+      "Regenerate from the source generator or document why this generated output change is intentional.",
   });
 
   return uniqueWarnings(warnings);

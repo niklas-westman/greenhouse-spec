@@ -196,6 +196,7 @@ export function formatStatusVerboseReport(report: StatusReport): string {
       lines.push(`- ${warning.severity}: ${warning.reason}`);
       lines.push(`  - changed: ${warning.changedFiles.join(", ")}`);
       lines.push(`  - affected: ${warning.affected.join(", ")}`);
+      lines.push(`  - resolution: ${warning.resolution}`);
     }
   }
 

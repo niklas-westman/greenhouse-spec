@@ -151,7 +151,11 @@ generated client review, workspace/CI changes may stale route expectations, and
 source changes that fall back to broad validation may need a scoped route. When
 `.greenhouse/roots/docs.yaml` exists, Greenhouse uses its doc ownership map to
 name the repo-specific docs that may be stale. These warnings are visible in
-`status`, `tend`, `verify --dry-run`, and evidence.
+`status`, `tend`, `verify --dry-run`, and evidence. Every warning includes a
+resolution hint. Advisory and warning findings are non-blocking; guarded
+findings require review language; blocking findings, such as a selected
+validation command pointing at a missing package script, fail `status` and
+`tend` until resolved.
 
 ## The `.greenhouse` Folder
 

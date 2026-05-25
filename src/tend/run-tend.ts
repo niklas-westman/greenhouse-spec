@@ -148,6 +148,16 @@ export function runTend(options: { cwd: string; check?: boolean; noPrune?: boole
 
   const dryRun = runVerify({ cwd: options.cwd, changed: true, dryRun: true });
   report.impactWarnings = dryRun.impactWarnings;
+  if (hasBlockingImpactWarnings(report.impactWarnings)) {
+    report.verify = dryRun;
+    report.ok = false;
+    report.state = "fail";
+    report.validation.reason =
+      "blocking impact warnings must be resolved; validation was not run.";
+    maybeWriteProposalReport(report, options);
+    return report;
+  }
+
   if (dryRun.route.commands.length === 0) {
     report.verify = dryRun;
     report.validation.reason =
@@ -159,7 +169,7 @@ export function runTend(options: { cwd: string; check?: boolean; noPrune?: boole
     });
     report.verify = verify;
     report.impactWarnings = verify.impactWarnings;
-    report.ok = verify.ok;
+    report.ok = verify.ok && !hasBlockingImpactWarnings(verify.impactWarnings);
     report.state = finalTendState(report);
     const evidence = writeEvidence({
       cwd: options.cwd,
@@ -211,6 +221,10 @@ function finalTendState(report: TendReport): TendState {
     return "warning";
   }
   return "pass";
+}
+
+function hasBlockingImpactWarnings(warnings: ImpactWarning[]): boolean {
+  return warnings.some((warning) => warning.severity === "blocking");
 }
 
 function maybeWriteProposalReport(
@@ -270,6 +284,7 @@ export function formatTendReport(report: TendReport): string {
       lines.push(`- ${warning.severity}: ${warning.reason}`);
       lines.push(`  - changed: ${warning.changedFiles.join(", ")}`);
       lines.push(`  - affected: ${warning.affected.join(", ")}`);
+      lines.push(`  - resolution: ${warning.resolution}`);
     }
   }
 
@@ -337,6 +352,9 @@ function firstBlockingCause(report: TendReport): string {
   if (report.selfTending && report.selfTending.blocking.length > 0) {
     return "structural drift blocks tending.";
   }
+  if (hasBlockingImpactWarnings(report.impactWarnings)) {
+    return "blocking impact warnings must be resolved.";
+  }
   if (report.validation.executed && !report.ok) {
     return "selected validation failed.";
   }
@@ -363,8 +381,16 @@ function nextActions(report: TendReport): string[] {
     return ["fix failed validation command(s), then rerun greenhouse-spec tend"];
   }
 
+  if (report.impactWarnings.some((warning) => warning.severity === "blocking")) {
+    return ["resolve blocking impact warnings before rerunning greenhouse-spec tend"];
+  }
+
   if (report.verify?.route.manualChecks.length) {
     return ["review manual checks, then rerun greenhouse-spec tend if code changes"];
+  }
+
+  if (report.impactWarnings.some((warning) => warning.severity === "guarded")) {
+    return ["review guarded impact warnings before finishing"];
   }
 
   if (report.impactWarnings.length > 0) {

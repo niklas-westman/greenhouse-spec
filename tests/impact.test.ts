@@ -14,6 +14,7 @@ describe("change-impact detection", () => {
         id: "impact.package-scripts-docs",
         severity: "warning",
         kind: "documentation-drift",
+        resolution: expect.stringContaining("Review affected setup/validation docs"),
         affected: expect.arrayContaining([
           "README.md",
           "docs/setup.md",
@@ -62,6 +63,7 @@ describe("change-impact detection", () => {
       expect.objectContaining({
         id: "impact.cli-docs",
         severity: "advisory",
+        resolution: expect.stringContaining("Review affected CLI docs"),
       }),
     );
   });
@@ -76,6 +78,7 @@ describe("change-impact detection", () => {
         id: "impact.api-spec-generated",
         severity: "guarded",
         kind: "generated-output-drift",
+        resolution: expect.stringContaining("Regenerate or review generated API outputs"),
       }),
     );
   });
@@ -99,6 +102,7 @@ describe("change-impact detection", () => {
         id: "impact.generated-boundary",
         severity: "guarded",
         kind: "generated-boundary",
+        resolution: expect.stringContaining("Regenerate from the source generator"),
       }),
     );
   });

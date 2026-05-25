@@ -184,6 +184,46 @@ describe("lifecycle commands", () => {
     );
   });
 
+  it("status fails when selected validation references a missing package script", () => {
+    const repo = createHealthyRepo();
+    writePackageJson(repo, {
+      typecheck: "node -e \"process.exit(0)\"",
+      greenhouse: greenhouseCommandForRepo(repo, "status"),
+      "greenhouse:tend": greenhouseCommandForRepo(repo, "tend"),
+      "greenhouse:tend:check": greenhouseCommandForRepo(repo, "tend --check"),
+      "greenhouse:verify:dry": greenhouseCommandForRepo(
+        repo,
+        "verify --changed --dry-run",
+      ),
+      "greenhouse:proposals": greenhouseCommandForRepo(repo, "proposals"),
+      prepush: "pnpm greenhouse:tend",
+    });
+    writeFileSync(join(repo, "src", "app.ts"), "export const app = 1;\n", "utf8");
+
+    const report = runStatus({ cwd: repo });
+    const output = formatStatusReport(report);
+    const verbose = formatStatusVerboseReport(report);
+
+    expect(report.ok).toBe(false);
+    expect(report.overallStatus).toBe("fail");
+    expect(report.health).toContainEqual(
+      expect.objectContaining({
+        id: "impact",
+        state: "fail",
+        nextCommand: "review blocking impact warnings before finishing work",
+      }),
+    );
+    expect(report.verify.impactWarnings).toContainEqual(
+      expect.objectContaining({
+        id: "impact.missing-package-script.test",
+        severity: "blocking",
+      }),
+    );
+    expect(output).toContain("State: fail");
+    expect(output).toContain("Impact: 1 warning, 1 blocking");
+    expect(verbose).toContain("Add package script \"test\" to package.json");
+  });
+
   it("status passes when latest evidence covers the current changed route", () => {
     const repo = createHealthyRepo();
     writeFileSync(join(repo, "README.md"), "# Lifecycle fixture\n\nChanged.\n", "utf8");

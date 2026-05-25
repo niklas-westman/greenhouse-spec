@@ -1,7 +1,7 @@
-# Implementation Guide: Lightweight Greenhouse Tending
+# Implementation Guide: Tending Reliability
 
 Created: 2026-05-25
-Status: complete
+Status: draft
 Branch: main
 
 ---
@@ -10,16 +10,16 @@ Branch: main
 
 This guide MUST be updated during implementation:
 
-- [x] Check off tasks as they are completed
-- [x] Add notes when reality diverges from plan
-- [x] Reorder or split phases when blockers are discovered
-- [x] Add new tasks discovered during implementation
-- [x] Mark tasks as "skipped - <reason>" when they become irrelevant
-- [x] Record timestamps on phase completions for velocity tracking
-- [x] Update test coverage map as tests are written
+- [ ] Check off tasks as they are completed.
+- [ ] Add notes when reality diverges from plan.
+- [ ] Reorder or split phases when blockers are discovered.
+- [ ] Add new tasks discovered during implementation.
+- [ ] Mark tasks as skipped with a concrete reason when they become irrelevant.
+- [ ] Record timestamps on phase completions for velocity tracking.
+- [ ] Update test coverage map as tests are written.
 
 Last updated: 2026-05-25
-Current phase: complete
+Current phase: 1
 
 ---
 
@@ -36,40 +36,52 @@ Current phase: complete
 | Typecheck | `pnpm typecheck` |
 | Lint | None discovered |
 | Build | `pnpm build` |
-| Domain checks | `pnpm test:tend`, `pnpm test:lifecycle`, `pnpm test:validation`, `pnpm test:evidence`, `pnpm test:alignment`, `pnpm alignment:check` |
+| Domain checks | `pnpm test:tend`, `pnpm test:validation`, `pnpm test:evidence`, `pnpm test:proposals`, `pnpm test:alignment`, `pnpm alignment:check` |
 | CI | None discovered in this repo |
-| Feature paths | `src/tend/run-tend.ts`, `src/status/run-status.ts`, `src/verify/run-verify.ts`, `src/commands/tend.ts`, `src/commands/status.ts`, `src/commands/verify.ts`, `src/evidence/**`, `src/proposals/**`, `src/validation/**` |
-| Existing tests | `tests/tend.test.ts`, `tests/lifecycle.test.ts`, `tests/validation.test.ts`, `tests/evidence.test.ts`, `tests/cli.test.ts`, `tests/alignment.test.ts` |
+| Feature paths | `src/tend/run-tend.ts`, `src/verify/run-verify.ts`, `src/impact/detect-change-impact.ts`, `src/evidence/**`, `src/proposals/**`, `src/alignment/**`, `src/commands/**` |
+| Existing tests | `tests/tend.test.ts`, `tests/validation.test.ts`, `tests/impact.test.ts`, `tests/evidence.test.ts`, `tests/proposals.test.ts`, `tests/alignment.test.ts`, `tests/lifecycle.test.ts`, `tests/cli.test.ts` |
 
 ### Validation Stack
 
 | Purpose | Command | Scope |
 |---|---|---|
-| Full check | `pnpm check` | Typecheck, full Vitest suite, build |
-| Unit/integration tests | `pnpm test` | All Vitest tests |
+| Full check | `pnpm check` | Typecheck, all Vitest tests, build |
 | Type safety | `pnpm typecheck` | TypeScript project |
+| Unit/integration tests | `pnpm test` | All Vitest tests |
 | Build integrity | `pnpm build` | CLI build |
-| Tend tests | `pnpm test:tend` | Tend command/model |
-| Lifecycle/status tests | `pnpm test:lifecycle` | Init/update/status behavior |
-| Validation routing tests | `pnpm test:validation` | Changed-file routing |
-| Evidence tests | `pnpm test:evidence` | Evidence writing/index/failure signatures |
-| CLI tests | `pnpm test:cli` | Commander registration/output compatibility |
-| Alignment tests | `pnpm test:alignment` | Alignment runner unit coverage |
-| Real repo alignment | `pnpm alignment:check` | Declarion, Sourcer, Ensember local alignment |
+| Tend behavior | `pnpm test:tend` | Finish-gate behavior and output |
+| Validation routing | `pnpm test:validation` | Changed-file route selection and dry-run output |
+| Impact warnings | `pnpm test:impact` | Impact detection and severities |
+| Evidence memory | `pnpm test:evidence` | Evidence writing, indexes, pruning, repeated failures |
+| Proposal lifecycle | `pnpm test:proposals` | Proposals, safe apply, adoption, dismissal |
+| CLI surface | `pnpm test:cli` | Command registration and flags |
+| Lifecycle/status | `pnpm test:lifecycle` | Status, install/update behavior |
+| Portable alignment unit tests | `pnpm test:alignment` | Alignment runner contracts |
+| Real repo alignment | `pnpm alignment:check` | Declarion, Sourcer, Ensember local behavior |
 
-### Current Command Model
+### Current Product State
 
-| Command | Current Role | Target Role |
-|---|---|---|
-| `greenhouse-spec status` | Read-only health report composed from doctor, tend-check, verify-dry-run, evidence health | Quiet entry point; concise by default, verbose/json for detail |
-| `greenhouse-spec tend` | Main composed pre-finish command | Main composed pre-finish command |
-| `greenhouse-spec tend --check` | Structural proposal gate | Structural-only CI/debug gate |
-| `greenhouse-spec verify --changed --dry-run` | Validation plan without execution | Lower-level routing explanation |
-| `greenhouse-spec verify --changed --write-evidence` | Execute selected validation and write evidence | Lower-level validation/evidence engine used by `tend` |
-| `greenhouse-spec proposals` | View structured proposals | Explicit repo evolution surface |
-| `greenhouse-spec apply-proposals --safe` | Apply safe mechanical proposals | Explicit repo evolution action |
-| `greenhouse-spec inspect` | Refresh generated repo intelligence | Advanced/generated intelligence command |
-| `greenhouse-spec alignment` | Validate behavior against local alignment repos | Greenhouse development check |
+Greenhouse already has these first-pass capabilities:
+
+- `greenhouse-spec status` as a concise read-only health report.
+- `greenhouse-spec tend` as the everyday finish gate.
+- `greenhouse-spec tend --check` as a structural-only gate.
+- `greenhouse-spec verify --changed --dry-run` as a route explanation surface.
+- Impact severities: `advisory`, `warning`, `guarded`, `blocking`.
+- Evidence writing with route reasons, impact warnings, bounded failure excerpts, tending state, indexes, and pruning.
+- Repeated failure signatures that degrade status without turning failures green.
+- Proposal IDs, idempotency keys, preconditions, dismissals, safe apply, and adoption.
+- Local real-repo alignment against Declarion, Sourcer, and Ensember.
+
+### Current Repo State
+
+At guide creation, the worktree was intentionally dirty:
+
+- `IMPLEMENTATION_GUIDE.md` is being recreated for this next phase.
+- `greenhouse-summary.md` has been rewritten as a GPT Pro product summary.
+- The previous completed implementation guide was removed.
+
+Phase 0 settled this baseline before changing runtime behavior.
 
 ---
 
@@ -77,470 +89,368 @@ Current phase: complete
 
 ### Problem Statement
 
-Greenhouse has strong internal layers, but the everyday workflow is still too exposed: agents may need to understand `inspect`, `proposals`, `tend --check`, and `verify --changed --write-evidence` separately. The product needs a lighter top layer where `status` explains the repo state and `tend` becomes the composed pre-finish command, while lower-level commands remain available for debugging, CI, and explicit repo evolution.
+Greenhouse has reached the right high-level product shape, but its user-visible
+finish-line experience is not yet as strong as its internal logic. The next
+phase must make `status`, `tend`, and `verify --changed --dry-run` feel
+trustworthy and action-oriented inside real repos, so an AI session working in
+Declarion, Sourcer, or Ensember can understand what changed, what was validated,
+what remains risky, and what to do next without opening generated YAML.
 
 ### Chosen Approach
 
-Preserve the existing command modules and build `greenhouse-spec tend` as a composition layer over existing behavior. `tend --check` remains structural-only. `verify --changed --write-evidence` remains the validation/evidence engine. `status` remains read-only. Change-impact warnings are introduced as a shared model that can be surfaced by `status`, `tend`, verify dry-runs, and evidence without silently mutating authored roots.
+Keep the public workflow small and improve existing surfaces. `status` remains
+read-only. `tend` remains the everyday finish gate. `verify --changed --dry-run`
+remains the detailed explanation layer. Proposals remain the explicit repair
+path. Evidence remains local memory, not permission to ignore failures. The
+largest new capability in this phase is portable fixture alignment so core
+agentic scenarios can be tested without local repo paths.
 
 ### Architecture Boundaries
 
 | Layer | Owns | Does NOT Own |
 |---|---|---|
-| CLI commands (`src/commands/**`) | Flag parsing, exit code mapping, console output | Core repo logic |
-| Status (`src/status/run-status.ts`) | Read-only health aggregation and next action | Writing evidence, reports, roots, grown intelligence |
-| Tend (`src/tend/run-tend.ts`) | Main finish gate orchestration and structural-only `--check` behavior | Silent authored-root mutation |
-| Verify (`src/verify/run-verify.ts`) | Validation routing execution and evidence write request | Structural proposal application |
-| Validation (`src/validation/**`) | Changed-file classification, route selection, command execution | Product-level status semantics |
-| Evidence (`src/evidence/**`) | Evidence records, evidence index, repeated failure signatures, pruning | Treating known failures as success |
-| Proposals (`src/proposals/**`) | Structured repo evolution proposals and safe apply/adopt mechanics | Hidden mutation of human-owned decisions |
-| Discovery (`src/discovery/**`) | Repo shape, command index, risk/doc intelligence | Running validation |
-| Alignment (`src/alignment/**`) | Read-only local repo behavior checks | Installing or mutating target repos |
+| CLI commands (`src/commands/**`) | Flag parsing, exit code mapping, console output wiring | Core behavior or repo mutation policy |
+| Status (`src/status/run-status.ts`) | Read-only repo health and next action | Evidence writing, generated refresh, authored-root mutation |
+| Tend (`src/tend/run-tend.ts`) | Finish-gate orchestration and report formatting | Silent repair of roots/package scripts |
+| Verify (`src/verify/run-verify.ts`) | Validation routing, command execution, dry-run explanation | Structural proposal application |
+| Impact (`src/impact/**`) | Change-impact warning detection and severity metadata | Blocking policy outside its warning model |
+| Evidence (`src/evidence/**`) | Evidence records, indexes, pruning, repeated failure signatures | Treating known failures as passing |
+| Proposals (`src/proposals/**`) | Explicit repo evolution state and safe/adopt/dismiss actions | Hidden mutation of human-owned decisions |
+| Alignment (`src/alignment/**`) | Read-only behavior contracts for fixtures and real repos | Installing or mutating target repos |
+| Docs (`README.md`, `docs/**`, `greenhouse-summary.md`) | User-facing product explanation | Runtime behavior |
 
 ### Non-Negotiables
 
-- [ ] `greenhouse-spec status` remains read-only.
-- [ ] `greenhouse-spec tend --check` remains structural-only and CI-friendly.
-- [ ] `greenhouse-spec tend` must not silently mutate authored roots, package scripts, or human-owned decisions.
-- [ ] Failed validation commands remain failed; repeated/known failures are explained, never made green.
-- [ ] A changed source file must not appear clean just because no route matched it.
-- [x] Change-impact documentation warnings are severity-based, not always blocking.
-- [ ] Existing commands remain available for compatibility.
-- [ ] Generated `.greenhouse/grown/**` remains disposable.
-- [x] Evidence must not capture sensitive full logs by default.
+- [ ] Do not add mandatory new public workflow commands.
+- [ ] Keep normal usage as `greenhouse-spec status` then `greenhouse-spec tend`.
+- [ ] Keep `status` read-only.
+- [ ] Keep `tend --check` structural-only.
+- [ ] Do not silently mutate `.greenhouse/roots/**`, package scripts, or human-owned decisions.
+- [ ] Known/repeated failures must be explained, not made green.
+- [ ] Generated Greenhouse artifacts must not pollute product validation routing.
+- [ ] Source changes must never appear clean solely because no route matched.
+- [ ] Evidence must remain bounded and redacted.
+- [ ] Real repo alignment must pass before this phase is considered done.
+
+### Out Of Scope
+
+- Mandatory `brief --agent`.
+- Background daemon behavior.
+- SQLite, FTS, vector storage, or indexing service.
+- Broad framework detection without fixture pressure.
+- Automatic rewriting of human-authored documentation prose.
+- New planning/spec workflow commands.
 
 ---
 
 ## 2. Implementation Phases
 
-### Phase 1: Tend Product Contract And Test Skeleton
+### Phase 0: Baseline And Output Snapshots
 
-Goal: Define the exact default behavior of `greenhouse-spec tend` and lock it with tests before changing runtime behavior.
+Goal: Settle the documentation baseline and capture current command outputs before changing behavior.
 Depends on: None
 Status: Complete - 2026-05-25
 
 #### Inputs
 
-- Existing `src/tend/run-tend.ts`
-- Existing `src/commands/tend.ts`
-- Existing `tests/tend.test.ts`
-- Existing `tests/lifecycle.test.ts`
-- Product decision: `tend` is the everyday pre-finish command; `tend --check` remains structural-only.
+- Current dirty `greenhouse-summary.md`.
+- Recreated `IMPLEMENTATION_GUIDE.md`.
+- Existing Greenhouse runtime and alignment tests.
 
 #### Outputs
 
-- Updated type contract for `TendReport`
-- New/updated tests describing the Phase 1 `tend` contract
-- CLI help/description updated to match the product role
-- No runtime broad orchestration until tests describe expected behavior
+- Baseline docs state is intentionally committed or explicitly left dirty for the implementation phase.
+- Current output snapshots are captured for comparison.
+- No runtime behavior changes.
 
 #### Relevant Paths
 
 | What | Path | Action |
 |---|---|---|
-| Tend model | `src/tend/run-tend.ts` | Edit |
-| Tend CLI | `src/commands/tend.ts` | Edit |
-| CLI registration tests | `tests/cli.test.ts` | Edit |
-| Tend behavior tests | `tests/tend.test.ts` | Edit |
-| Lifecycle/status tests | `tests/lifecycle.test.ts` | Read/Edit |
-| Docs | `README.md`, `docs/commands.md`, `docs/operating-playbook.md` | Edit |
+| Product summary | `greenhouse-summary.md` | Review/Edit |
+| Implementation guide | `IMPLEMENTATION_GUIDE.md` | Create/Edit |
+| Tend output | `src/tend/run-tend.ts` | Read |
+| Verify output | `src/verify/run-verify.ts` | Read |
+| Proposal output | `src/proposals/run-proposals.ts` | Read |
+| Evidence prune output | `src/evidence/prune.ts` | Read |
 
 #### Tasks
 
-- [x] Define `TendReport` states: `pass`, `warning`, `fail` or reuse existing health state if suitable.
-  - Tool: edit
+- [x] Review `greenhouse-summary.md` for accuracy against current CLI behavior.
+  - Tool: read/edit
   - Verify: `pnpm typecheck`
 
-- [x] Add tests for default `tend` as a report-only pre-finish surface with no changed files.
-  - Tool: edit
-  - Verify: `pnpm test:tend`
+- [x] Capture current outputs for `status`, `tend`, `verify --changed --dry-run`, `proposals`, and `evidence prune --dry-run`.
+  - Tool: bash
+  - Verify: `docs/tending-reliability-baseline.md`
 
-- [x] Add tests that `tend --check` does not execute validation and does not write evidence.
-  - Tool: edit
-  - Verify: `pnpm test:tend`
-
-- [x] Add tests that default `tend` does not execute validation until Phase 2.
-  - Tool: edit
-  - Verify: `pnpm test:tend`
-
-- [x] Add tests that default `tend` does not mutate authored roots or package scripts.
-  - Tool: edit
-  - Verify: `pnpm test:tend`
-
-- [x] Update CLI description from proposal-report language to pre-finish tending language.
-  - Tool: edit
-  - Verify: `pnpm test:cli`
+- [x] Decide whether to commit the docs baseline before runtime edits.
+  - Tool: git
+  - Verify: `git status --short --branch`
 
 #### Phase Notes
 
-- Added explicit `TendReport` contract fields: `state`, `flow`, `validation`, and `writes`.
-- Preserved current runtime boundary: default `tend` is `report-only`; `tend --check` is `structural-check`.
-- Deferred composed validation execution to Phase 2 as planned.
-- Verified neither path reports authored-root or package-script mutation.
+- Completed on 2026-05-25.
+- Captured command behavior in `docs/tending-reliability-baseline.md`.
+- Baseline decision: commit `IMPLEMENTATION_GUIDE.md`,
+  `greenhouse-summary.md`, and `docs/tending-reliability-baseline.md` before
+  runtime implementation begins.
+- Running `tend` produced generated evidence and generated indexes as expected;
+  those generated artifacts are excluded from this docs baseline.
+- Product finding: `status` is already concise, while `tend` is functionally
+  correct but too implementation-shaped. Phase 1 should focus on the `tend`
+  report.
 
 #### Tests for This Phase
 
 | Test Type | What to Test | Exists? | Path / Command |
 |---|---|---|---|
-| Unit | `tend` report contract | Yes - extend | `pnpm test:tend` |
-| Integration | CLI command description/flags | Yes - extend | `pnpm test:cli` |
-| Regression | Status read-only behavior still holds | Yes - extend if needed | `pnpm test:lifecycle` |
-| Type safety | New report types compile | Auto | `pnpm typecheck` |
+| Full package | Current implementation still passes | Yes | `pnpm check` |
+| Real repo alignment | Local behavior still matches expected repos | Yes | `pnpm alignment:check` |
+| Type safety | Docs-only change does not affect build | Auto | `pnpm typecheck` |
 
 #### Phase Exit Criteria
 
-- [x] `pnpm test:tend` passes.
-- [x] `pnpm test:cli` passes.
-- [x] `pnpm test:lifecycle` passes if touched.
-- [x] `pnpm typecheck` passes.
-- [x] Guide updated with completion notes.
+- [x] `pnpm check` passes.
+- [x] `pnpm alignment:check` passes.
+- [x] Current output snapshots exist in phase notes or a docs artifact.
+- [x] Guide updated with baseline decision.
 
 #### Failure Protocol
 
 | If | Then |
 |---|---|
-| Tests require too much mocking | Split orchestration dependency injection into a later phase |
-| Existing `tend` report behavior conflicts | Preserve current behavior behind a compatibility path or document intentional replacement |
-| `tend --check` becomes coupled to validation execution | Stop and split structural check into a dedicated internal function |
+| Baseline validation fails | Fix or document the existing failure before runtime edits |
+| Output cannot be captured cleanly | Use a temporary fixture repo and document why |
+| Scope expands beyond docs/output baseline | Stop and move the extra work to a later phase |
 
 ---
 
-### Phase 2: Compose Default `tend`
+### Phase 1: Product-Grade `tend` Report
 
-Goal: Implement `greenhouse-spec tend` as the main pre-finish flow while preserving strict lower-level semantics.
-Depends on: Phase 1
-Status: Complete - 2026-05-25
+Goal: Make `greenhouse-spec tend` feel like a trustworthy finish-line report.
+Depends on: Phase 0
+Status: Not started
 
 #### Inputs
 
-- Phase 1 tests and report contract
-- Existing `runDoctor`, `runTend({ check: true })`, `runVerify({ changed: true, writeEvidence: true })`
-- Existing proposal summary behavior
+- Current `TendReport` model.
+- Current `formatTendReport` output.
+- Phase 0 output snapshots.
 
 #### Outputs
 
-- Default `tend` runs the composed flow:
-  1. install/root health
-  2. structural check
-  3. changed-file route selection
-  4. selected validation execution
-  5. evidence writing when validation commands run
-  6. repeated failure annotations
-  7. proposal summary
-- Exit code fails for blocking structural drift or failed validation.
-- Warnings do not fail unless classified as guarded/blocking.
+- `tend` report is state-first, concise, grouped by concern, and action-oriented.
+- Passing reports collapse successful detail.
+- Degraded/warning reports name unresolved concerns.
+- Failing reports name the first blocking cause.
+- Report ends with one clear next action.
 
 #### Relevant Paths
 
 | What | Path | Action |
 |---|---|---|
-| Tend orchestration | `src/tend/run-tend.ts` | Edit |
-| Doctor | `src/doctor/run-doctor.ts` | Read |
-| Verify | `src/verify/run-verify.ts` | Read/Edit only if integration seam is needed |
-| Evidence | `src/evidence/write-evidence.ts` | Read |
+| Tend model/output | `src/tend/run-tend.ts` | Edit |
+| Tend CLI | `src/commands/tend.ts` | Read/Edit if wording changes |
 | Tend tests | `tests/tend.test.ts` | Edit |
-| Lifecycle tests | `tests/lifecycle.test.ts` | Edit |
+| Lifecycle tests | `tests/lifecycle.test.ts` | Read/Edit if status-next-action coupling changes |
+| Docs | `docs/commands.md`, `docs/operating-playbook.md`, `greenhouse-summary.md` | Edit |
 
 #### Tasks
 
-- [x] Split structural self-tending check into a reusable internal function.
+- [ ] Add tests for concise passing `tend` output.
   - Tool: edit
   - Verify: `pnpm test:tend`
 
-- [x] Add default `tend` orchestration path that calls doctor, structural check, and verify changed with evidence.
+- [ ] Add tests for warning/degraded `tend` output with impact warnings or manual checks.
   - Tool: edit
   - Verify: `pnpm test:tend`
 
-- [x] Preserve `--check` as structural-only and non-writing.
+- [ ] Add tests for failing `tend` output naming the blocking validation or structural cause.
   - Tool: edit
   - Verify: `pnpm test:tend`
 
-- [x] Add output formatting for roots, drift, validation, evidence, proposals, and final state.
+- [ ] Refactor `formatTendReport` into state-first sections: State, Changed, Validation, Impact, Evidence, Proposals, Repeated Failures, Next.
   - Tool: edit
   - Verify: `pnpm test:tend`
 
-- [x] Ensure failed validation sets `report.ok = false` and CLI exit code 1.
+- [ ] Keep detailed routing explanations out of `tend`; point to `verify --changed --dry-run` when needed.
   - Tool: edit
   - Verify: `pnpm test:tend`
-
-#### Phase Notes
-
-- Default `tend` is now `flow: finish-gate`.
-- Default `tend` runs doctor, structural self-tending, validation routing/execution, evidence writing, repeated failure refresh, and proposal report writing.
-- `tend --check` remains `flow: structural-check` and does not execute validation or write evidence.
-- Validation does not run if install/root health fails or structural drift blocks tending.
-- Failed validation keeps `report.ok = false` and `state = fail`; repeated failures remain explanatory only.
 
 #### Tests for This Phase
 
 | Test Type | What to Test | Exists? | Path / Command |
 |---|---|---|---|
-| Unit | Default `tend` with no changes | No - create | `pnpm test:tend` |
-| Unit | Default `tend` with routed passing validation | No - create | `pnpm test:tend` |
-| Unit | Default `tend` with failing validation | No - create | `pnpm test:tend` |
-| Unit | `tend --check` remains structural-only | Yes - strengthen | `pnpm test:tend` |
-| Integration | CLI exit code mapping | Existing CLI patterns | `pnpm test:cli` |
-| Type safety | Orchestration contract | Auto | `pnpm typecheck` |
+| Unit | Passing `tend` report is short and state-first | Yes - extend | `pnpm test:tend` |
+| Unit | Warning `tend` report names unresolved concerns | Yes - extend | `pnpm test:tend` |
+| Unit | Failing `tend` report names first blocking cause | Yes - extend | `pnpm test:tend` |
+| CLI | Existing `tend` flags still work | Yes | `pnpm test:cli` |
+| Type safety | Tend report contracts compile | Auto | `pnpm typecheck` |
 
 #### Phase Exit Criteria
 
-- [x] `pnpm test:tend` passes.
-- [x] `pnpm test:cli` passes.
-- [x] `pnpm test:lifecycle` passes.
-- [x] `pnpm typecheck` passes.
-- [x] `pnpm build` passes.
+- [ ] `pnpm test:tend` passes.
+- [ ] `pnpm test:cli` passes.
+- [ ] `pnpm typecheck` passes.
+- [ ] Before/after output comparison is recorded.
+- [ ] Guide updated with completion notes.
 
 ---
 
-### Phase 3: Status Concision And Verbose/JSON Detail
+### Phase 2: Dry-Run Explanation Reliability
 
-Goal: Keep `status` as the quiet entry point while preserving detailed diagnostics when requested.
-Depends on: Phase 2
-Status: Complete - 2026-05-25
+Goal: Make `verify --changed --dry-run` the complete explanation layer for routing decisions.
+Depends on: Phase 1
+Status: Not started
 
 #### Inputs
 
-- Existing `runStatus`, `formatStatusReport`, `formatStatusJsonReport`
-- Current health categories
-- New `tend` next-command semantics
+- Current `formatVerifyReport`.
+- Existing route command metadata and manual check metadata.
+- Current impact warnings.
 
 #### Outputs
 
-- Default `status` output is short and readable.
-- `status --verbose` prints existing detailed sections.
-- `status --json` keeps structured report compatibility.
-- Next command prefers `greenhouse-spec tend` when changed validation is pending.
+- Every selected command has a reason and source.
+- Every changed product file is routed, guarded, fallback-routed, or explicitly identified as uncovered.
+- Generated Greenhouse artifacts are explained as excluded.
+- Guarded/fallback behavior is easy to understand.
+- Impact warnings appear before command execution detail.
 
 #### Relevant Paths
 
 | What | Path | Action |
 |---|---|---|
-| Status model/output | `src/status/run-status.ts` | Edit |
-| Status CLI | `src/commands/status.ts` | Edit |
-| Lifecycle tests | `tests/lifecycle.test.ts` | Edit |
-| CLI tests | `tests/cli.test.ts` | Edit |
-| Docs | `README.md`, `docs/commands.md` | Edit |
-
-#### Tasks
-
-- [x] Add `--verbose` option for current detailed Markdown output.
-  - Tool: edit
-  - Verify: `pnpm test:cli && pnpm test:lifecycle`
-
-- [x] Make default status concise: state, changed count, validation readiness, drift, generated-only status, evidence, next command.
-  - Tool: edit
-  - Verify: `pnpm test:lifecycle`
-
-- [x] Keep JSON stable and include any new state fields.
-  - Tool: edit
-  - Verify: `pnpm test:lifecycle`
-
-- [x] Update next action to recommend `greenhouse-spec tend` for normal finish work.
-  - Tool: edit
-  - Verify: `pnpm test:lifecycle`
-
-#### Phase Notes
-
-- Default `status` now prints a concise read-only summary instead of the full Markdown diagnostics.
-- `status --verbose` preserves the detailed Markdown health report.
-- `status --json` remains the stable structured output path.
-- Pending changed validation now recommends `greenhouse-spec tend`.
-
-#### Tests for This Phase
-
-| Test Type | What to Test | Exists? | Path / Command |
-|---|---|---|---|
-| Unit | Concise default status | Yes - update | `pnpm test:lifecycle` |
-| Unit | Verbose status preserves detailed sections | No - create | `pnpm test:lifecycle` |
-| Unit | JSON status remains parseable | Yes - update | `pnpm test:lifecycle` |
-| CLI | `--verbose` and `--json` flags | Yes - extend | `pnpm test:cli` |
-| Type safety | Status report shape | Auto | `pnpm typecheck` |
-
-#### Phase Exit Criteria
-
-- [x] `pnpm test:lifecycle` passes.
-- [x] `pnpm test:cli` passes.
-- [x] `pnpm typecheck` passes.
-
----
-
-### Phase 4: Explain Verification Dry-Run
-
-Goal: Make `verify --changed --dry-run` explain validation routing clearly enough for debugging without adding a new top-level command.
-Depends on: Phase 2
-Status: Complete - 2026-05-25
-
-#### Inputs
-
-- Existing `ValidationRoute` command reasons
-- Changed-file classification groups
-- Manual checks and risk output
-
-#### Outputs
-
-- Dry-run report shows changed files, groups, routed files, matched commands, reasons, route source when available, fallback/guarded behavior, and manual checks.
-- Output remains useful for direct path validation with `--paths`.
-
-#### Relevant Paths
-
-| What | Path | Action |
-|---|---|---|
-| Verify formatting | `src/verify/run-verify.ts` | Edit |
-| Route model | `src/validation/route-validation.ts` | Edit if route source is missing |
+| Verify output | `src/verify/run-verify.ts` | Edit |
+| Route model | `src/validation/route-validation.ts` | Edit if metadata is missing |
+| Changed classification | `src/validation/classify-changed-files.ts` | Read/Edit if uncovered reporting needs grouping |
 | Validation tests | `tests/validation.test.ts` | Edit |
-| CLI tests | `tests/cli.test.ts` | Edit if output snapshots/assertions exist |
+| CLI tests | `tests/cli.test.ts` | Read/Edit if output flags change |
+| Docs | `docs/validation-routing.md`, `docs/commands.md` | Edit |
 
 #### Tasks
 
-- [x] Add route source/origin to selected command metadata if not already inferable.
+- [ ] Add/extend tests for command reason, source, and matched route in dry-run output.
   - Tool: edit
   - Verify: `pnpm test:validation`
 
-- [x] Update dry-run output to explicitly call out selected commands and reasons.
+- [ ] Add/extend tests for generated Greenhouse files excluded from routing.
   - Tool: edit
   - Verify: `pnpm test:validation`
 
-- [x] Ensure generated-only Greenhouse artifacts are clearly excluded from routing.
+- [ ] Add tests for fallback or guarded behavior being explicitly explained.
   - Tool: edit
   - Verify: `pnpm test:validation`
 
-#### Phase Notes
-
-- Added route source metadata to commands and manual checks.
-- Added route-level explanations for path rules, risk rules, inferred routes, mode requirements, fallback defaults, generated exclusions, and skipped validation.
-- Updated verify reports to include `## Route explanation` and source/reason lines per selected command/manual check.
-- Generated-only Greenhouse files are explicitly explained as excluded from validation routing.
+- [ ] Improve dry-run section order: Changed, Groups, Impact, Routing, Commands, Manual checks, Skipped/excluded, Next.
+  - Tool: edit
+  - Verify: `pnpm test:validation`
 
 #### Tests for This Phase
 
 | Test Type | What to Test | Exists? | Path / Command |
 |---|---|---|---|
-| Unit | Route reasons and origins | Yes - extend | `pnpm test:validation` |
-| Unit | Generated-only paths excluded | Yes - extend | `pnpm test:validation` |
-| Integration | CLI dry-run output | Yes - extend if needed | `pnpm test:cli` |
-| Type safety | Route metadata | Auto | `pnpm typecheck` |
+| Unit | Command source/reason present | Yes - extend | `pnpm test:validation` |
+| Unit | Generated artifacts excluded | Yes - extend | `pnpm test:validation` |
+| Unit | Guarded/fallback explanation | Yes - extend | `pnpm test:validation` |
+| Type safety | Route metadata contracts compile | Auto | `pnpm typecheck` |
 
 #### Phase Exit Criteria
 
-- [x] `pnpm test:validation` passes.
-- [x] `pnpm test:cli` passes if touched.
-- [x] `pnpm typecheck` passes.
+- [ ] `pnpm test:validation` passes.
+- [ ] `pnpm typecheck` passes.
+- [ ] `pnpm build` passes.
+- [ ] Guide updated with completion notes.
 
 ---
 
-### Phase 5: Change-Impact Model
+### Phase 3: Impact Severity Discipline
 
-Goal: Add quiet impact warnings that surface stale assumptions without adding ceremony or silently editing docs.
-Depends on: Phase 3 and Phase 4
-Status: Complete - 2026-05-25
+Goal: Normalize impact warning behavior so warnings are useful without becoming ceremony.
+Depends on: Phase 2
+Status: Not started
 
 #### Inputs
 
-- Changed-file classification
-- Repo shape discovery
-- Command index
-- Validation roots
-- Existing proposal generation patterns
+- Existing `ImpactWarning` model.
+- Existing `detectChangeImpact` rules.
+- Existing status/tend/verify/evidence impact displays.
 
 #### Outputs
 
-- Shared impact model with severities: `advisory`, `warning`, `guarded`, `blocking`.
-- First-pass impact rules:
-  - `package.json` scripts -> README/setup docs and validation roots may be stale
-  - CLI source -> CLI docs/help examples may be stale
-  - OpenAPI/API spec -> generated clients and API docs may be stale
-  - env/config schema -> `.env.example` and deployment docs may be stale
-  - generated output -> generator/boundary check
-  - new source folder -> validation route may be missing
-  - `src-tauri/**` -> Rust/Tauri validation and packaging docs may be affected
-  - workspace config -> repo map/package scope may be stale
-  - CI workflow files -> local validation docs/routes may be stale
-- Impact warnings surface in `status`, `tend`, verify dry-run, and evidence.
+- Each impact warning has clear severity, reason, affected paths, and resolution hint.
+- `blocking` impact warnings fail `status`/`tend` where appropriate.
+- `guarded` impact warnings are visible and require review language but do not silently mutate anything.
+- `warning` and `advisory` warnings remain non-blocking.
+- Tracked docs path warnings are consistently worded with docs ownership drift.
 
 #### Relevant Paths
 
 | What | Path | Action |
 |---|---|---|
-| Impact model | `src/impact/` | Create |
-| Changed files | `src/validation/classify-changed-files.ts` | Read/Edit if categories need extension |
-| Status | `src/status/run-status.ts` | Edit |
-| Tend | `src/tend/run-tend.ts` | Edit |
-| Verify | `src/verify/run-verify.ts` | Edit |
-| Evidence writer | `src/evidence/write-evidence.ts` | Edit |
-| Tests | `tests/impact.test.ts`, `tests/lifecycle.test.ts`, `tests/tend.test.ts`, `tests/evidence.test.ts` | Create/Edit |
+| Impact model | `src/impact/detect-change-impact.ts` | Edit |
+| Status health | `src/status/run-status.ts` | Edit |
+| Tend output/state | `src/tend/run-tend.ts` | Edit |
+| Verify output | `src/verify/run-verify.ts` | Edit |
+| Evidence writer | `src/evidence/write-evidence.ts` | Read/Edit |
+| Doctor docs root check | `src/doctor/run-doctor.ts` | Read/Edit if wording changes |
+| Tests | `tests/impact.test.ts`, `tests/lifecycle.test.ts`, `tests/tend.test.ts`, `tests/evidence.test.ts` | Edit |
 
 #### Tasks
 
-- [x] Create `ImpactWarning` type and severity model.
-  - Tool: edit
-  - Verify: `pnpm typecheck`
-
-- [x] Implement pure `detectChangeImpact` from changed files and repo shape.
+- [ ] Add a resolution or next-action field to impact warnings if needed.
   - Tool: edit
   - Verify: `pnpm test:impact`
 
-- [x] Add impact warnings to status output and JSON.
+- [ ] Add tests for severity behavior in `status` and `tend`.
   - Tool: edit
-  - Verify: `pnpm test:lifecycle`
+  - Verify: `pnpm test:lifecycle && pnpm test:tend`
 
-- [x] Add impact warnings to tend output and final state.
-  - Tool: edit
-  - Verify: `pnpm test:tend`
-
-- [x] Add impact warnings to verify dry-run output.
-  - Tool: edit
-  - Verify: `pnpm test:validation`
-
-- [x] Add impact warnings to evidence writer.
+- [ ] Ensure impact warnings in evidence include enough context for future agents.
   - Tool: edit
   - Verify: `pnpm test:evidence`
 
-#### Phase Notes
-
-- Added `ImpactWarning` with severities `advisory`, `warning`, `guarded`, and `blocking`.
-- Added conservative first-pass impact detection for package scripts, CLI source, API specs, env/config schema, generated output, workspace config, CI workflows, Tauri/Rust paths, and fallback source routing.
-- Surfaced impact warnings in `status`, `status --json`, `tend`, `verify --dry-run`, and evidence records.
-- Kept impact warnings advisory/degraded by default; Greenhouse does not mutate docs or authored roots.
+- [ ] Keep docs drift non-blocking unless the rule is explicitly guarded/blocking.
+  - Tool: edit
+  - Verify: `pnpm test:impact`
 
 #### Tests for This Phase
 
 | Test Type | What to Test | Exists? | Path / Command |
 |---|---|---|---|
-| Unit | Impact warning detection | Yes | `pnpm test:impact` |
-| Unit | Severity mapping | Yes | `pnpm test:impact` |
-| Integration | Status includes impacts | Yes - extended | `pnpm test:lifecycle` |
-| Integration | Tend includes impacts | Yes - extended | `pnpm test:tend` |
-| Integration | Evidence stores impacts | Yes - extended | `pnpm test:evidence` |
-| Type safety | Impact schema integration | Auto | `pnpm typecheck` |
+| Unit | Severity defaults and resolution text | Yes - extend | `pnpm test:impact` |
+| Integration | Status/tend state by severity | Yes - extend | `pnpm test:lifecycle`, `pnpm test:tend` |
+| Integration | Evidence stores impact context | Yes - extend | `pnpm test:evidence` |
+| Type safety | Impact contracts compile | Auto | `pnpm typecheck` |
 
 #### Phase Exit Criteria
 
-- [x] `pnpm test:impact` or equivalent passes.
-- [x] `pnpm test:lifecycle` passes.
-- [x] `pnpm test:tend` passes.
-- [x] `pnpm test:evidence` passes.
-- [x] `pnpm test:validation` passes.
-- [x] `pnpm typecheck` passes.
+- [ ] `pnpm test:impact` passes.
+- [ ] `pnpm test:lifecycle` passes.
+- [ ] `pnpm test:tend` passes.
+- [ ] `pnpm test:evidence` passes.
+- [ ] `pnpm typecheck` passes.
 
 ---
 
-### Phase 6: Evidence Policy And Impact Context
+### Phase 4: Evidence Summary And Prune Reliability
 
-Goal: Make evidence useful as repo-local memory without turning it into a noisy or sensitive log store.
-Depends on: Phase 5
-Status: Complete - 2026-05-25
+Goal: Keep evidence useful as local memory without growing into clutter.
+Depends on: Phase 3
+Status: Not started
 
 #### Inputs
 
-- Existing Markdown evidence writer
-- Existing evidence index and failure signatures
-- New impact warnings
+- Existing evidence writer, evidence index, failure signatures, and prune command.
+- Current `greenhouse-spec evidence prune`.
 
 #### Outputs
 
-- Evidence records include route reasons, impact warnings, repeated failure matches, manual checks, and final tending state when written by `tend`.
-- Failed command excerpts remain clear but bounded.
-- Default output redacts or avoids sensitive full logs.
+- Evidence index can summarize latest tending result and latest failure by command.
+- Pruning preserves latest useful evidence and failure context.
+- `status` can summarize evidence without scanning every old record beyond generated indexes where possible.
+- Prune output clearly states what was kept and why.
 
 #### Relevant Paths
 
@@ -549,230 +459,285 @@ Status: Complete - 2026-05-25
 | Evidence writer | `src/evidence/write-evidence.ts` | Edit |
 | Evidence index | `src/evidence/evidence-index.ts` | Edit |
 | Failure signatures | `src/evidence/failure-signatures.ts` | Read/Edit |
-| Evidence schemas | `src/schemas/evidence.ts`, `src/schemas/evidence-index.ts` | Edit |
+| Prune logic | `src/evidence/prune.ts` | Edit |
+| Evidence command | `src/commands/evidence.ts` | Read/Edit |
 | Evidence tests | `tests/evidence.test.ts` | Edit |
+| Status | `src/status/run-status.ts` | Edit if index summary is consumed |
 
 #### Tasks
 
-- [x] Extend evidence payload with impact warnings and manual checks.
+- [ ] Add tests for prune preserving latest evidence and latest failure context.
   - Tool: edit
   - Verify: `pnpm test:evidence`
 
-- [x] Add bounded failure excerpt policy if current capture is insufficient.
+- [ ] Improve prune report to include kept records and preservation reason.
   - Tool: edit
   - Verify: `pnpm test:evidence`
 
-- [x] Ensure evidence index remains stable after new fields.
+- [ ] Extend evidence index only if current index cannot answer latest tending/failure questions.
   - Tool: edit
   - Verify: `pnpm test:evidence`
 
-- [x] Add docs describing evidence as local memory, not permission.
+- [ ] Ensure known/repeated failures remain failing when validation fails.
   - Tool: edit
-  - Verify: `pnpm typecheck`
-
-#### Phase Notes
-
-- Evidence records now include route reasons, impact warnings, bounded/redacted command excerpts, and optional tending state.
-- `tend` writes evidence with final tending state instead of relying on direct verify evidence.
-- Evidence index accepts impact warning summaries and tending state while preserving existing recent evidence metadata.
-- Failure excerpts redact home paths, common secret-like environment values, and OpenAI-style secret tokens.
+  - Verify: `pnpm test:evidence`
 
 #### Tests for This Phase
 
 | Test Type | What to Test | Exists? | Path / Command |
 |---|---|---|---|
-| Unit | Evidence includes impact warnings | Yes - extended | `pnpm test:evidence` |
-| Unit | Failure excerpts are bounded | Yes - extended | `pnpm test:evidence` |
-| Unit | Repeated failure annotations remain failing | Yes - extended | `pnpm test:evidence` |
-| Type safety | Schema changes compile | Auto | `pnpm typecheck` |
+| Unit | Prune preserves latest useful context | Yes - extend | `pnpm test:evidence` |
+| Unit | Evidence index summary stays stable | Yes - extend | `pnpm test:evidence` |
+| Type safety | Evidence schemas compile | Auto | `pnpm typecheck` |
 
 #### Phase Exit Criteria
 
-- [x] `pnpm test:evidence` passes.
-- [x] `pnpm typecheck` passes.
-- [x] `pnpm build` passes.
+- [ ] `pnpm test:evidence` passes.
+- [ ] `pnpm typecheck` passes.
+- [ ] `pnpm build` passes.
 
 ---
 
-### Phase 7: Proposal Lifecycle Hardening
+### Phase 5: Proposal Review UX Reliability
 
-Goal: Make proposals durable enough to reduce repeated noise without allowing hidden mutation.
-Depends on: Phase 5
-Status: Complete - 2026-05-25
+Goal: Make proposal decisions easy to understand without opening generated YAML.
+Depends on: Phase 3
+Status: Not started
 
 #### Inputs
 
-- Existing validation proposals
-- Existing safe apply/adopt commands
-- Impact warnings that may produce proposal-worthy findings
+- Existing proposal schema and commands.
+- Existing dismissal ledger.
+- Existing safe apply/adopt behavior.
 
 #### Outputs
 
-- Stable proposal IDs and idempotency keys where missing.
-- Preconditions and collision explanations for proposal application.
-- Dismissal ledger design and first implementation if scope remains small.
-- Safe proposals remain explicit and non-destructive.
+- `greenhouse-spec proposals` clearly groups pending, adoptable, conflict, applied, and skipped proposals.
+- Safe-apply output says exactly what changed and what was skipped.
+- Conflicts explain the human-owned area involved.
+- Dismissed proposals point to `.greenhouse/roots/proposal-decisions.yaml`.
 
 #### Relevant Paths
 
 | What | Path | Action |
 |---|---|---|
-| Proposal schemas | `src/schemas/validation-proposals.ts` | Edit |
-| Proposal builder | `src/proposals/build-proposals.ts` | Edit |
-| Proposal reader | `src/proposals/read-proposals.ts` | Edit |
-| Apply/adopt | `src/proposals/apply-proposals.ts`, `src/proposals/adopt-proposals.ts` | Edit |
-| Commands | `src/commands/proposals.ts`, `src/commands/apply-proposals.ts`, `src/commands/adopt-proposals.ts` | Edit |
+| Proposal report | `src/proposals/run-proposals.ts` | Edit |
+| Safe apply | `src/proposals/apply-proposals.ts` | Edit if report lacks detail |
+| Adoption | `src/proposals/adopt-proposals.ts` | Read/Edit if report lacks detail |
+| Dismissal | `src/proposals/dismiss-proposals.ts` | Read/Edit if report lacks detail |
+| Commands | `src/commands/proposals.ts`, `src/commands/apply-proposals.ts`, `src/commands/adopt-proposals.ts` | Read/Edit |
 | Tests | `tests/proposals.test.ts` | Edit |
+| Docs | `docs/proposals.md` | Edit |
 
 #### Tasks
 
-- [x] Audit current proposal schema for ID, status, confidence, target, patch, and managed ownership fields.
-  - Tool: read/edit
-  - Verify: `pnpm test:proposals`
-
-- [x] Add idempotency keys and preconditions where V1 proposal kinds need them.
+- [ ] Add tests for grouped proposal output.
   - Tool: edit
   - Verify: `pnpm test:proposals`
 
-- [x] Add dismissal design to roots without implementing broad UX if too large.
+- [ ] Add tests for safe-apply reporting changed/skipped items.
   - Tool: edit
   - Verify: `pnpm test:proposals`
 
-- [x] Ensure human-owned collisions remain skipped/conflict.
+- [ ] Add tests for dismissal references and conflict explanations.
   - Tool: edit
   - Verify: `pnpm test:proposals`
 
-#### Phase Notes
-
-- Proposal schema now includes `idempotency_key`, `preconditions`, and optional collision metadata.
-- Proposal reports print idempotency and precondition detail for agent readability.
-- Added `.greenhouse/roots/proposal-decisions.yaml` as the authored dismissal ledger.
-- Added `greenhouse-spec proposals dismiss --id <proposal-id> --reason "..."`.
-- Dismissed proposal idempotency keys are marked `skipped` on the next inspect without mutating validation roots or package scripts.
+- [ ] Update proposal docs with the final review flow.
+  - Tool: edit
+  - Verify: `pnpm typecheck`
 
 #### Tests for This Phase
 
 | Test Type | What to Test | Exists? | Path / Command |
 |---|---|---|---|
-| Unit | Stable proposal identity | Yes - extended | `pnpm test:proposals` |
-| Unit | Safe apply idempotency | Yes - extended | `pnpm test:proposals` |
-| Unit | Human-owned collisions protected | Yes - extended | `pnpm test:proposals` |
-| Type safety | Proposal schema | Auto | `pnpm typecheck` |
+| Unit | Grouped proposal report | Yes - extend | `pnpm test:proposals` |
+| Unit | Safe apply output detail | Yes - extend | `pnpm test:proposals` |
+| Unit | Dismissed/conflict readability | Yes - extend | `pnpm test:proposals` |
+| Type safety | Proposal contracts compile | Auto | `pnpm typecheck` |
 
 #### Phase Exit Criteria
 
-- [x] `pnpm test:proposals` passes.
-- [x] `pnpm typecheck` passes.
-- [x] `pnpm build` passes.
+- [ ] `pnpm test:proposals` passes.
+- [ ] `pnpm typecheck` passes.
+- [ ] `pnpm build` passes.
 
 ---
 
-### Phase 8: Documentation And Alignment
+### Phase 6: Portable Fixture Alignment
 
-Goal: Prove the simplified top-layer workflow across Greenhouse and the three local alignment repos.
-Depends on: Phases 1-7 as applicable
-Status: Complete
+Goal: Add CI-safe alignment scenarios that prove the agentic loop without local repo paths.
+Depends on: Phases 1-5
+Status: Not started
 
 #### Inputs
 
-- Updated behavior for `status`, `tend`, verify dry-run, impact warnings, and evidence
-- Local alignment repos: Declarion, Sourcer, Ensember
+- Existing alignment runner and tests.
+- Existing temporary fixture patterns in Vitest tests.
+- Existing real repo alignment contracts.
 
 #### Outputs
 
-- README and docs explain the everyday workflow:
-  - `greenhouse-spec status`
-  - work normally
-  - `greenhouse-spec tend`
-  - proposals only when reported
-- Alignment checks include expectations for `tend` and impact warnings where stable.
-- Real repo alignment passes.
+- New `pnpm alignment:fixtures` script.
+- Fixture alignment runner or test suite that creates temporary repos and verifies behavior.
+- Scenarios cover package script drift, new source folders, dead validation commands, generated output edits, API spec changes, repeated failures, docs-only changes, and generated Greenhouse dirt.
+- Existing `pnpm alignment:check` remains local real-repo confidence.
 
 #### Relevant Paths
 
 | What | Path | Action |
 |---|---|---|
-| README | `README.md` | Edit |
-| Commands docs | `docs/commands.md` | Edit |
-| Operating playbook | `docs/operating-playbook.md` | Edit |
-| Validation routing docs | `docs/validation-routing.md` | Edit |
-| Alignment runner | `src/alignment/run-alignment.ts` | Edit |
+| Alignment runner | `src/alignment/run-alignment.ts` | Edit/Create adjacent fixture runner |
+| Alignment command | `src/commands/alignment.ts` | Edit if fixture mode is exposed |
+| Package scripts | `package.json` | Edit |
 | Alignment tests | `tests/alignment.test.ts` | Edit |
+| Fixtures | `tests/fixtures/**` or generated temp repos | Create/Edit |
+| Docs | `docs/operating-playbook.md`, `greenhouse-summary.md` | Edit |
 
 #### Tasks
 
-- [x] Update README to present `status` and `tend` as the top-layer workflow.
-  - Tool: edit
-  - Verify: `pnpm typecheck`
+- [ ] Decide whether fixture alignment is a CLI mode or test-only script.
+  - Tool: read/edit
+  - Verify: guide note and package script added.
 
-- [x] Update command docs with primary, secondary, and advanced command model.
-  - Tool: edit
-  - Verify: `pnpm typecheck`
-
-- [x] Add/adjust alignment expectations for default `tend`.
+- [ ] Add fixture scenarios for package script drift and docs-only scoped validation.
   - Tool: edit
   - Verify: `pnpm test:alignment`
 
-- [x] Run real repo alignment.
-  - Tool: bash
-  - Verify: `pnpm alignment:check`
+- [ ] Add fixture scenarios for missing route/new source folder and dead validation command.
+  - Tool: edit
+  - Verify: `pnpm test:alignment`
+
+- [ ] Add fixture scenarios for generated output edits and API spec impact.
+  - Tool: edit
+  - Verify: `pnpm test:alignment`
+
+- [ ] Add fixture scenario for repeated failure degradation without greenwashing.
+  - Tool: edit
+  - Verify: `pnpm test:alignment`
+
+- [ ] Add `alignment:fixtures` to `package.json`.
+  - Tool: edit
+  - Verify: `pnpm alignment:fixtures`
 
 #### Tests for This Phase
 
 | Test Type | What to Test | Exists? | Path / Command |
 |---|---|---|---|
-| Unit | Alignment runner expectations | Yes - extend | `pnpm test:alignment` |
-| Real repo | Declarion, Sourcer, Ensember | Yes | `pnpm alignment:check` |
-| Full check | Whole package | Yes | `pnpm check` |
+| Fixture alignment | Agentic repo scenarios | No - create | `pnpm alignment:fixtures` |
+| Unit | Existing alignment runner remains stable | Yes - extend | `pnpm test:alignment` |
+| Full package | All behavior still passes | Yes | `pnpm check` |
 
 #### Phase Exit Criteria
 
-- [x] `pnpm test:alignment` passes.
-- [x] `pnpm alignment:check` passes.
-- [x] `pnpm check` passes.
-- [x] Docs match implemented behavior.
+- [ ] `pnpm alignment:fixtures` passes.
+- [ ] `pnpm test:alignment` passes.
+- [ ] `pnpm check` passes.
+- [ ] `pnpm alignment:check` passes.
+- [ ] Guide updated with fixture scenario list and status.
 
-#### Phase Notes
+---
 
-- Completed on 2026-05-25.
-- Docs now position `greenhouse-spec status` and `greenhouse-spec tend` as the
-  normal top-layer workflow, with verify/inspect/proposals as repair and debug
-  surfaces.
-- Alignment contracts now assert stable impact warnings in real repos and
-  default `tend` finish-gate behavior in the portable Ensember-like fixture.
-- Real repo alignment stayed read-only for Declarion, Sourcer, and Ensember.
+### Phase 7: Real Repo Agent-Readiness Proof
+
+Goal: Prove that Greenhouse visibly helps an AI session work in Declarion, Sourcer, and Ensember.
+Depends on: Phase 6
+Status: Not started
+
+#### Inputs
+
+- Improved `status`, `tend`, dry-run, evidence, proposal, and fixture alignment behavior.
+- Local repos: Declarion, Sourcer, Ensember.
+
+#### Outputs
+
+- A proof document with before/after snippets or summarized outputs from all three repos.
+- Clear notes on what an AI agent should see and do in each repo.
+- Any remaining repo-specific friction recorded as follow-up.
+
+#### Relevant Paths
+
+| What | Path | Action |
+|---|---|---|
+| Proof docs | `docs/tending-reliability-proof.md` | Create |
+| Alignment runner | `src/alignment/run-alignment.ts` | Read/Edit only if real-repo contract needs update |
+| Greenhouse summary | `greenhouse-summary.md` | Update if product behavior changed |
+| Target repo: Declarion | `/Users/niklaswestman/Documents/extras-projects/declarion` | Read-only validation unless user approves changes |
+| Target repo: Sourcer | `/Users/niklaswestman/Documents/extras-projects/sourcer` | Read-only validation unless user approves changes |
+| Target repo: Ensember | `/Users/niklaswestman/Documents/extras-projects/ensember/code/ensember` | Read-only validation unless user approves changes |
+
+#### Tasks
+
+- [ ] Run `status`, `tend`, `verify --changed --dry-run`, and `proposals` in a controlled way for each target repo.
+  - Tool: bash
+  - Verify: outputs recorded in proof document.
+
+- [ ] Confirm Declarion still explains repeated failure context without treating it as green.
+  - Tool: bash
+  - Verify: `pnpm alignment:check`
+
+- [ ] Confirm Sourcer remains understandable as a polyglot React/Java/API/infra repo.
+  - Tool: bash
+  - Verify: `pnpm alignment:check`
+
+- [ ] Confirm Ensember remains understandable as React/Tauri/Rust/Cargo.
+  - Tool: bash
+  - Verify: `pnpm alignment:check`
+
+- [ ] Write final agent-readiness proof.
+  - Tool: write/edit
+  - Verify: `pnpm typecheck`
+
+#### Tests for This Phase
+
+| Test Type | What to Test | Exists? | Path / Command |
+|---|---|---|---|
+| Real repo alignment | Declarion, Sourcer, Ensember contracts | Yes | `pnpm alignment:check` |
+| Fixture alignment | Portable behavior scenarios | Yes after Phase 6 | `pnpm alignment:fixtures` |
+| Full package | Greenhouse package health | Yes | `pnpm check` |
+
+#### Phase Exit Criteria
+
+- [ ] `pnpm check` passes.
+- [ ] `pnpm alignment:fixtures` passes.
+- [ ] `pnpm alignment:check` passes.
+- [ ] `docs/tending-reliability-proof.md` exists.
+- [ ] Proof document shows how AI is helped in Declarion, Sourcer, and Ensember.
+- [ ] Remaining follow-ups are documented.
 
 ---
 
 ## 3. Repeatable Unit Contract
 
-### Unit Template: Command Surface Change
+### Unit Template: Agent-Facing Report Improvement
 
 | Step | Description | Path | Action | Verify | Test |
 |---|---|---|---|---|---|
-| 1 | Define behavior contract in model/types | `src/<domain>/` | Edit | `pnpm typecheck` | Domain test |
-| 2 | Add tests before behavior change | `tests/<domain>.test.ts` | Edit | `pnpm test:<domain>` | Create/extend |
-| 3 | Implement behavior using existing modules | `src/<domain>/` | Edit | `pnpm test:<domain>` | Domain test |
-| 4 | Update CLI wiring/output | `src/commands/<command>.ts`, `src/cli.ts` | Edit | `pnpm test:cli` | CLI test |
-| 5 | Update docs | `README.md`, `docs/**` | Edit | `pnpm typecheck` | N/A |
+| 1 | Capture current output for the command | CLI command | Bash | Save in phase notes/proof | N/A |
+| 2 | Add tests for desired output shape | `tests/domain.test.ts` | Edit | Focused test command | Create/extend |
+| 3 | Update formatter/model using existing data | `src/domain/**` | Edit | Focused test command | Domain tests |
+| 4 | Update docs with final behavior | `docs/**`, `greenhouse-summary.md` | Edit | `pnpm typecheck` | N/A |
+| 5 | Compare output in real alignment repo | Declarion/Sourcer/Ensember | Bash | `pnpm alignment:check` | Alignment |
 
 Unit done when:
 
-- [ ] Focused test passes.
+- [ ] Focused tests pass.
 - [ ] `pnpm typecheck` passes.
-- [ ] CLI behavior is documented.
+- [ ] Output is shorter or clearer than baseline.
+- [ ] The next action is explicit.
 - [ ] Guide updated.
 
 ### Units
 
 | Unit | Status | Tests | Validation | Notes |
 |---|---|---|---|---|
-| `tend` default command | Not started | pending | pending | First implementation unit |
-| `status` concise/verbose output | Not started | pending | pending | Depends on `tend` semantics |
-| `verify --changed --dry-run` explanation | Not started | pending | pending | Lower-level diagnostic surface |
-| Impact warnings | Not started | pending | pending | Shared model used by status/tend/verify/evidence |
-| Evidence impact context | Not started | pending | pending | Depends on impact warnings |
-| Proposal lifecycle hardening | Not started | pending | pending | Keep explicit and non-destructive |
+| `tend` finish report | Not started | pending | pending | Highest leverage first |
+| `verify --changed --dry-run` explanation | Not started | pending | pending | Detailed diagnostic layer |
+| Impact warning wording/severity | Not started | pending | pending | Model exists; discipline needs hardening |
+| Evidence prune/index summary | Not started | pending | pending | Preserve useful local memory |
+| Proposal review output | Not started | pending | pending | Make decisions readable without YAML |
+| Fixture alignment scenarios | Not started | pending | pending | CI-safe confidence |
+| Real repo proof | Not started | pending | pending | Shows AI benefit in target repos |
 
 ---
 
@@ -780,42 +745,50 @@ Unit done when:
 
 ### Principles
 
-- Tests are phase exit criteria.
-- If a needed test does not exist, creating it is the first task in that phase.
-- Tests should validate user-visible behavior and command contracts, not only internal implementation.
-- `status` must remain read-only.
-- `tend --check` must remain non-writing and structural-only.
-- Default `tend` may write evidence/reports only as explicitly specified.
-- Real repo alignment is required before merging product-surface changes.
+- Test user-visible behavior and command contracts.
+- Add/extend tests before changing output.
+- Do not accept broad snapshots that make intentional wording changes painful.
+- Prefer targeted assertions for section order, next action, command reasons, and safety invariants.
+- Real repo alignment remains read-only unless the user explicitly approves repo changes.
 
 ### Coverage Map
 
 | Phase | What's Tested | Test Type | Exists? | Path |
 |---|---|---|---|---|
-| Phase 1 | Tend contract and CLI wording | Unit/CLI | Yes - extend | `tests/tend.test.ts`, `tests/cli.test.ts` |
-| Phase 2 | Composed `tend` execution/evidence/exit behavior | Unit/integration | Partial - extend | `tests/tend.test.ts`, `tests/lifecycle.test.ts` |
-| Phase 3 | Status concise/verbose/json output | Unit/CLI | Partial - extend | `tests/lifecycle.test.ts`, `tests/cli.test.ts` |
-| Phase 4 | Verify dry-run explanation | Unit/CLI | Partial - extend | `tests/validation.test.ts`, `tests/cli.test.ts` |
-| Phase 5 | Change-impact detection | Unit/integration | No - create | `tests/impact.test.ts`, existing integration tests |
-| Phase 6 | Evidence impact context | Unit | Partial - extend | `tests/evidence.test.ts` |
-| Phase 7 | Proposal identity/dismissal/idempotency | Unit | Partial - extend | `tests/proposals.test.ts` |
-| Phase 8 | Alignment repos and docs | Unit/real repo | Yes - extend | `tests/alignment.test.ts`, `pnpm alignment:check` |
+| Phase 0 | Baseline health and snapshots | Full/real repo | Yes | `pnpm check`, `pnpm alignment:check` |
+| Phase 1 | `tend` report readability | Unit/CLI | Yes - extend | `tests/tend.test.ts`, `tests/cli.test.ts` |
+| Phase 2 | Dry-run explanation completeness | Unit | Yes - extend | `tests/validation.test.ts` |
+| Phase 3 | Impact severity and resolution discipline | Unit/integration | Yes - extend | `tests/impact.test.ts`, `tests/lifecycle.test.ts`, `tests/tend.test.ts`, `tests/evidence.test.ts` |
+| Phase 4 | Evidence index/prune reliability | Unit | Yes - extend | `tests/evidence.test.ts` |
+| Phase 5 | Proposal review readability | Unit | Yes - extend | `tests/proposals.test.ts` |
+| Phase 6 | Portable agentic scenarios | Fixture/integration | No - create | `tests/alignment.test.ts`, `pnpm alignment:fixtures` |
+| Phase 7 | Target repo agent-readiness | Real repo | Yes | `pnpm alignment:check`, `docs/tending-reliability-proof.md` |
 
 ### Full Validation Run
 
-Run after every phase completion:
+Run after each phase:
 
 ```bash
 pnpm typecheck
 pnpm test:tend
-pnpm test:lifecycle
 pnpm test:validation
+pnpm test:impact
 pnpm test:evidence
-pnpm test:cli
+pnpm test:proposals
+pnpm test:alignment
 pnpm build
 ```
 
-Run before declaring the full plan complete:
+Run before the full phase is complete:
+
+```bash
+pnpm check
+pnpm alignment:fixtures
+pnpm alignment:check
+```
+
+`pnpm alignment:fixtures` is introduced in Phase 6. Until then, the required
+gate is:
 
 ```bash
 pnpm check
@@ -829,15 +802,16 @@ pnpm alignment:check
 | Failure Type | Detection | Action |
 |---|---|---|
 | Test failure | Focused Vitest command exits non-zero | Fix in current phase before proceeding |
-| Type error | `pnpm typecheck` exits non-zero | Check contracts between command/model/schema layers |
-| Build failure | `pnpm build` exits non-zero | Check exports, ESM imports, and dist assumptions |
-| `status` writes files | Lifecycle test or git status detects mutation | Stop and restore read-only boundary |
-| `tend --check` writes or runs validation | Tend test detects mutation/execution | Stop and split structural check path |
-| Default `tend` mutates authored roots | Tend/proposal tests detect file changes | Stop; convert mutation into proposal |
-| Evidence leaks too much output | Evidence tests or review detects full logs/secrets | Add bounded excerpt/redaction before proceeding |
-| Alignment repo fails unexpectedly | `pnpm alignment:check` fails | Determine whether Greenhouse behavior or repo expectation changed; document before updating expectations |
-| Ambiguous product decision | Cannot decide severity/exit behavior | Stop and ask Niklas |
-| Repeated failure 3 times | Same check fails after three fix attempts | Escalate with concrete alternatives |
+| Type error | `pnpm typecheck` exits non-zero | Check contracts between formatter/model/schema layers |
+| Build failure | `pnpm build` exits non-zero | Check exports and ESM imports |
+| Output becomes noisier | Before/after comparison is worse | Rework formatter before proceeding |
+| `status` writes files | Git status or lifecycle test detects mutation | Stop and restore read-only boundary |
+| `tend --check` writes or runs validation | Tend tests detect mutation/execution | Stop and isolate structural path |
+| Known failure becomes green | Evidence/validation tests detect pass override | Stop and restore strict validation semantics |
+| Generated files pollute routing | Validation/alignment test fails | Fix classification before proceeding |
+| Real repo alignment fails unexpectedly | `pnpm alignment:check` fails | Determine whether implementation or expectation changed; document before updating expectations |
+| Ambiguous product decision | Cannot choose blocking vs warning behavior | Stop and ask Niklas |
+| Same failure repeats 3 times | Same test/check fails after three attempts | Escalate with concrete alternatives |
 
 ---
 
@@ -845,14 +819,14 @@ pnpm alignment:check
 
 | Phase | Title | Status | Tests | Validation | Completed |
 |---|---|---|---|---|---|
-| 1 | Tend Product Contract And Test Skeleton | Complete | pass | pass | 2026-05-25 |
-| 2 | Compose Default `tend` | Complete | pass | pass | 2026-05-25 |
-| 3 | Status Concision And Verbose/JSON Detail | Complete | pass | pass | 2026-05-25 |
-| 4 | Explain Verification Dry-Run | Complete | pass | pass | 2026-05-25 |
-| 5 | Change-Impact Model | Not started | pending | pending | - |
-| 6 | Evidence Policy And Impact Context | Not started | pending | pending | - |
-| 7 | Proposal Lifecycle Hardening | Not started | pending | pending | - |
-| 8 | Documentation And Alignment | Not started | pending | pending | - |
+| 0 | Baseline And Output Snapshots | Complete | pass | pass | 2026-05-25 |
+| 1 | Product-Grade `tend` Report | Not started | pending | pending | - |
+| 2 | Dry-Run Explanation Reliability | Not started | pending | pending | - |
+| 3 | Impact Severity Discipline | Not started | pending | pending | - |
+| 4 | Evidence Summary And Prune Reliability | Not started | pending | pending | - |
+| 5 | Proposal Review UX Reliability | Not started | pending | pending | - |
+| 6 | Portable Fixture Alignment | Not started | pending | pending | - |
+| 7 | Real Repo Agent-Readiness Proof | Not started | pending | pending | - |
 
 ---
 
@@ -860,27 +834,22 @@ pnpm alignment:check
 
 - [ ] All phases marked complete or intentionally skipped with reason.
 - [ ] `pnpm check` passes.
+- [ ] `pnpm alignment:fixtures` passes.
 - [ ] `pnpm alignment:check` passes.
-- [ ] Docs reflect the final command model.
+- [ ] `greenhouse-summary.md` reflects final behavior.
+- [ ] `docs/tending-reliability-proof.md` exists and shows real repo benefit.
 - [ ] No skipped tests without documented reason.
 - [ ] No silent authored-root mutation introduced.
 - [ ] No known/repeated failure is treated as success.
-- [ ] Branch is ready for review/merge.
 - [ ] Follow-up work is documented.
 
 ---
 
 ## 8. Recommended First Phase
 
-Start with Phase 1.
+Start with Phase 0.
 
-Do not implement composed `tend` behavior first. The exact semantics need to be locked down by tests because this command becomes the main product surface. Phase 1 should answer and codify:
-
-- What does default `greenhouse-spec tend` run?
-- What does it write?
-- What still belongs only to `tend --check`?
-- What exit states are possible?
-- How does it avoid silent mutation?
-- What output should an agent/developer see?
-
-Once Phase 1 passes, Phase 2 can safely implement the behavior.
+Do not improve runtime output before capturing the current output baseline.
+The goal of this next phase is not only to make tests pass; it is to make the
+agent-facing experience noticeably clearer in Declarion, Sourcer, and Ensember.
+Without before/after output, we cannot prove that the AI is actually helped.

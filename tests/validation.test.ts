@@ -559,18 +559,19 @@ describe("validation routing and evidence", () => {
       kind: "risk-rule",
       message: 'Matched risk "generated-output-contract".',
     });
-    expect(formatVerifyReport(report)).toContain("## Route explanation");
-    expect(formatVerifyReport(report)).toContain("## Agent takeaway");
-    expect(formatVerifyReport(report)).toContain(
-      "- Coverage: 1/1 file(s) routed for validation.",
-    );
-    expect(formatVerifyReport(report)).toContain("## Validation plan");
-    expect(formatVerifyReport(report)).toContain(
-      '- path-rule: Matched path rule "src/engine/sru/**".',
-    );
-    expect(formatVerifyReport(report)).toContain(
-      "- source: path-rule (src/engine/sru/**)",
-    );
+    const output = formatVerifyReport(report);
+    expect(output).toContain("# Greenhouse Verify");
+    expect(output).toContain("## Changed");
+    expect(output).toContain("## Groups");
+    expect(output).toContain("## Impact");
+    expect(output).toContain("## Routing");
+    expect(output).toContain("- coverage: 1/1 file(s) routed");
+    expect(output).toContain('- path-rule: Matched path rule "src/engine/sru/**".');
+    expect(output).toContain("## Commands");
+    expect(output).toContain("- source: path-rule (src/engine/sru/**)");
+    expect(output).toContain("## Manual Checks");
+    expect(output).toContain("## Skipped / Excluded");
+    expect(output).toContain("## Next");
   });
 
   it("routes official source paths to guarded through the risk index", () => {
@@ -670,6 +671,9 @@ describe("validation routing and evidence", () => {
         ".greenhouse/evidence/2026-05-23T00-00-00-000Z-verify.md was excluded from validation routing because it is generated or not routable.",
     });
     expect(formatVerifyReport(report)).toContain("- generated-excluded:");
+    expect(formatVerifyReport(report)).toContain(
+      "- excluded: .greenhouse/evidence/2026-05-23T00-00-00-000Z-verify.md",
+    );
     expect(formatVerifyReport(report)).toContain("- skipped:");
   });
 
@@ -690,8 +694,8 @@ describe("validation routing and evidence", () => {
         severity: "warning",
       }),
     );
-    expect(output).toContain("- Impact warnings: 1 warning.");
-    expect(output).toContain("## Impact warnings");
+    expect(output).toContain("## Impact");
+    expect(output).toContain("- summary: 1 warning");
     expect(output).toContain("package.json changed; setup docs");
   });
 
@@ -712,6 +716,11 @@ describe("validation routing and evidence", () => {
         kind: "validation-route-drift",
       }),
     );
+    const output = formatVerifyReport(report);
+    expect(output).toContain("## Impact");
+    expect(output).toContain("- summary: 1 guarded");
+    expect(output).toContain("source files used fallback validation");
+    expect(output).toContain("- fallback-default:");
   });
 
   it("writes evidence with selected commands and skipped validation notes", () => {

@@ -151,78 +151,71 @@ export function formatVerifyReport(report: VerifyReport): string {
   const commandCount = report.route.commands.length;
   const manualCheckCount = report.route.manualChecks.length;
   const validationAction = report.dryRun ? "selected" : "executed";
+  const unroutedFiles = consideredFiles.filter(
+    (file) => !report.route.changedFiles.includes(file),
+  );
   const lines = [
-    "# Greenhouse Verify Report",
+    "# Greenhouse Verify",
     "",
     `Repository: ${report.cwd}`,
     `Mode: ${report.route.mode}`,
     `Run mode: ${report.dryRun ? "dry-run" : "execute"}`,
     `Status: ${report.ok ? "pass" : "fail"}`,
     "",
-    "## Agent takeaway",
-    "",
-    `- Coverage: ${report.route.changedFiles.length}/${consideredFiles.length} file(s) routed for validation.`,
-    `- Validation: ${commandCount === 0 ? "no commands selected" : `${commandCount} ${pluralize("command", commandCount)} ${validationAction}`}.`,
-    `- Manual checks: ${manualCheckCount === 0 ? "none" : `${manualCheckCount} pending`}.`,
-    `- Impact warnings: ${formatImpactSummary(report.impactWarnings)}.`,
-    `- Next: ${formatVerifyNextStep(report)}`,
-    "",
-    "## Validation plan",
+    "## Changed",
     "",
   ];
-
-  if (report.route.commands.length === 0) {
-    lines.push(`- skipped: ${report.route.skippedValidation}`);
-  } else {
-    for (const command of report.route.commands) {
-      const result = report.commandResults.find(
-        (item) => item.command === command.command,
-      );
-      lines.push(`- ${command.command} [${result?.result ?? "not_run"}]`);
-      lines.push(`  - why: ${command.reason}`);
-    }
-  }
-
-  lines.push(
-    "",
-    "## Changed files",
-    "",
-  );
 
   if (consideredFiles.length === 0) {
     lines.push("- none");
   } else {
+    lines.push(
+      `- ${consideredFiles.length} file${consideredFiles.length === 1 ? "" : "s"} considered`,
+    );
+    lines.push(`- ${report.route.changedFiles.length} routed for validation`);
     for (const file of consideredFiles) {
       lines.push(`- ${file}`);
     }
   }
 
-  lines.push("", "## Changed file groups", "");
+  lines.push("", "## Groups", "");
   for (const [category, files] of Object.entries(report.classification.groups)) {
-    lines.push(`- ${category}: ${files.length === 0 ? "none" : files.join(", ")}`);
+    lines.push(
+      `- ${category}: ${files.length === 0 ? "none" : files.join(", ")}`,
+    );
   }
 
-  lines.push("", "## Routed files", "");
-  if (report.route.changedFiles.length === 0) {
+  lines.push("", "## Impact", "");
+  if (report.impactWarnings.length === 0) {
     lines.push("- none");
   } else {
-    for (const file of report.route.changedFiles) {
-      lines.push(`- ${file}`);
+    lines.push(`- summary: ${formatImpactSummary(report.impactWarnings)}`);
+    for (const warning of report.impactWarnings) {
+      lines.push(`- ${warning.severity}: ${warning.reason}`);
+      lines.push(`  - changed: ${warning.changedFiles.join(", ")}`);
+      lines.push(`  - affected: ${warning.affected.join(", ")}`);
     }
   }
 
-  lines.push("", "## Risks", "");
+  lines.push("", "## Routing", "");
+  lines.push(
+    `- coverage: ${report.route.changedFiles.length}/${consideredFiles.length} file(s) routed`,
+  );
+  lines.push(
+    `- validation: ${commandCount === 0 ? "no commands selected" : `${commandCount} ${pluralize("command", commandCount)} ${validationAction}`}`,
+  );
+  lines.push(
+    `- manual checks: ${manualCheckCount === 0 ? "none" : `${manualCheckCount} pending`}`,
+  );
+  lines.push(`- mode: ${report.route.mode}`);
+
   if (report.route.risks.length === 0) {
-    lines.push("- none");
+    lines.push("- risks: none");
   } else {
-    for (const risk of report.route.risks) {
-      lines.push(`- ${risk}`);
-    }
+    lines.push(`- risks: ${report.route.risks.join(", ")}`);
   }
-
-  lines.push("", "## Route explanation", "");
   if (report.route.explanations.length === 0) {
-    lines.push("- none");
+    lines.push("- explanation: none");
   } else {
     for (const explanation of report.route.explanations) {
       lines.push(`- ${explanation.kind}: ${explanation.message}`);
@@ -244,12 +237,27 @@ export function formatVerifyReport(report: VerifyReport): string {
       lines.push(
         `- ${result?.result ?? "not_run"}: ${command.command}`,
       );
-      lines.push(`  - source: ${command.source}${command.matched ? ` (${command.matched})` : ""}`);
+      lines.push(
+        `  - source: ${command.source}${command.matched ? ` (${command.matched})` : ""}`,
+      );
       lines.push(`  - reason: ${command.reason}${annotationText}`);
     }
   }
 
-  lines.push("", "## Repeated failures", "");
+  lines.push("", "## Manual Checks", "");
+  if (report.route.manualChecks.length === 0) {
+    lines.push("- none");
+  } else {
+    for (const check of report.route.manualChecks) {
+      lines.push(`- pending: ${check.prompt}`);
+      lines.push(
+        `  - source: ${check.source}${check.matched ? ` (${check.matched})` : ""}`,
+      );
+      lines.push(`  - reason: ${check.reason}`);
+    }
+  }
+
+  lines.push("", "## Repeated Failures", "");
   if (report.failureAnnotations.length === 0) {
     lines.push("- none");
   } else {
@@ -260,34 +268,25 @@ export function formatVerifyReport(report: VerifyReport): string {
     }
   }
 
-  lines.push("", "## Manual checks", "");
-  if (report.route.manualChecks.length === 0) {
+  lines.push("", "## Skipped / Excluded", "");
+  if (unroutedFiles.length === 0 && !report.route.skippedValidation) {
     lines.push("- none");
   } else {
-    for (const check of report.route.manualChecks) {
-      lines.push(`- pending: ${check.prompt}`);
-      lines.push(`  - source: ${check.source}${check.matched ? ` (${check.matched})` : ""}`);
-      lines.push(`  - reason: ${check.reason}`);
+    if (unroutedFiles.length > 0) {
+      for (const file of unroutedFiles) {
+        lines.push(`- excluded: ${file}`);
+      }
+    }
+    if (report.route.skippedValidation) {
+      lines.push(`- skipped: ${report.route.skippedValidation}`);
     }
   }
-
-  lines.push("", "## Impact warnings", "");
-  if (report.impactWarnings.length === 0) {
-    lines.push("- none");
-  } else {
-    for (const warning of report.impactWarnings) {
-      lines.push(`- ${warning.severity}: ${warning.reason}`);
-      lines.push(`  - changed: ${warning.changedFiles.join(", ")}`);
-      lines.push(`  - affected: ${warning.affected.join(", ")}`);
-    }
-  }
-
-  lines.push("", "## Skipped validation", "");
-  lines.push(report.route.skippedValidation ?? "No validation was skipped.");
 
   if (report.evidencePath) {
-    lines.push("", `Evidence written: ${report.evidencePath}`);
+    lines.push("", "## Evidence", "", `- written: ${report.evidencePath}`);
   }
+
+  lines.push("", "## Next", "", `- ${formatVerifyNextStep(report)}`);
 
   lines.push("");
   return lines.join("\n");

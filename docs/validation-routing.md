@@ -99,6 +99,23 @@ indexes and current verification output first. Open specific evidence files only
 when continuing a related change, debugging validation, or investigating tend
 recommendations.
 
+## Dry-Run Reports
+
+`verify --changed --dry-run` is the detailed routing explanation surface. It
+does not run commands, but it should make the validation plan auditable without
+opening generated YAML.
+
+The report is ordered as:
+
+```text
+Changed -> Groups -> Impact -> Routing -> Commands -> Manual Checks
+-> Repeated Failures -> Skipped / Excluded -> Next
+```
+
+This order intentionally puts stale-assumption risks and route coverage before
+command detail. Generated Greenhouse files appear under `Skipped / Excluded`
+instead of expanding product validation.
+
 ## Impact Warnings
 
 Impact warnings call out stale assumptions that validation alone may not prove.

@@ -211,11 +211,25 @@ greenhouse-spec verify --mode guarded --paths src/engine/tax/example.ts
 Selects validation commands from `.greenhouse/roots/validation.yaml` and runs
 them unless `--dry-run` is used.
 
-Dry-run output is the validation routing explanation surface. It starts with an
-agent takeaway and validation plan, then shows changed files, changed-file
-groups, routed files, risks, route explanations, selected commands with
-source/reason metadata, impact warnings, manual checks, and skipped/generated
-validation notes.
+Dry-run output is the validation routing explanation surface. It is ordered for
+fast agent scanning:
+
+```text
+Changed
+Groups
+Impact
+Routing
+Commands
+Manual Checks
+Repeated Failures
+Skipped / Excluded
+Next
+```
+
+The report shows which files were considered, which groups they belong to, what
+impact warnings exist before command detail, route coverage, fallback/guarded
+explanations, selected commands with source/reason metadata, manual checks,
+generated files excluded from routing, and the next useful command.
 
 Impact warnings are stale-assumption signals, not automatic edits. They call out
 cases such as package scripts affecting setup docs, CLI source affecting CLI

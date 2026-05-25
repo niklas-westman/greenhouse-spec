@@ -216,3 +216,53 @@ Product improvement:
 - Successful install/self-tending internals are collapsed.
 - The report ends with the next useful action.
 - Detailed route reasoning remains in `verify --changed --dry-run`.
+
+## Phase 2 After Snapshot: `greenhouse-spec verify --changed --dry-run`
+
+After Phase 2, dry-run verification keeps the same routing behavior but renders
+as a clearer explanation report:
+
+```text
+# Greenhouse Verify
+
+Mode: patch
+Run mode: dry-run
+Status: pass
+
+Changed:
+  2 files considered
+  2 routed for validation
+
+Groups:
+  product-source: src/verify/run-verify.ts, tests/validation.test.ts
+
+Impact:
+  none
+
+Routing:
+  coverage: 2/2 file(s) routed
+  validation: 2 commands selected
+  path-rule: Matched path rule "src/verify/**".
+
+Commands:
+  not_run: pnpm test:validation
+    source: path-rule (src/verify/**)
+    reason: Matched path rule "src/verify/**".
+
+Skipped / Excluded:
+  none
+
+Next:
+  run greenhouse-spec tend for the normal finish gate, or rerun verify without --dry-run.
+```
+
+Product improvement:
+
+- Impact warnings appear before command execution detail.
+- Route coverage and fallback/guarded explanations live in one `Routing`
+  section.
+- Every selected command remains tied to source and reason metadata.
+- Generated Greenhouse artifacts are listed as excluded instead of polluting
+  product validation routing.
+- The report is now a more reliable diagnostic companion to the shorter
+  `tend` finish gate.

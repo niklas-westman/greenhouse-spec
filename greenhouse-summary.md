@@ -171,12 +171,14 @@ It shows:
 
 - Changed files.
 - File groups.
-- Routed files.
+- Impact warnings before command detail.
+- Route coverage.
 - Selected commands.
 - Route sources and reasons.
 - Manual checks.
-- Generated files excluded from routing.
-- Impact warnings.
+- Repeated failure annotations when present.
+- Generated files skipped or excluded from routing.
+- The next useful command.
 
 This is useful when an agent wants to understand why Greenhouse selected a
 particular validation plan.
@@ -392,7 +394,9 @@ Greenhouse now has:
 - A concise `status` command with `pass`, `degraded`, and `fail` states.
 - A composed `tend` finish gate for everyday work.
 - A structural-only `tend --check` gate.
-- Changed-file validation routing with explainable dry-run output.
+- Changed-file validation routing with explainable dry-run output ordered as
+  Changed, Groups, Impact, Routing, Commands, Manual Checks, Repeated Failures,
+  Skipped/Excluded, and Next.
 - Change-impact warnings for stale docs/config/spec/generated assumptions.
 - Documentation ownership through `.greenhouse/roots/docs.yaml`.
 - Evidence records with route reasons, impact warnings, manual checks, tending
@@ -409,7 +413,8 @@ Greenhouse now has:
 
 The next improvements should stay inside the lightweight tending model:
 
-1. Improve readability of `tend` and `verify --dry-run` reports for agents.
+1. Continue testing readability of `tend` and `verify --dry-run` reports in real
+   agent sessions.
 2. Add better impact rules only where real repo usage proves value.
 3. Make proposal dismissals and decisions easier to review.
 4. Improve evidence summarization and pruning before evidence grows noisy.

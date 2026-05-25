@@ -19,7 +19,7 @@ This guide MUST be updated during implementation:
 - [ ] Update test coverage map as tests are written.
 
 Last updated: 2026-05-25
-Current phase: 2
+Current phase: 3
 
 ---
 
@@ -315,7 +315,7 @@ Status: Complete - 2026-05-25
 
 Goal: Make `verify --changed --dry-run` the complete explanation layer for routing decisions.
 Depends on: Phase 1
-Status: Not started
+Status: Complete - 2026-05-25
 
 #### Inputs
 
@@ -344,21 +344,36 @@ Status: Not started
 
 #### Tasks
 
-- [ ] Add/extend tests for command reason, source, and matched route in dry-run output.
+- [x] Add/extend tests for command reason, source, and matched route in dry-run output.
   - Tool: edit
   - Verify: `pnpm test:validation`
 
-- [ ] Add/extend tests for generated Greenhouse files excluded from routing.
+- [x] Add/extend tests for generated Greenhouse files excluded from routing.
   - Tool: edit
   - Verify: `pnpm test:validation`
 
-- [ ] Add tests for fallback or guarded behavior being explicitly explained.
+- [x] Add tests for fallback or guarded behavior being explicitly explained.
   - Tool: edit
   - Verify: `pnpm test:validation`
 
-- [ ] Improve dry-run section order: Changed, Groups, Impact, Routing, Commands, Manual checks, Skipped/excluded, Next.
+- [x] Improve dry-run section order: Changed, Groups, Impact, Routing, Commands, Manual checks, Skipped/excluded, Next.
   - Tool: edit
   - Verify: `pnpm test:validation`
+
+#### Phase Notes
+
+- Completed on 2026-05-25.
+- Runtime routing behavior was preserved; this phase changed the rendered
+  dry-run explanation.
+- `formatVerifyReport` now uses `Changed`, `Groups`, `Impact`, `Routing`,
+  `Commands`, `Manual Checks`, `Repeated Failures`, `Skipped / Excluded`, and
+  `Next`.
+- Impact warnings now appear before command detail, so stale-assumption risks
+  are visible before an agent reads validation commands.
+- Generated Greenhouse files are shown as excluded in the report and remain out
+  of product validation routing.
+- Before/after comparison is recorded in
+  `docs/tending-reliability-baseline.md`.
 
 #### Tests for This Phase
 
@@ -371,10 +386,10 @@ Status: Not started
 
 #### Phase Exit Criteria
 
-- [ ] `pnpm test:validation` passes.
-- [ ] `pnpm typecheck` passes.
-- [ ] `pnpm build` passes.
-- [ ] Guide updated with completion notes.
+- [x] `pnpm test:validation` passes.
+- [x] `pnpm typecheck` passes.
+- [x] `pnpm build` passes.
+- [x] Guide updated with completion notes.
 
 ---
 
@@ -744,8 +759,8 @@ Unit done when:
 
 | Unit | Status | Tests | Validation | Notes |
 |---|---|---|---|---|
-| `tend` finish report | Not started | pending | pending | Highest leverage first |
-| `verify --changed --dry-run` explanation | Not started | pending | pending | Detailed diagnostic layer |
+| `tend` finish report | Complete | pass | pass | State-first finish report |
+| `verify --changed --dry-run` explanation | Complete | pass | pass | Detailed diagnostic layer |
 | Impact warning wording/severity | Not started | pending | pending | Model exists; discipline needs hardening |
 | Evidence prune/index summary | Not started | pending | pending | Preserve useful local memory |
 | Proposal review output | Not started | pending | pending | Make decisions readable without YAML |
@@ -834,7 +849,7 @@ pnpm alignment:check
 |---|---|---|---|---|---|
 | 0 | Baseline And Output Snapshots | Complete | pass | pass | 2026-05-25 |
 | 1 | Product-Grade `tend` Report | Complete | pass | pass | 2026-05-25 |
-| 2 | Dry-Run Explanation Reliability | Not started | pending | pending | - |
+| 2 | Dry-Run Explanation Reliability | Complete | pass | pass | 2026-05-25 |
 | 3 | Impact Severity Discipline | Not started | pending | pending | - |
 | 4 | Evidence Summary And Prune Reliability | Not started | pending | pending | - |
 | 5 | Proposal Review UX Reliability | Not started | pending | pending | - |

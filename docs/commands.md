@@ -25,11 +25,16 @@ checks, changed-file validation dry-run, and latest evidence discovery.
 
 Use `--json` when another agent or script needs stable fields instead of
 Markdown. The JSON report includes `overallStatus`, categorized `health`,
-`generatedOnlyDirty`, changed-file groups, repeated failures, and the next
-recommended command.
+`generatedOnlyDirty`, changed-file groups, evidence coverage, repeated failures,
+legacy `nextCommand`, and structured `nextAction`.
 
 When only generated Greenhouse artifacts are dirty, status says
 `generated-only dirty: yes`; those files do not affect validation routing.
+
+When routed files are dirty, status compares the current routed files and
+commands with the latest indexed evidence. If the latest matching evidence
+passed, changed validation remains `pass`; otherwise it is `degraded` until
+`verify --changed --write-evidence` records fresh passing evidence.
 
 Side effects: none.
 
@@ -180,6 +185,25 @@ greenhouse-spec doctor --write-report
 Checks that the installed Greenhouse configuration is internally consistent.
 `--write-report` appends a report under `.greenhouse/reports/doctor/`. Old
 generated reports are pruned unless `--no-prune` is used.
+
+## `alignment`
+
+```bash
+greenhouse-spec alignment
+greenhouse-spec alignment --repo declarion
+greenhouse-spec alignment --repo declarion sourcer ensember
+greenhouse-spec alignment --json
+```
+
+Runs read-only contracts against the local alignment repos. It does not refresh
+`.greenhouse/grown/**`, apply proposals, or write evidence in target repos.
+
+Default contracts:
+
+- Declarion: single-package React/Vite + CLI, expected degraded status from the
+  known repeated app test failure, and scoped app routing.
+- Sourcer: React workspace frontend plus Java/Maven backend routing.
+- Ensember: React/Vite + Tauri/Rust/Cargo routing, including `src-tauri/**`.
 
 ## `evidence prune`
 

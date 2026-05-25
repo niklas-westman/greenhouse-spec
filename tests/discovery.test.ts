@@ -224,6 +224,67 @@ describe("discovery", () => {
     ]);
     expect(repoShape.gaps.map((gap) => gap.id)).toContain("polyglot-routing-review");
   });
+
+  it("detects Tauri Rust modules and Cargo build output", () => {
+    const repo = createTempRepo();
+    writeFileSync(join(repo, "pnpm-lock.yaml"), "lockfileVersion: '9.0'\n");
+    mkdirSync(join(repo, "src-tauri", "src"), { recursive: true });
+    mkdirSync(join(repo, "src-tauri", "target"), { recursive: true });
+    writeFileSync(
+      join(repo, "src-tauri", "Cargo.toml"),
+      ["[package]", 'name = "ensember"', 'version = "0.1.0"', ""].join("\n"),
+    );
+    writePackageJson(repo, {
+      name: "ensember",
+      scripts: {
+        tauri: "tauri",
+        "tauri:dev": "tauri dev",
+        lint: "eslint .",
+        test: "vitest run",
+        typecheck: "tsc -b",
+      },
+      dependencies: {
+        "@tauri-apps/api": "2.11.0",
+        react: "19.2.6",
+      },
+      devDependencies: {
+        "@tauri-apps/cli": "2.11.2",
+        typescript: "5.9.3",
+        vite: "7.2.4",
+        vitest: "4.0.14",
+      },
+    });
+
+    const repoShape = discoverRepoShape(repo);
+
+    expect(repoShape.shape).toEqual([
+      "single-package",
+      "frontend-react",
+      "rust-cargo",
+      "tauri",
+      "polyglot",
+    ]);
+    expect(repoShape.packages[0]).toMatchObject({
+      path: ".",
+      kind: expect.arrayContaining(["frontend", "desktop"]),
+      languages: expect.arrayContaining(["typescript", "rust"]),
+      frameworks: expect.arrayContaining(["react", "vite", "vitest", "tauri"]),
+    });
+    expect(repoShape.rust_modules).toContainEqual(
+      expect.objectContaining({
+        path: "src-tauri/",
+        package_name: "ensember",
+        commands: expect.objectContaining({
+          test: "cd src-tauri && cargo test",
+        }),
+      }),
+    );
+    expect(repoShape.generated).toContainEqual({
+      path: "src-tauri/target/",
+      reason: "Rust/Cargo build output",
+      confidence: "high",
+    });
+  });
 });
 
 function createTempRepo(): string {

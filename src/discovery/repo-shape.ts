@@ -17,15 +17,15 @@ const generatedDirectoryReasons: Record<string, string> = {
   ".greenhouse/reports/": "Greenhouse generated reports",
   "dist/": "JavaScript build output",
   "dist-cli/": "CLI build output",
-  "target/": "Maven build output",
 };
 
 export function discoverRepoShape(cwd: string): RepoShape {
   const packages = discoverPackages(cwd);
   const javaModules = discoverJavaModules(cwd);
+  const rustModules = discoverRustModules(cwd);
   const generated = discoverGenerated(cwd);
-  const shape = discoverShape(cwd, packages, javaModules);
-  const gaps = discoverGaps(packages, javaModules, shape);
+  const shape = discoverShape(cwd, packages, javaModules, rustModules);
+  const gaps = discoverGaps(packages, javaModules, rustModules, shape);
 
   return {
     schema_version: 1,
@@ -36,6 +36,7 @@ export function discoverRepoShape(cwd: string): RepoShape {
     package_manager: detectPackageManager(cwd),
     packages,
     java_modules: javaModules,
+    rust_modules: rustModules,
     generated,
     gaps,
   };
@@ -128,6 +129,15 @@ function detectPackageKind(
   if (hasDependency(packageJson, "react")) {
     kind.add("frontend");
   }
+  if (
+    hasDependency(packageJson, "@tauri-apps/api") ||
+    hasDependency(packageJson, "@tauri-apps/cli") ||
+    Boolean(packageJson?.scripts?.tauri) ||
+    Boolean(packageJson?.scripts?.["tauri:dev"]) ||
+    existsSync(join(cwd, directory, "src-tauri", "Cargo.toml"))
+  ) {
+    kind.add("desktop");
+  }
   if (hasDependency(packageJson, "aws-cdk-lib") || basename(directory) === "infra-aws") {
     kind.add("infra");
   }
@@ -157,12 +167,31 @@ function detectPackageLanguages(
   if (existsSync(join(cwd, directory, "pom.xml"))) {
     languages.add("java");
   }
+  if (
+    existsSync(join(cwd, directory, "Cargo.toml")) ||
+    existsSync(join(cwd, directory, "src-tauri", "Cargo.toml"))
+  ) {
+    languages.add("rust");
+  }
 
   return [...languages];
 }
 
 function detectPackageFrameworks(packageJson: PackageJson | null): string[] {
-  return ["react", "vite", "vitest"].filter((name) => hasDependency(packageJson, name));
+  const frameworks = ["react", "vite", "vitest"].filter((name) =>
+    hasDependency(packageJson, name),
+  );
+
+  if (
+    hasDependency(packageJson, "@tauri-apps/api") ||
+    hasDependency(packageJson, "@tauri-apps/cli") ||
+    Boolean(packageJson?.scripts?.tauri) ||
+    Boolean(packageJson?.scripts?.["tauri:dev"])
+  ) {
+    frameworks.push("tauri");
+  }
+
+  return frameworks;
 }
 
 function detectPackageCommands(
@@ -200,6 +229,33 @@ function discoverJavaModules(cwd: string): RepoShape["java_modules"] {
   });
 }
 
+function discoverRustModules(cwd: string): RepoShape["rust_modules"] {
+  return fg.sync(["Cargo.toml", "**/Cargo.toml"], {
+    cwd,
+    ignore: ["**/node_modules/**", "**/target/**"],
+    onlyFiles: true,
+  }).sort().map((cargoPath) => {
+    const directory = dirname(cargoPath) === "." ? "." : `${dirname(cargoPath)}/`;
+    return {
+      path: directory,
+      package_name: readCargoPackageName(join(cwd, cargoPath)),
+      build_tool: "cargo" as const,
+      commands: {
+        build: directory === "." ? "cargo build" : `cd ${directory.replace(/\/$/, "")} && cargo build`,
+        test: directory === "." ? "cargo test" : `cd ${directory.replace(/\/$/, "")} && cargo test`,
+      },
+      confidence: "medium" as const,
+    };
+  });
+}
+
+function readCargoPackageName(cargoPath: string): string | null {
+  const source = readFileSync(cargoPath, "utf8");
+  const packageSection = source.match(/\[package\]([\s\S]*?)(?:\n\[|$)/);
+  const match = packageSection?.[1]?.match(/^\s*name\s*=\s*"([^"]+)"\s*$/m);
+  return match?.[1] ?? null;
+}
+
 function readArtifactId(pomPath: string): string | null {
   const source = readFileSync(pomPath, "utf8").replace(
     /<parent>[\s\S]*?<\/parent>/,
@@ -223,9 +279,10 @@ function discoverGenerated(cwd: string): RepoShape["generated"] {
     ignore: ["**/node_modules/**"],
     onlyDirectories: true,
   })) {
+    const normalizedPath = `${path.replace(/\/$/, "")}/`;
     generated.push({
-      path: `${path.replace(/\/$/, "")}/`,
-      reason: "Maven build output",
+      path: normalizedPath,
+      reason: targetDirectoryReason(cwd, normalizedPath),
       confidence: "high",
     });
   }
@@ -250,6 +307,7 @@ function discoverShape(
   cwd: string,
   packages: RepoShape["packages"],
   javaModules: RepoShape["java_modules"],
+  rustModules: RepoShape["rust_modules"],
 ): string[] {
   const shape = new Set<string>();
 
@@ -265,13 +323,22 @@ function discoverShape(
   if (javaModules.length > 0) {
     shape.add("java-maven");
   }
+  if (rustModules.length > 0) {
+    shape.add("rust-cargo");
+  }
+  if (
+    existsSync(join(cwd, "src-tauri", "Cargo.toml")) ||
+    packages.some((item) => item.frameworks.includes("tauri"))
+  ) {
+    shape.add("tauri");
+  }
   if (packages.some((item) => item.kind.includes("api-spec"))) {
     shape.add("api-spec");
   }
   if (packages.some((item) => item.kind.includes("infra"))) {
     shape.add("infra");
   }
-  if (shape.has("java-maven") && packages.length > 0) {
+  if ((shape.has("java-maven") || shape.has("rust-cargo")) && packages.length > 0) {
     shape.add("polyglot");
   }
 
@@ -281,6 +348,7 @@ function discoverShape(
 function discoverGaps(
   packages: RepoShape["packages"],
   javaModules: RepoShape["java_modules"],
+  rustModules: RepoShape["rust_modules"],
   shape: string[],
 ): RepoShape["gaps"] {
   const gaps: RepoShape["gaps"] = [];
@@ -308,6 +376,15 @@ function discoverGaps(
     });
   }
 
+  if (rustModules.length > 0) {
+    gaps.push({
+      id: "cargo-routes-need-authored-validation",
+      severity: "info",
+      message: "Cargo modules were detected; verify authored validation routes call the intended Cargo commands.",
+      paths: rustModules.map((item) => item.path),
+    });
+  }
+
   if (shape.includes("polyglot")) {
     gaps.push({
       id: "polyglot-routing-review",
@@ -318,6 +395,20 @@ function discoverGaps(
   }
 
   return gaps;
+}
+
+function targetDirectoryReason(cwd: string, targetPath: string): string {
+  const modulePath = targetPath.replace(/target\/$/, "");
+
+  if (existsSync(join(cwd, modulePath, "Cargo.toml"))) {
+    return "Rust/Cargo build output";
+  }
+
+  if (existsSync(join(cwd, modulePath, "pom.xml"))) {
+    return "Maven build output";
+  }
+
+  return "Build output";
 }
 
 function uniqueByPath<T extends { path: string }>(items: T[]): T[] {

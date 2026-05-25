@@ -2,6 +2,7 @@ import {
   existsSync,
   mkdirSync,
   mkdtempSync,
+  readFileSync,
   readdirSync,
   rmSync,
   utimesSync,
@@ -11,7 +12,9 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 import { afterEach, describe, expect, it } from "vitest";
+import { parse as parseYaml } from "yaml";
 
+import { buildEvidenceIndex } from "../src/evidence/evidence-index.js";
 import {
   annotateRepeatedFailures,
   buildFailureSignatures,
@@ -200,6 +203,123 @@ describe("failure signatures", () => {
     expect(
       existsSync(join(repo, ".greenhouse", "grown", "failure-signatures.yaml")),
     ).toBe(true);
+  });
+});
+
+describe("evidence index", () => {
+  it("indexes structured passing evidence metadata", () => {
+    const repo = createRepoWithEvidence(0);
+
+    writeEvidence({
+      cwd: repo,
+      route: {
+        mode: "patch",
+        changedFiles: ["package.json"],
+        risks: [],
+        commands: [
+          {
+            id: "check:greenhouse",
+            command: "pnpm check:greenhouse",
+            reason: "repo config",
+          },
+        ],
+        manualChecks: [],
+        skippedValidation: null,
+      },
+      commandResults: [
+        {
+          command: "pnpm check:greenhouse",
+          result: "pass",
+          exitCode: 0,
+          output: "ok",
+        },
+      ],
+      noPrune: true,
+    });
+
+    const index = buildEvidenceIndex(repo);
+
+    expect(index.recent[0]).toMatchObject({
+      status: "pass",
+      mode: "patch",
+      changed_files: ["package.json"],
+      commands: ["pnpm check:greenhouse"],
+      manual_checks: [],
+    });
+    expect(index.recent[0].summary).toContain("files package.json");
+  });
+
+  it("indexes failed evidence metadata", () => {
+    const repo = createRepoWithEvidence(0);
+
+    writeEvidence({
+      cwd: repo,
+      route: {
+        mode: "patch",
+        changedFiles: ["src/App.tsx"],
+        risks: [],
+        commands: [{ id: "test", command: "pnpm test", reason: "test" }],
+        manualChecks: [],
+        skippedValidation: null,
+      },
+      commandResults: [
+        {
+          command: "pnpm test",
+          result: "fail",
+          exitCode: 1,
+          output: "TypeError: localStorage.clear is not a function",
+        },
+      ],
+      noPrune: true,
+    });
+
+    expect(buildEvidenceIndex(repo).recent[0]).toMatchObject({
+      status: "fail",
+      mode: "patch",
+      changed_files: ["src/App.tsx"],
+      commands: ["pnpm test"],
+    });
+  });
+
+  it("writes structured metadata to evidence-index.yaml", () => {
+    const repo = createRepoWithEvidence(0);
+
+    writeEvidence({
+      cwd: repo,
+      route: {
+        mode: "patch",
+        changedFiles: ["package.json"],
+        risks: [],
+        commands: [
+          {
+            id: "check:greenhouse",
+            command: "pnpm check:greenhouse",
+            reason: "repo config",
+          },
+        ],
+        manualChecks: [],
+        skippedValidation: null,
+      },
+      commandResults: [
+        {
+          command: "pnpm check:greenhouse",
+          result: "pass",
+          exitCode: 0,
+          output: "ok",
+        },
+      ],
+      noPrune: true,
+    });
+
+    const written = parseYaml(
+      readFileSync(join(repo, ".greenhouse", "grown", "evidence-index.yaml"), "utf8"),
+    ) as any;
+
+    expect(written.recent[0]).toMatchObject({
+      status: "pass",
+      changed_files: ["package.json"],
+      commands: ["pnpm check:greenhouse"],
+    });
   });
 });
 

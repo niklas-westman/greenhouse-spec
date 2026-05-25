@@ -36,6 +36,15 @@ export const repoShapeSchema = z.object({
       confidence: confidenceSchema,
     }),
   ).default([]),
+  rust_modules: z.array(
+    z.object({
+      path: z.string().min(1),
+      package_name: z.string().min(1).nullable(),
+      build_tool: z.literal("cargo"),
+      commands: commandSetSchema,
+      confidence: confidenceSchema,
+    }),
+  ).default([]),
   generated: z.array(
     z.object({
       path: z.string().min(1),

@@ -8,6 +8,7 @@ describe("greenhouse-spec CLI", () => {
 
     expect(program.commands.map((command) => command.name()).sort()).toEqual([
       "adopt-proposals",
+      "alignment",
       "apply-proposals",
       "doctor",
       "evidence",
@@ -34,6 +35,7 @@ describe("greenhouse-spec CLI", () => {
     expect(help).toContain("verify");
     expect(help).toContain("proposals");
     expect(help).toContain("adopt-proposals");
+    expect(help).toContain("alignment");
     expect(help).toContain("apply-proposals");
     expect(help).toContain("tend");
     expect(help).toContain("evidence");

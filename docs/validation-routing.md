@@ -44,13 +44,16 @@ Examples:
 
 ```text
 docs-only patch
-  format check only, when the repo has an appropriate docs route.
+  format check when available, otherwise lint when that is the repo's style check.
 
 CLI-only patch
   CLI build, CLI tests, and typecheck.
 
 generic app patch
-  app tests and typecheck, without unrelated CLI smoke checks.
+  style check, app tests, and typecheck, without unrelated CLI smoke checks.
+
+Tauri/Rust patch
+  Cargo tests for src-tauri changes, proposed through repo-shape routing.
 
 guarded tax/source/generated-output patch
   full validation plus a manual guarded-risk review.
@@ -98,6 +101,10 @@ A healthy route is scoped but not weak:
 
 - Docs changes should not run unrelated app tests.
 - CLI changes should not run app tests unless shared contracts are touched.
+- Inferred routes should use existing repo commands and avoid inventing missing
+  scripts such as `pnpm format:check`.
+- Tauri/Rust changes should route through Cargo validation instead of generic
+  TypeScript-only checks.
 - High-risk source, tax, API, generated output, migration, and official source
   changes should run broad validation and request manual review.
 - Generated Greenhouse evidence and reports should not pollute changed-file

@@ -208,6 +208,142 @@ describe("validation routing and evidence", () => {
     );
   });
 
+  it("uses lint for inferred app patches when format check is unavailable", () => {
+    const route = routeValidation({
+      changedFiles: ["src/app.tsx"],
+      commandIndex: {
+        schema_version: 1,
+        managed_by: "greenhouse-spec",
+        generated_at: "2026-05-25T00:00:00Z",
+        package_manager: "pnpm",
+        commands: [
+          {
+            id: "lint",
+            command: "pnpm lint",
+            source: "package.json",
+            purpose: "lint validation",
+            confidence: "high",
+          },
+          {
+            id: "typecheck",
+            command: "pnpm typecheck",
+            source: "package.json",
+            purpose: "TypeScript validation",
+            confidence: "high",
+          },
+          {
+            id: "test",
+            command: "pnpm test",
+            source: "package.json",
+            purpose: "test suite",
+            confidence: "high",
+          },
+        ],
+      },
+      validation: {
+        schema_version: 1,
+        defaults: {
+          required: [
+            { id: "typecheck", command: "pnpm typecheck" },
+            { id: "test", command: "pnpm test" },
+          ],
+          recommended: [],
+          manual: [],
+        },
+      },
+    });
+
+    expect(route.commands.map((command) => command.command)).toEqual([
+      "pnpm lint",
+      "pnpm typecheck",
+      "pnpm test",
+    ]);
+  });
+
+  it("does not invent style checks for inferred app patches", () => {
+    const route = routeValidation({
+      changedFiles: ["src/app.tsx"],
+      commandIndex: {
+        schema_version: 1,
+        managed_by: "greenhouse-spec",
+        generated_at: "2026-05-25T00:00:00Z",
+        package_manager: "pnpm",
+        commands: [
+          {
+            id: "typecheck",
+            command: "pnpm typecheck",
+            source: "package.json",
+            purpose: "TypeScript validation",
+            confidence: "high",
+          },
+          {
+            id: "test",
+            command: "pnpm test",
+            source: "package.json",
+            purpose: "test suite",
+            confidence: "high",
+          },
+        ],
+      },
+      validation: {
+        schema_version: 1,
+        defaults: {
+          required: [
+            { id: "typecheck", command: "pnpm typecheck" },
+            { id: "test", command: "pnpm test" },
+          ],
+          recommended: [],
+          manual: [],
+        },
+      },
+    });
+
+    expect(route.commands.map((command) => command.command)).toEqual([
+      "pnpm typecheck",
+      "pnpm test",
+    ]);
+    expect(route.commands.map((command) => command.command)).not.toContain(
+      "pnpm format:check",
+    );
+  });
+
+  it("uses lint for docs-only patches when format check is unavailable", () => {
+    const route = routeValidation({
+      changedFiles: ["README.md"],
+      commandIndex: {
+        schema_version: 1,
+        managed_by: "greenhouse-spec",
+        generated_at: "2026-05-25T00:00:00Z",
+        package_manager: "pnpm",
+        commands: [
+          {
+            id: "lint",
+            command: "pnpm lint",
+            source: "package.json",
+            purpose: "lint validation",
+            confidence: "high",
+          },
+        ],
+      },
+      validation: {
+        schema_version: 1,
+        defaults: {
+          required: [],
+          recommended: [],
+          manual: [],
+        },
+      },
+    });
+
+    expect(route.commands).toEqual([
+      {
+        id: "lint",
+        command: "pnpm lint",
+        reason: "Inferred docs-only patch route.",
+      },
+    ]);
+  });
+
   it("recognizes common uppercase React app entrypoints as app patches", () => {
     const route = routeValidation({
       changedFiles: ["src/App.tsx"],
@@ -261,7 +397,6 @@ describe("validation routing and evidence", () => {
       "pnpm format:check",
       "pnpm typecheck",
       "pnpm test",
-      "pnpm cli:build",
       "pnpm test:cli",
     ]);
   });
@@ -337,7 +472,6 @@ describe("validation routing and evidence", () => {
     expect(route.mode).toBe("patch");
     expect(route.commands.map((command) => command.command)).toEqual([
       "pnpm format:check",
-      "pnpm cli:build",
       "pnpm test:cli",
       "pnpm typecheck",
       "pnpm check:greenhouse",

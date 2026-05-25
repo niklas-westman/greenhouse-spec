@@ -270,12 +270,65 @@ function buildRouteProposals(
 
   proposals.push(...buildGreenhouseSpecSeedProposals(cwd, validation, rootScripts));
   proposals.push(...buildSinglePackageSeedProposals(cwd, validation, rootScripts));
+  proposals.push(...buildRustSeedProposals(validation, repoShape));
 
   return proposals.filter(
     (proposal): proposal is RouteRule =>
       proposal.kind === "validation-route" &&
       proposal.validation_route.rule.required.length > 0,
   );
+}
+
+function buildRustSeedProposals(
+  validation: ValidationConfig | null,
+  repoShape: RepoShape,
+): ValidationProposal[] {
+  const proposals: ValidationProposal[] = [];
+
+  for (const item of repoShape.rust_modules ?? []) {
+    const isTauriModule = item.path === "src-tauri/";
+    const testCommand = item.commands.test;
+
+    if (!testCommand) {
+      continue;
+    }
+
+    proposals.push(
+      routeProposal(validation, {
+        pattern: `${item.path}src/**`,
+        mode: "patch",
+        required: compactCommands([
+          command(isTauriModule ? "test:tauri" : "test:rust", testCommand),
+        ]),
+        reason: `${isTauriModule ? "Tauri" : "Rust"} source detected at ${item.path}src/.`,
+        confidence: item.confidence,
+      }),
+    );
+
+    for (const manifest of ["Cargo.toml", "Cargo.lock"]) {
+      proposals.push(
+        routeProposal(validation, {
+          pattern: `${item.path}${manifest}`,
+          mode: "guarded",
+          required: compactCommands([
+            command(isTauriModule ? "test:tauri" : "test:rust", testCommand),
+          ]),
+          manual: [
+            {
+              id: isTauriModule ? "tauri-runtime-review" : "rust-dependency-review",
+              prompt: isTauriModule
+                ? "Review Tauri runtime, permissions, and Rust dependency impact."
+                : "Review Rust dependency and runtime impact.",
+            },
+          ],
+          reason: `${isTauriModule ? "Tauri" : "Rust"} manifest detected at ${item.path}${manifest}.`,
+          confidence: item.confidence,
+        }),
+      );
+    }
+  }
+
+  return proposals;
 }
 
 function buildGreenhouseSpecSeedProposals(

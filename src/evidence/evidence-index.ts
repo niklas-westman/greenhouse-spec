@@ -3,7 +3,8 @@ import { dirname, join, relative } from "node:path";
 
 import { stringify as stringifyYaml } from "yaml";
 
-import type { EvidenceIndex } from "../schemas/evidence-index.js";
+import { parseYamlWithSchema } from "../schemas/common.js";
+import { evidenceIndexSchema, type EvidenceIndex } from "../schemas/evidence-index.js";
 
 const maxRecentEvidenceEntries = 20;
 
@@ -12,6 +13,16 @@ export function writeEvidenceIndex(cwd: string): string {
   mkdirSync(dirname(indexPath), { recursive: true });
   writeFileSync(indexPath, stringifyYaml(buildEvidenceIndex(cwd), { lineWidth: 0 }), "utf8");
   return indexPath;
+}
+
+export function readEvidenceIndex(cwd: string): EvidenceIndex | null {
+  const indexPath = join(cwd, ".greenhouse", "grown", "evidence-index.yaml");
+
+  if (!existsSync(indexPath)) {
+    return null;
+  }
+
+  return parseYamlWithSchema(readFileSync(indexPath, "utf8"), evidenceIndexSchema);
 }
 
 export function buildEvidenceIndex(cwd: string): EvidenceIndex {
@@ -34,16 +45,27 @@ export function buildEvidenceIndex(cwd: string): EvidenceIndex {
       retention:
         "Keep recent evidence indexed here; archive or prune old records when they no longer help future validation decisions.",
     },
-    recent: evidenceFiles.map((path) => ({
-      path: relative(join(cwd, ".greenhouse"), path).replace(/\\/g, "/"),
-      modified_at: new Date(statSync(path).mtimeMs).toISOString(),
-      summary: summarizeEvidence(path),
-    })),
+    recent: evidenceFiles.map((path) => evidenceEntry(cwd, path)),
   };
 }
 
-function summarizeEvidence(path: string): string {
+function evidenceEntry(cwd: string, path: string): EvidenceIndex["recent"][number] {
   const content = readFileSync(path, "utf8");
+  const metadata = parseEvidenceMetadata(content);
+
+  return {
+    path: relative(join(cwd, ".greenhouse"), path).replace(/\\/g, "/"),
+    modified_at: new Date(statSync(path).mtimeMs).toISOString(),
+    summary: summarizeEvidence(content),
+    status: metadata.status,
+    mode: metadata.mode,
+    changed_files: metadata.changedFiles,
+    commands: metadata.commands,
+    manual_checks: metadata.manualChecks,
+  };
+}
+
+function summarizeEvidence(content: string): string {
   const heading = content
     .split("\n")
     .find((line) => line.startsWith("# "))
@@ -57,4 +79,70 @@ function summarizeEvidence(path: string): string {
     .filter(Boolean)
     .join("; ")
     .slice(0, 240) || "Verification evidence";
+}
+
+function parseEvidenceMetadata(content: string): {
+  status: "pass" | "fail";
+  mode?: string;
+  changedFiles: string[];
+  commands: string[];
+  manualChecks: string[];
+} {
+  const mode = content.match(/Change mode:\s*([^\n]+)/i)?.[1]?.trim();
+  const changedFiles = splitCsv(
+    content.match(/Changed files:\s*([^\n]+)/i)?.[1]?.trim(),
+  );
+  const commandRows = parseTableRows(content, "## Commands run");
+  const manualRows = parseTableRows(content, "## Manual checks");
+  const commands = commandRows
+    .map((row) => row[0]?.replace(/^`|`$/g, "").trim())
+    .filter((command) => Boolean(command) && command !== "none");
+  const manualChecks = manualRows
+    .filter((row) => row[0] && row[0] !== "none" && row[1] === "pending")
+    .map((row) => row[0]);
+
+  return {
+    status: commandRows.some((row) => row[1] === "fail") ? "fail" : "pass",
+    mode,
+    changedFiles,
+    commands,
+    manualChecks,
+  };
+}
+
+function parseTableRows(content: string, heading: string): string[][] {
+  const lines = content.split("\n");
+  const start = lines.findIndex((line) => line.trim() === heading);
+  if (start === -1) {
+    return [];
+  }
+
+  const rows: string[][] = [];
+  for (const line of lines.slice(start + 1)) {
+    if (line.startsWith("## ")) {
+      break;
+    }
+    if (!line.startsWith("|") || line.includes("---")) {
+      continue;
+    }
+    const row = line
+      .slice(1, -1)
+      .split("|")
+      .map((cell) => cell.trim().replace(/\\\|/g, "|"));
+    if (["Command", "Check"].includes(row[0] ?? "")) {
+      continue;
+    }
+    rows.push(row);
+  }
+  return rows;
+}
+
+function splitCsv(value: string | undefined): string[] {
+  if (!value || value === "none") {
+    return [];
+  }
+  return value
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
 }

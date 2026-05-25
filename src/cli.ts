@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { Command } from "commander";
 
+import { registerAlignmentCommand } from "./commands/alignment.js";
 import { registerEvidenceCommand } from "./commands/evidence.js";
 import { registerInitCommand } from "./commands/init.js";
 import { registerAdoptProposalsCommand } from "./commands/adopt-proposals.js";
@@ -23,6 +24,7 @@ export function createProgram(): Command {
     .version("0.1.0");
 
   registerInitCommand(program);
+  registerAlignmentCommand(program);
   registerPlantCommand(program);
   registerUpdateCommand(program);
   registerStatusCommand(program);

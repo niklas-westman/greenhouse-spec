@@ -89,6 +89,41 @@ export function runStatus(options: { cwd: string }): StatusReport {
 }
 
 export function formatStatusReport(report: StatusReport): string {
+  const changedCount = report.verify.route.allChangedFiles?.length ?? report.verify.route.changedFiles.length;
+  const routedCount = report.verify.route.changedFiles.length;
+  const validation =
+    routedCount === 0
+      ? "ready; no routed changed-file validation is pending."
+      : report.evidenceCoverage.covered
+        ? "covered by latest passing evidence."
+        : `${report.verify.route.commands.length} command(s) selected; evidence needed.`;
+  const drift = report.tend.selfTending && report.tend.selfTending.blocking.length > 0
+    ? `${report.tend.selfTending.blocking.length} blocking proposal(s).`
+    : "none blocking.";
+  const repeatedFailures = report.repeatedFailures.length === 0
+    ? "none."
+    : `${report.repeatedFailures.length} repeated failure signature(s).`;
+  const evidence = report.latestEvidencePath
+    ? report.latestEvidencePath
+    : "none.";
+
+  return [
+    "Greenhouse Status",
+    "",
+    `Repository: ${report.cwd}`,
+    `State: ${report.overallStatus}`,
+    `Changed: ${changedCount} file(s), ${routedCount} routed`,
+    `Generated-only dirty: ${report.generatedOnlyDirty ? "yes" : "no"}`,
+    `Validation: ${validation}`,
+    `Drift: ${drift}`,
+    `Repeated failures: ${repeatedFailures}`,
+    `Evidence: ${evidence}`,
+    `Next: ${recommendedNextCommand(report) ?? "no action needed"}`,
+    "",
+  ].join("\n");
+}
+
+export function formatStatusVerboseReport(report: StatusReport): string {
   const lines = [
     "# Greenhouse Status Report",
     "",
@@ -331,7 +366,7 @@ function changedValidationHealth(
       label: "Changed validation",
       state: "degraded",
       summary: `${verify.route.commands.length} validation command(s) selected without matching passing evidence.`,
-      nextCommand: "greenhouse-spec verify --changed --write-evidence",
+      nextCommand: "greenhouse-spec tend",
     };
   }
 

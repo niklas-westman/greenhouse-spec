@@ -15,7 +15,7 @@ import { runPlant } from "../src/plant/run-plant.js";
 import { getChangedFiles } from "../src/validation/changed-files.js";
 import { classifyChangedFiles } from "../src/validation/classify-changed-files.js";
 import { routeValidation } from "../src/validation/route-validation.js";
-import { runVerify } from "../src/verify/run-verify.js";
+import { formatVerifyReport, runVerify } from "../src/verify/run-verify.js";
 
 const tempRepos: string[] = [];
 
@@ -122,6 +122,8 @@ describe("validation routing and evidence", () => {
         id: "format:check",
         command: "pnpm format:check",
         reason: "Inferred docs-only patch route.",
+        source: "inferred-route",
+        matched: "docs-only",
       },
     ]);
   });
@@ -165,16 +167,22 @@ describe("validation routing and evidence", () => {
         id: "cli:build",
         command: "pnpm cli:build",
         reason: "Inferred CLI-only patch route.",
+        source: "inferred-route",
+        matched: "Inferred CLI-only patch route.",
       },
       {
         id: "test:cli",
         command: "pnpm test:cli",
         reason: "Inferred CLI-only patch route.",
+        source: "inferred-route",
+        matched: "Inferred CLI-only patch route.",
       },
       {
         id: "typecheck",
         command: "pnpm typecheck",
         reason: "Inferred CLI-only patch route.",
+        source: "inferred-route",
+        matched: "Inferred CLI-only patch route.",
       },
     ]);
   });
@@ -340,6 +348,8 @@ describe("validation routing and evidence", () => {
         id: "lint",
         command: "pnpm lint",
         reason: "Inferred docs-only patch route.",
+        source: "inferred-route",
+        matched: "docs-only",
       },
     ]);
   });
@@ -541,6 +551,21 @@ describe("validation routing and evidence", () => {
       true,
     );
     expect(report.commandResults[0]?.output).toContain("Matched path rule");
+    expect(report.route.explanations).toContainEqual({
+      kind: "path-rule",
+      message: 'Matched path rule "src/engine/sru/**".',
+    });
+    expect(report.route.explanations).toContainEqual({
+      kind: "risk-rule",
+      message: 'Matched risk "generated-output-contract".',
+    });
+    expect(formatVerifyReport(report)).toContain("## Route explanation");
+    expect(formatVerifyReport(report)).toContain(
+      '- path-rule: Matched path rule "src/engine/sru/**".',
+    );
+    expect(formatVerifyReport(report)).toContain(
+      "- source: path-rule (src/engine/sru/**)",
+    );
   });
 
   it("routes official source paths to guarded through the risk index", () => {
@@ -634,6 +659,13 @@ describe("validation routing and evidence", () => {
     expect(report.route.changedFiles).toEqual([]);
     expect(report.route.commands).toEqual([]);
     expect(report.route.skippedValidation).toContain("no non-generated files");
+    expect(report.route.explanations).toContainEqual({
+      kind: "generated-excluded",
+      message:
+        ".greenhouse/evidence/2026-05-23T00-00-00-000Z-verify.md was excluded from validation routing because it is generated or not routable.",
+    });
+    expect(formatVerifyReport(report)).toContain("- generated-excluded:");
+    expect(formatVerifyReport(report)).toContain("- skipped:");
   });
 
   it("writes evidence with selected commands and skipped validation notes", () => {

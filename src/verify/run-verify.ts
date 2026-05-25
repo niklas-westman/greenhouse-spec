@@ -159,6 +159,15 @@ export function formatVerifyReport(report: VerifyReport): string {
     }
   }
 
+  lines.push("", "## Route explanation", "");
+  if (report.route.explanations.length === 0) {
+    lines.push("- none");
+  } else {
+    for (const explanation of report.route.explanations) {
+      lines.push(`- ${explanation.kind}: ${explanation.message}`);
+    }
+  }
+
   lines.push("", "## Commands", "");
   if (report.route.commands.length === 0) {
     lines.push(`- skipped: ${report.route.skippedValidation}`);
@@ -172,8 +181,10 @@ export function formatVerifyReport(report: VerifyReport): string {
       );
       const annotationText = annotation ? ` - ${annotation.message}` : "";
       lines.push(
-        `- ${result?.result ?? "not_run"}: ${command.command} (${command.reason})${annotationText}`,
+        `- ${result?.result ?? "not_run"}: ${command.command}`,
       );
+      lines.push(`  - source: ${command.source}${command.matched ? ` (${command.matched})` : ""}`);
+      lines.push(`  - reason: ${command.reason}${annotationText}`);
     }
   }
 
@@ -193,7 +204,9 @@ export function formatVerifyReport(report: VerifyReport): string {
     lines.push("- none");
   } else {
     for (const check of report.route.manualChecks) {
-      lines.push(`- pending: ${check.prompt} (${check.reason})`);
+      lines.push(`- pending: ${check.prompt}`);
+      lines.push(`  - source: ${check.source}${check.matched ? ` (${check.matched})` : ""}`);
+      lines.push(`  - reason: ${check.reason}`);
     }
   }
 

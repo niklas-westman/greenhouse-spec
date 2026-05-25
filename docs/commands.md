@@ -7,11 +7,14 @@ from another working directory.
 
 ```bash
 greenhouse-spec status
+greenhouse-spec status --verbose
 greenhouse-spec status --json
 ```
 
-Prints one read-only health report by combining doctor, self-tending drift
-checks, changed-file validation dry-run, and latest evidence discovery.
+Prints a short read-only health report by combining doctor, self-tending drift
+checks, changed-file validation dry-run, and latest evidence discovery. Use
+`--verbose` for the detailed Markdown report with health categories and command
+details.
 
 `status` uses three top-level states:
 
@@ -29,12 +32,12 @@ Markdown. The JSON report includes `overallStatus`, categorized `health`,
 legacy `nextCommand`, and structured `nextAction`.
 
 When only generated Greenhouse artifacts are dirty, status says
-`generated-only dirty: yes`; those files do not affect validation routing.
+`Generated-only dirty: yes`; those files do not affect validation routing.
 
 When routed files are dirty, status compares the current routed files and
 commands with the latest indexed evidence. If the latest matching evidence
-passed, changed validation remains `pass`; otherwise it is `degraded` until
-`verify --changed --write-evidence` records fresh passing evidence.
+passed, changed validation remains `pass`; otherwise it is `degraded` and the
+next command is `greenhouse-spec tend`.
 
 Side effects: none.
 
@@ -144,12 +147,17 @@ greenhouse-spec tend
 greenhouse-spec tend --check
 ```
 
-Without `--check`, writes a tend report from the current repo state. With
-`--check`, runs fresh discovery in memory and fails if any pending, adoptable,
-or conflict proposal exists.
+Without `--check`, `tend` is the pre-finish Greenhouse surface. It checks
+install/root health, runs the structural drift gate, routes changed-file
+validation, executes selected validation commands, writes evidence when
+commands run, reports repeated failure context, and summarizes proposals.
 
-`tend --check` is the intended prepush drift gate. Normal report writes prune old
-generated records unless `--no-prune` is used.
+With `--check`, runs fresh discovery in memory and fails if any pending,
+adoptable, or conflict proposal exists.
+
+`tend --check` is structural-only and does not run validation or write evidence.
+Normal evidence/report writes prune old generated records unless `--no-prune`
+is used.
 
 ## `verify`
 
@@ -162,6 +170,11 @@ greenhouse-spec verify --mode guarded --paths src/engine/tax/example.ts
 
 Selects validation commands from `.greenhouse/roots/validation.yaml` and runs
 them unless `--dry-run` is used.
+
+Dry-run output is the validation routing explanation surface. It shows changed
+files, changed-file groups, routed files, risks, route explanations, selected
+commands with source/reason metadata, manual checks, and skipped/generated
+validation notes.
 
 Important options:
 

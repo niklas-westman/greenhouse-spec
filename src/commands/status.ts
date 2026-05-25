@@ -3,6 +3,7 @@ import type { Command } from "commander";
 import {
   formatStatusJsonReport,
   formatStatusReport,
+  formatStatusVerboseReport,
   runStatus,
 } from "../status/run-status.js";
 
@@ -12,11 +13,16 @@ export function registerStatusCommand(program: Command): void {
     .description("Show one read-only Greenhouse health report.")
     .option("--cwd <path>", "Repository root to inspect.", process.cwd())
     .option("--json", "Print a stable machine-readable status report.")
-    .action((options: { cwd: string; json?: boolean }) => {
+    .option("--verbose", "Print the detailed Markdown status report.")
+    .action((options: { cwd: string; json?: boolean; verbose?: boolean }) => {
       const report = runStatus({ cwd: options.cwd });
 
       console.log(
-        options.json ? formatStatusJsonReport(report) : formatStatusReport(report),
+        options.json
+          ? formatStatusJsonReport(report)
+          : options.verbose
+            ? formatStatusVerboseReport(report)
+            : formatStatusReport(report),
       );
 
       if (!report.ok) {

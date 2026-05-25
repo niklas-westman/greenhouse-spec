@@ -40,4 +40,25 @@ describe("greenhouse-spec CLI", () => {
     expect(help).toContain("tend");
     expect(help).toContain("evidence");
   });
+
+  it("describes tend as the pre-finish tending surface", () => {
+    const tendCommand = createProgram().commands.find(
+      (command) => command.name() === "tend",
+    );
+
+    expect(tendCommand?.description()).toBe(
+      "Tend the repository before finishing work.",
+    );
+    expect(tendCommand?.options.map((option) => option.long)).toContain("--check");
+    expect(tendCommand?.options.map((option) => option.long)).toContain("--no-prune");
+  });
+
+  it("exposes status verbose and json output modes", () => {
+    const statusCommand = createProgram().commands.find(
+      (command) => command.name() === "status",
+    );
+
+    expect(statusCommand?.options.map((option) => option.long)).toContain("--json");
+    expect(statusCommand?.options.map((option) => option.long)).toContain("--verbose");
+  });
 });

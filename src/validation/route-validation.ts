@@ -14,12 +14,39 @@ export type RoutedCommand = {
   id: string;
   command: string;
   reason: string;
+  source: RouteSource;
+  matched?: string;
 };
 
 export type ManualCheck = {
   id: string;
   prompt: string;
   reason: string;
+  source: RouteSource;
+  matched?: string;
+};
+
+export type RouteSource =
+  | "path-rule"
+  | "risk-rule"
+  | "risk-default-guarded"
+  | "inferred-route"
+  | "mode-rule"
+  | "fallback-default"
+  | "manual-config";
+
+export type RouteExplanation = {
+  kind:
+    | "path-rule"
+    | "risk-rule"
+    | "risk-default-guarded"
+    | "inferred-route"
+    | "mode-rule"
+    | "fallback-default"
+    | "manual-check"
+    | "generated-excluded"
+    | "skipped";
+  message: string;
 };
 
 export type ValidationRoute = {
@@ -30,6 +57,7 @@ export type ValidationRoute = {
   commands: RoutedCommand[];
   manualChecks: ManualCheck[];
   skippedValidation: string | null;
+  explanations: RouteExplanation[];
 };
 
 type Mode = ValidationRoute["mode"];
@@ -54,11 +82,24 @@ export function routeValidation(options: {
   let mode: Mode = parseMode(options.forcedMode) ?? "patch";
   const commands: RoutedCommand[] = [];
   const manualChecks: ManualCheck[] = [];
+  const explanations: RouteExplanation[] = [];
+  for (const file of (options.allChangedFiles ?? []).filter(
+    (item) => !changedFiles.includes(item),
+  )) {
+    explanations.push({
+      kind: "generated-excluded",
+      message: `${file} was excluded from validation routing because it is generated or not routable.`,
+    });
+  }
 
   for (const [pattern, rule] of Object.entries(options.validation.paths ?? {})) {
     if (!changedFiles.some((path) => matchesPath(pattern, path))) {
       continue;
     }
+    explanations.push({
+      kind: "path-rule",
+      message: `Matched path rule "${pattern}".`,
+    });
 
     if (rule.mode) {
       mode = maxMode(mode, rule.mode);
@@ -68,12 +109,16 @@ export function routeValidation(options: {
       commands.push({
         ...command,
         reason: `Matched path rule "${pattern}".`,
+        source: "path-rule",
+        matched: pattern,
       });
     }
     for (const manual of rule.manual) {
       manualChecks.push({
         ...manual,
         reason: `Matched path rule "${pattern}".`,
+        source: "path-rule",
+        matched: pattern,
       });
     }
   }
@@ -82,8 +127,16 @@ export function routeValidation(options: {
     const rule = options.validation.risks?.[risk];
     if (!rule) {
       mode = maxMode(mode, "guarded");
+      explanations.push({
+        kind: "risk-default-guarded",
+        message: `Risk "${risk}" had no authored rule; mode escalated to guarded.`,
+      });
       continue;
     }
+    explanations.push({
+      kind: "risk-rule",
+      message: `Matched risk "${risk}".`,
+    });
 
     if (rule.mode) {
       mode = maxMode(mode, rule.mode);
@@ -93,30 +146,52 @@ export function routeValidation(options: {
       commands.push({
         ...command,
         reason: `Matched risk "${risk}".`,
+        source: "risk-rule",
+        matched: risk,
       });
     }
     for (const manual of rule.manual) {
       manualChecks.push({
         ...manual,
         reason: `Matched risk "${risk}".`,
+        source: "risk-rule",
+        matched: risk,
       });
     }
   }
 
   const hasExplicitRoute = commands.length > 0 || manualChecks.length > 0;
   if (!hasExplicitRoute && mode === "patch") {
-    commands.push(
-      ...inferLightweightPatchCommands({
-        changedFiles,
-        commandIndex: options.commandIndex,
-        validation: options.validation,
-      }),
-    );
+    const inferredCommands = inferLightweightPatchCommands({
+      changedFiles,
+      commandIndex: options.commandIndex,
+      validation: options.validation,
+    });
+    if (inferredCommands.length > 0) {
+      explanations.push({
+        kind: "inferred-route",
+        message: inferredCommands[0]?.reason ?? "Inferred lightweight patch route.",
+      });
+      commands.push(...inferredCommands);
+    }
   }
 
-  manualChecks.push(...inferConfigManualChecks(changedFiles));
+  const configManualChecks = inferConfigManualChecks(changedFiles);
+  for (const check of configManualChecks) {
+    explanations.push({
+      kind: "manual-check",
+      message: check.reason,
+    });
+  }
+  manualChecks.push(...configManualChecks);
 
   const modeRule = options.validation.modes?.[mode];
+  if ((modeRule?.required.length ?? 0) > 0 || (modeRule?.manual.length ?? 0) > 0) {
+    explanations.push({
+      kind: "mode-rule",
+      message: `Applied ${mode} mode requirements.`,
+    });
+  }
   for (const command of modeRule?.required ?? []) {
     if (command.command === "greenhouse-spec verify --changed") {
       continue;
@@ -124,22 +199,45 @@ export function routeValidation(options: {
     commands.push({
       ...command,
       reason: `Required for ${mode} mode.`,
+      source: "mode-rule",
+      matched: mode,
     });
   }
   for (const manual of modeRule?.manual ?? []) {
     manualChecks.push({
       ...manual,
       reason: `Required for ${mode} mode.`,
+      source: "mode-rule",
+      matched: mode,
     });
   }
 
   if (commands.length === 0 && options.allowDefaultFallback !== false) {
+    if ((options.validation.defaults?.required.length ?? 0) > 0) {
+      explanations.push({
+        kind: "fallback-default",
+        message: "No explicit or inferred route selected commands; using default required validation.",
+      });
+    }
     for (const command of options.validation.defaults?.required ?? []) {
       commands.push({
         ...command,
         reason: "Fallback default required validation.",
+        source: "fallback-default",
       });
     }
+  }
+  const skippedValidation =
+    commands.length === 0
+      ? (options.allowDefaultFallback === false
+          ? "No validation commands were selected because no non-generated files were routed."
+          : "No validation commands were selected from validation.yaml.")
+      : null;
+  if (skippedValidation) {
+    explanations.push({
+      kind: "skipped",
+      message: skippedValidation,
+    });
   }
 
   return {
@@ -149,12 +247,8 @@ export function routeValidation(options: {
     risks,
     commands: uniqueCommands(commands),
     manualChecks: uniqueManualChecks(manualChecks),
-    skippedValidation:
-      commands.length === 0
-        ? (options.allowDefaultFallback === false
-            ? "No validation commands were selected because no non-generated files were routed."
-            : "No validation commands were selected from validation.yaml.")
-        : null,
+    skippedValidation,
+    explanations: uniqueExplanations(explanations),
   };
 }
 
@@ -174,6 +268,8 @@ function inferLightweightPatchCommands(options: {
           {
             ...styleCheck,
             reason: "Inferred docs-only patch route.",
+            source: "inferred-route",
+            matched: "docs-only",
           },
         ]
       : [];
@@ -214,6 +310,8 @@ function inferDocsCommands(options: {
         {
           ...styleCheck,
           reason: "Inferred docs patch route.",
+          source: "inferred-route",
+          matched: "docs",
         },
       ]
     : [];
@@ -242,6 +340,8 @@ function inferCliCommands(
     .map((command) => ({
       ...command,
       reason,
+      source: "inferred-route",
+      matched: reason,
     }));
 }
 
@@ -265,6 +365,8 @@ function inferAppCommands(options: {
     .map((command) => ({
       ...command,
       reason: "Inferred app patch route.",
+      source: "inferred-route",
+      matched: "app-source",
     }));
 }
 
@@ -290,6 +392,8 @@ function inferConfigCommands(options: {
         {
           ...doctor,
           reason: "Inferred repository configuration route.",
+          source: "inferred-route",
+          matched: "repo-config",
         },
       ]
     : [];
@@ -304,6 +408,8 @@ function inferConfigManualChecks(changedFiles: string[]): ManualCheck[] {
       prompt:
         "Review Greenhouse authored config changes before relying on validation routing.",
       reason: "Matched Greenhouse authored config.",
+      source: "manual-config",
+      matched: "greenhouse-authored",
     });
   }
 
@@ -312,6 +418,8 @@ function inferConfigManualChecks(changedFiles: string[]): ManualCheck[] {
       id: "agent-instructions-review",
       prompt: "Review agent instruction changes before relying on agent behavior.",
       reason: "Matched agent instruction config.",
+      source: "manual-config",
+      matched: "agent-instructions",
     });
   }
 
@@ -516,6 +624,18 @@ function uniqueManualChecks(checks: ManualCheck[]): ManualCheck[] {
       return false;
     }
     seen.add(check.id);
+    return true;
+  });
+}
+
+function uniqueExplanations(explanations: RouteExplanation[]): RouteExplanation[] {
+  const seen = new Set<string>();
+  return explanations.filter((explanation) => {
+    const key = `${explanation.kind}\0${explanation.message}`;
+    if (seen.has(key)) {
+      return false;
+    }
+    seen.add(key);
     return true;
   });
 }

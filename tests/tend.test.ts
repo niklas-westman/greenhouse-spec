@@ -27,19 +27,118 @@ afterEach(() => {
 });
 
 describe("tend", () => {
-  it("returns no-op for trivial changes without durable evidence signal", () => {
-    const repo = createRepo();
+  it("returns pass for a healthy repo with no changed files", () => {
+    const repo = createReadyRepo();
     initGitRepo(repo);
-    writeFileSync(join(repo, "README.md"), "# Updated\n");
 
     const report = runTend({ cwd: repo });
 
+    expect(report.flow).toBe("finish-gate");
+    expect(report.state).toBe("pass");
+    expect(report.ok).toBe(true);
+    expect(report.doctor?.ok).toBe(true);
+    expect(report.selfTending?.blocking).toEqual([]);
+    expect(report.validation).toEqual({
+      executed: false,
+      evidenceWritten: false,
+      commands: [],
+      reason: "No validation commands were selected because no non-generated files were routed.",
+    });
+    expect(report.writes).toEqual({
+      authoredRootsMutated: false,
+      packageScriptsMutated: false,
+      tendReportPath: null,
+      evidencePath: null,
+    });
     expect(report.proposals).toEqual([]);
     expect(report.writtenReportPath).toBeUndefined();
   });
 
-  it("writes a proposal report for evidence that asks for validation learning", () => {
+  it("executes selected validation and writes evidence for changed source files", () => {
+    const repo = createReadyRepo();
+    mkdirSync(join(repo, "src"), { recursive: true });
+    writeFileSync(join(repo, "src", "app.ts"), "export const app = 1;\n");
+    initGitRepo(repo);
+    writeFileSync(join(repo, "src", "app.ts"), "export const app = 2;\n");
+
+    const report = runTend({ cwd: repo });
+
+    expect(report.flow).toBe("finish-gate");
+    expect(report.state).toBe("pass");
+    expect(report.ok).toBe(true);
+    expect(report.validation.executed).toBe(true);
+    expect(report.validation.evidenceWritten).toBe(true);
+    expect(report.validation.commands).toEqual(["pnpm typecheck", "pnpm test"]);
+    expect(report.writes.evidencePath).toMatch(/\.greenhouse\/evidence\/.+-verify\.md$/);
+    expect(report.latestEvidencePath).toBe(report.writes.evidencePath);
+    expect(existsSync(report.writes.evidencePath ?? "")).toBe(true);
+  });
+
+  it("fails when selected validation fails and still writes evidence", () => {
+    const repo = createReadyRepo({
+      test: "node -e \"process.exit(1)\"",
+      typecheck: "node -e \"process.exit(0)\"",
+    });
+    mkdirSync(join(repo, "src"), { recursive: true });
+    writeFileSync(join(repo, "src", "app.ts"), "export const app = 1;\n");
+    initGitRepo(repo);
+    writeFileSync(join(repo, "src", "app.ts"), "export const app = 2;\n");
+
+    const report = runTend({ cwd: repo, noPrune: true });
+
+    expect(report.ok).toBe(false);
+    expect(report.state).toBe("fail");
+    expect(report.validation.executed).toBe(true);
+    expect(report.validation.evidenceWritten).toBe(true);
+    expect(report.validation.reason).toBe("selected validation failed.");
+    expect(report.verify?.commandResults).toContainEqual(
+      expect.objectContaining({
+        command: "pnpm test",
+        result: "fail",
+      }),
+    );
+    expect(existsSync(report.writes.evidencePath ?? "")).toBe(true);
+  });
+
+  it("does not execute validation when install health fails", () => {
     const repo = createRepo();
+    mkdirSync(join(repo, "src"), { recursive: true });
+    writeFileSync(join(repo, "src", "app.ts"), "export const app = 1;\n");
+    rmSync(join(repo, ".greenhouse", "project.yaml"));
+    writeFileSync(
+      join(repo, "package.json"),
+      JSON.stringify(
+        {
+          name: "tend-fixture",
+          scripts: {
+            test: "node -e \"require('fs').writeFileSync('validation-ran', 'yes')\"",
+            typecheck: "node -e \"require('fs').writeFileSync('validation-ran', 'yes')\"",
+          },
+        },
+        null,
+        2,
+      ),
+      "utf8",
+    );
+    initGitRepo(repo);
+    writeFileSync(join(repo, "src", "app.ts"), "export const app = 2;\n");
+
+    const report = runTend({ cwd: repo });
+
+    expect(report.flow).toBe("finish-gate");
+    expect(report.ok).toBe(false);
+    expect(report.state).toBe("fail");
+    expect(report.doctor?.ok).toBe(false);
+    expect(report.validation.executed).toBe(false);
+    expect(report.validation.evidenceWritten).toBe(false);
+    expect(report.validation.reason).toBe("install/root health failed; validation was not run.");
+    expect(report.writes.evidencePath).toBeNull();
+    expect(existsSync(join(repo, "validation-ran"))).toBe(false);
+  });
+
+  it("writes a proposal report for evidence that asks for validation learning", () => {
+    const repo = createReadyRepo();
+    initGitRepo(repo);
     writeFileSync(
       join(repo, ".greenhouse", "evidence", "2026-05-22-verify.md"),
       [
@@ -60,6 +159,10 @@ describe("tend", () => {
 
     const report = runTend({ cwd: repo });
 
+    expect(report.state).toBe("warning");
+    expect(report.writes.tendReportPath).toBe(report.writtenReportPath);
+    expect(report.writes.authoredRootsMutated).toBe(false);
+    expect(report.writes.packageScriptsMutated).toBe(false);
     expect(report.proposals).toContainEqual(
       expect.objectContaining({
         kind: "validation",
@@ -70,7 +173,8 @@ describe("tend", () => {
   });
 
   it("ignores unchecked durable learning checkboxes", () => {
-    const repo = createRepo();
+    const repo = createReadyRepo();
+    initGitRepo(repo);
     writeFileSync(
       join(repo, ".greenhouse", "evidence", "2026-05-24-pass.md"),
       [
@@ -96,7 +200,7 @@ describe("tend", () => {
   });
 
   it("proposes a specific docs routing update for fallback failure on docs-only changes", () => {
-    const repo = createRepo();
+    const repo = createReadyRepo();
     initGitRepo(repo);
     writeFileSync(join(repo, "README.md"), "# Updated\n");
     writeFileSync(
@@ -125,7 +229,7 @@ describe("tend", () => {
   });
 
   it("proposes a specific CLI routing update for fallback failure on CLI-only changes", () => {
-    const repo = createRepo();
+    const repo = createReadyRepo();
     mkdirSync(join(repo, "src", "cli"), { recursive: true });
     writeFileSync(join(repo, "src", "cli", "main.ts"), "export {}\n");
     initGitRepo(repo);
@@ -156,9 +260,11 @@ describe("tend", () => {
   });
 
   it("does not mutate authored roots while creating a tend report", () => {
-    const repo = createRepo();
+    const repo = createReadyRepo();
     const rulesPath = join(repo, ".greenhouse", "roots", "rules.md");
+    const packagePath = join(repo, "package.json");
     const rulesBefore = readFileSync(rulesPath, "utf8");
+    const packageBefore = readFileSync(packagePath, "utf8");
     mkdirSync(join(repo, "src", "engine", "tax"), { recursive: true });
     writeFileSync(join(repo, "src", "engine", "tax", "index.ts"), "export {}\n");
     initGitRepo(repo);
@@ -172,6 +278,9 @@ describe("tend", () => {
       }),
     );
     expect(readFileSync(rulesPath, "utf8")).toBe(rulesBefore);
+    expect(readFileSync(packagePath, "utf8")).toBe(packageBefore);
+    expect(report.writes.authoredRootsMutated).toBe(false);
+    expect(report.writes.packageScriptsMutated).toBe(false);
   });
 
   it("check passes when no structured proposals exist", () => {
@@ -181,6 +290,14 @@ describe("tend", () => {
 
     const report = runTend({ cwd: repo, check: true });
 
+    expect(report.flow).toBe("structural-check");
+    expect(report.state).toBe("pass");
+    expect(report.validation).toEqual({
+      executed: false,
+      evidenceWritten: false,
+      commands: [],
+      reason: "tend --check is structural-only and does not execute validation.",
+    });
     expect(report.ok).toBe(true);
     expect(report.selfTending?.blocking).toEqual([]);
     expect(report.writtenReportPath).toBeUndefined();
@@ -254,11 +371,22 @@ describe("tend", () => {
     const repo = createRepo();
     const proposalsPath = join(repo, ".greenhouse", "grown", "validation-proposals.yaml");
     const proposalsBefore = readFileSync(proposalsPath, "utf8");
+    const evidenceBefore = readFileSync(
+      join(repo, ".greenhouse", "grown", "evidence-index.yaml"),
+      "utf8",
+    );
 
-    runTend({ cwd: repo, check: true });
+    const report = runTend({ cwd: repo, check: true });
 
     expect(readFileSync(proposalsPath, "utf8")).toBe(proposalsBefore);
+    expect(readFileSync(join(repo, ".greenhouse", "grown", "evidence-index.yaml"), "utf8")).toBe(
+      evidenceBefore,
+    );
     expect(existsSync(join(repo, ".greenhouse", "reports", "tend"))).toBe(false);
+    expect(report.writes.tendReportPath).toBeNull();
+    expect(report.writes.evidencePath).toBeNull();
+    expect(report.writes.authoredRootsMutated).toBe(false);
+    expect(report.writes.packageScriptsMutated).toBe(false);
   });
 
   it("check report prints resolution commands for structural drift", () => {
@@ -266,9 +394,29 @@ describe("tend", () => {
 
     const output = formatTendReport(runTend({ cwd: repo, check: true }));
 
+    expect(output).toContain("Flow: structural-check");
+    expect(output).toContain("Status: fail");
+    expect(output).toContain("not run: tend --check is structural-only");
     expect(output).toContain("greenhouse-spec inspect");
     expect(output).toContain("greenhouse-spec apply-proposals --safe --dry-run");
     expect(output).toContain("greenhouse-spec adopt-proposals --id <proposal-id>");
+  });
+
+  it("default report prints composed validation results", () => {
+    const repo = createReadyRepo();
+    initGitRepo(repo);
+
+    const output = formatTendReport(runTend({ cwd: repo }));
+
+    expect(output).toContain("Flow: finish-gate");
+    expect(output).toContain("Status: pass");
+    expect(output).toContain("## Install health");
+    expect(output).toContain("pass: doctor found no issues");
+    expect(output).toContain("## Self-tending gate");
+    expect(output).toContain(
+      "not run: No validation commands were selected because no non-generated files were routed.",
+    );
+    expect(output).toContain("evidence written: no");
   });
 });
 
@@ -293,6 +441,31 @@ function createRepo(): string {
     "utf8",
   );
   runPlant({ cwd: repo });
+  return repo;
+}
+
+function createReadyRepo(scriptOverrides: Record<string, string> = {}): string {
+  const repo = createRepo();
+  const packageJson = JSON.parse(readFileSync(join(repo, "package.json"), "utf8")) as {
+    scripts: Record<string, string>;
+  };
+  writeFileSync(
+    join(repo, "package.json"),
+    JSON.stringify(
+      {
+        name: "tend-fixture",
+        scripts: {
+          ...packageJson.scripts,
+          ...scriptOverrides,
+        },
+      },
+      null,
+      2,
+    ),
+    "utf8",
+  );
+  runInspect({ cwd: repo });
+  applyProposals({ cwd: repo, safe: true });
   return repo;
 }
 

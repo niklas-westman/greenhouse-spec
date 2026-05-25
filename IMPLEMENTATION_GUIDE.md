@@ -19,7 +19,7 @@ This guide MUST be updated during implementation:
 - [ ] Update test coverage map as tests are written
 
 Last updated: 2026-05-25
-Current phase: Phase 1
+Current phase: Phase 5
 
 ---
 
@@ -62,7 +62,7 @@ Current phase: Phase 1
 | Command | Current Role | Target Role |
 |---|---|---|
 | `greenhouse-spec status` | Read-only health report composed from doctor, tend-check, verify-dry-run, evidence health | Quiet entry point; concise by default, verbose/json for detail |
-| `greenhouse-spec tend` | Writes durable proposal report when recent evidence suggests learning | Main composed pre-finish command |
+| `greenhouse-spec tend` | Main composed pre-finish command | Main composed pre-finish command |
 | `greenhouse-spec tend --check` | Structural proposal gate | Structural-only CI/debug gate |
 | `greenhouse-spec verify --changed --dry-run` | Validation plan without execution | Lower-level routing explanation |
 | `greenhouse-spec verify --changed --write-evidence` | Execute selected validation and write evidence | Lower-level validation/evidence engine used by `tend` |
@@ -117,7 +117,7 @@ Preserve the existing command modules and build `greenhouse-spec tend` as a comp
 
 Goal: Define the exact default behavior of `greenhouse-spec tend` and lock it with tests before changing runtime behavior.
 Depends on: None
-Status: Not started
+Status: Complete - 2026-05-25
 
 #### Inputs
 
@@ -130,7 +130,7 @@ Status: Not started
 #### Outputs
 
 - Updated type contract for `TendReport`
-- New/updated tests describing composed `tend` behavior
+- New/updated tests describing the Phase 1 `tend` contract
 - CLI help/description updated to match the product role
 - No runtime broad orchestration until tests describe expected behavior
 
@@ -147,29 +147,36 @@ Status: Not started
 
 #### Tasks
 
-- [ ] Define `TendReport` states: `pass`, `warning`, `fail` or reuse existing health state if suitable.
+- [x] Define `TendReport` states: `pass`, `warning`, `fail` or reuse existing health state if suitable.
   - Tool: edit
   - Verify: `pnpm typecheck`
 
-- [ ] Add tests for default `tend` as a composed finish gate with no changed files.
+- [x] Add tests for default `tend` as a report-only pre-finish surface with no changed files.
   - Tool: edit
   - Verify: `pnpm test:tend`
 
-- [ ] Add tests that `tend --check` does not execute validation and does not write evidence.
+- [x] Add tests that `tend --check` does not execute validation and does not write evidence.
   - Tool: edit
   - Verify: `pnpm test:tend`
 
-- [ ] Add tests that default `tend` delegates validation execution through the same route semantics as `verify --changed --write-evidence`.
+- [x] Add tests that default `tend` does not execute validation until Phase 2.
   - Tool: edit
   - Verify: `pnpm test:tend`
 
-- [ ] Add tests that default `tend` does not mutate authored roots or package scripts.
+- [x] Add tests that default `tend` does not mutate authored roots or package scripts.
   - Tool: edit
   - Verify: `pnpm test:tend`
 
-- [ ] Update CLI description from proposal-report language to pre-finish tending language.
+- [x] Update CLI description from proposal-report language to pre-finish tending language.
   - Tool: edit
   - Verify: `pnpm test:cli`
+
+#### Phase Notes
+
+- Added explicit `TendReport` contract fields: `state`, `flow`, `validation`, and `writes`.
+- Preserved current runtime boundary: default `tend` is `report-only`; `tend --check` is `structural-check`.
+- Deferred composed validation execution to Phase 2 as planned.
+- Verified neither path reports authored-root or package-script mutation.
 
 #### Tests for This Phase
 
@@ -182,11 +189,11 @@ Status: Not started
 
 #### Phase Exit Criteria
 
-- [ ] `pnpm test:tend` passes.
-- [ ] `pnpm test:cli` passes.
-- [ ] `pnpm test:lifecycle` passes if touched.
-- [ ] `pnpm typecheck` passes.
-- [ ] Guide updated with completion notes.
+- [x] `pnpm test:tend` passes.
+- [x] `pnpm test:cli` passes.
+- [x] `pnpm test:lifecycle` passes if touched.
+- [x] `pnpm typecheck` passes.
+- [x] Guide updated with completion notes.
 
 #### Failure Protocol
 
@@ -202,7 +209,7 @@ Status: Not started
 
 Goal: Implement `greenhouse-spec tend` as the main pre-finish flow while preserving strict lower-level semantics.
 Depends on: Phase 1
-Status: Not started
+Status: Complete - 2026-05-25
 
 #### Inputs
 
@@ -236,25 +243,33 @@ Status: Not started
 
 #### Tasks
 
-- [ ] Split structural self-tending check into a reusable internal function.
+- [x] Split structural self-tending check into a reusable internal function.
   - Tool: edit
   - Verify: `pnpm test:tend`
 
-- [ ] Add default `tend` orchestration path that calls doctor, structural check, and verify changed with evidence.
+- [x] Add default `tend` orchestration path that calls doctor, structural check, and verify changed with evidence.
   - Tool: edit
   - Verify: `pnpm test:tend`
 
-- [ ] Preserve `--check` as structural-only and non-writing.
+- [x] Preserve `--check` as structural-only and non-writing.
   - Tool: edit
   - Verify: `pnpm test:tend`
 
-- [ ] Add output formatting for roots, drift, validation, evidence, proposals, and final state.
+- [x] Add output formatting for roots, drift, validation, evidence, proposals, and final state.
   - Tool: edit
   - Verify: `pnpm test:tend`
 
-- [ ] Ensure failed validation sets `report.ok = false` and CLI exit code 1.
+- [x] Ensure failed validation sets `report.ok = false` and CLI exit code 1.
   - Tool: edit
   - Verify: `pnpm test:tend`
+
+#### Phase Notes
+
+- Default `tend` is now `flow: finish-gate`.
+- Default `tend` runs doctor, structural self-tending, validation routing/execution, evidence writing, repeated failure refresh, and proposal report writing.
+- `tend --check` remains `flow: structural-check` and does not execute validation or write evidence.
+- Validation does not run if install/root health fails or structural drift blocks tending.
+- Failed validation keeps `report.ok = false` and `state = fail`; repeated failures remain explanatory only.
 
 #### Tests for This Phase
 
@@ -269,11 +284,11 @@ Status: Not started
 
 #### Phase Exit Criteria
 
-- [ ] `pnpm test:tend` passes.
-- [ ] `pnpm test:cli` passes.
-- [ ] `pnpm test:lifecycle` passes.
-- [ ] `pnpm typecheck` passes.
-- [ ] `pnpm build` passes.
+- [x] `pnpm test:tend` passes.
+- [x] `pnpm test:cli` passes.
+- [x] `pnpm test:lifecycle` passes.
+- [x] `pnpm typecheck` passes.
+- [x] `pnpm build` passes.
 
 ---
 
@@ -281,7 +296,7 @@ Status: Not started
 
 Goal: Keep `status` as the quiet entry point while preserving detailed diagnostics when requested.
 Depends on: Phase 2
-Status: Not started
+Status: Complete - 2026-05-25
 
 #### Inputs
 
@@ -308,21 +323,28 @@ Status: Not started
 
 #### Tasks
 
-- [ ] Add `--verbose` option for current detailed Markdown output.
+- [x] Add `--verbose` option for current detailed Markdown output.
   - Tool: edit
   - Verify: `pnpm test:cli && pnpm test:lifecycle`
 
-- [ ] Make default status concise: repo shape, state, changed count, validation readiness, drift, impact, evidence, next command.
+- [x] Make default status concise: state, changed count, validation readiness, drift, generated-only status, evidence, next command.
   - Tool: edit
   - Verify: `pnpm test:lifecycle`
 
-- [ ] Keep JSON stable and include any new state fields.
+- [x] Keep JSON stable and include any new state fields.
   - Tool: edit
   - Verify: `pnpm test:lifecycle`
 
-- [ ] Update next action to recommend `greenhouse-spec tend` for normal finish work.
+- [x] Update next action to recommend `greenhouse-spec tend` for normal finish work.
   - Tool: edit
   - Verify: `pnpm test:lifecycle`
+
+#### Phase Notes
+
+- Default `status` now prints a concise read-only summary instead of the full Markdown diagnostics.
+- `status --verbose` preserves the detailed Markdown health report.
+- `status --json` remains the stable structured output path.
+- Pending changed validation now recommends `greenhouse-spec tend`.
 
 #### Tests for This Phase
 
@@ -336,9 +358,9 @@ Status: Not started
 
 #### Phase Exit Criteria
 
-- [ ] `pnpm test:lifecycle` passes.
-- [ ] `pnpm test:cli` passes.
-- [ ] `pnpm typecheck` passes.
+- [x] `pnpm test:lifecycle` passes.
+- [x] `pnpm test:cli` passes.
+- [x] `pnpm typecheck` passes.
 
 ---
 
@@ -346,7 +368,7 @@ Status: Not started
 
 Goal: Make `verify --changed --dry-run` explain validation routing clearly enough for debugging without adding a new top-level command.
 Depends on: Phase 2
-Status: Not started
+Status: Complete - 2026-05-25
 
 #### Inputs
 
@@ -370,17 +392,24 @@ Status: Not started
 
 #### Tasks
 
-- [ ] Add route source/origin to selected command metadata if not already inferable.
+- [x] Add route source/origin to selected command metadata if not already inferable.
   - Tool: edit
   - Verify: `pnpm test:validation`
 
-- [ ] Update dry-run output to explicitly call out selected commands and reasons.
+- [x] Update dry-run output to explicitly call out selected commands and reasons.
   - Tool: edit
   - Verify: `pnpm test:validation`
 
-- [ ] Ensure generated-only Greenhouse artifacts are clearly excluded from routing.
+- [x] Ensure generated-only Greenhouse artifacts are clearly excluded from routing.
   - Tool: edit
   - Verify: `pnpm test:validation`
+
+#### Phase Notes
+
+- Added route source metadata to commands and manual checks.
+- Added route-level explanations for path rules, risk rules, inferred routes, mode requirements, fallback defaults, generated exclusions, and skipped validation.
+- Updated verify reports to include `## Route explanation` and source/reason lines per selected command/manual check.
+- Generated-only Greenhouse files are explicitly explained as excluded from validation routing.
 
 #### Tests for This Phase
 
@@ -393,9 +422,9 @@ Status: Not started
 
 #### Phase Exit Criteria
 
-- [ ] `pnpm test:validation` passes.
-- [ ] `pnpm test:cli` passes if touched.
-- [ ] `pnpm typecheck` passes.
+- [x] `pnpm test:validation` passes.
+- [x] `pnpm test:cli` passes if touched.
+- [x] `pnpm typecheck` passes.
 
 ---
 
@@ -785,10 +814,10 @@ pnpm alignment:check
 
 | Phase | Title | Status | Tests | Validation | Completed |
 |---|---|---|---|---|---|
-| 1 | Tend Product Contract And Test Skeleton | Not started | pending | pending | - |
-| 2 | Compose Default `tend` | Not started | pending | pending | - |
-| 3 | Status Concision And Verbose/JSON Detail | Not started | pending | pending | - |
-| 4 | Explain Verification Dry-Run | Not started | pending | pending | - |
+| 1 | Tend Product Contract And Test Skeleton | Complete | pass | pass | 2026-05-25 |
+| 2 | Compose Default `tend` | Complete | pass | pass | 2026-05-25 |
+| 3 | Status Concision And Verbose/JSON Detail | Complete | pass | pass | 2026-05-25 |
+| 4 | Explain Verification Dry-Run | Complete | pass | pass | 2026-05-25 |
 | 5 | Change-Impact Model | Not started | pending | pending | - |
 | 6 | Evidence Policy And Impact Context | Not started | pending | pending | - |
 | 7 | Proposal Lifecycle Hardening | Not started | pending | pending | - |

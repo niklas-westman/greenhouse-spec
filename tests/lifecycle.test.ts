@@ -21,6 +21,7 @@ import { greenhouseCommandForRepo } from "../src/native-scripts/package-script-p
 import {
   formatStatusJsonReport,
   formatStatusReport,
+  formatStatusVerboseReport,
   runStatus,
 } from "../src/status/run-status.js";
 import { runPlant } from "../src/plant/run-plant.js";
@@ -106,6 +107,19 @@ describe("lifecycle commands", () => {
       "pass",
       "pass",
     ]);
+    expect(output).toContain("Greenhouse Status");
+    expect(output).toContain("State: pass");
+    expect(output).toContain("Changed: 0 file(s), 0 routed");
+    expect(output).toContain("Generated-only dirty: no");
+    expect(output).toContain("Next: no action needed");
+    expect(output).not.toContain("## Health Summary");
+  });
+
+  it("status verbose report preserves detailed sections", () => {
+    const repo = createHealthyRepo();
+
+    const output = formatStatusVerboseReport(runStatus({ cwd: repo }));
+
     expect(output).toContain("Status: pass");
     expect(output).toContain("## Health Summary");
     expect(output).toContain("## Install Health");
@@ -126,10 +140,11 @@ describe("lifecycle commands", () => {
       expect.objectContaining({
         id: "changed-validation",
         state: "degraded",
-        nextCommand: "greenhouse-spec verify --changed --write-evidence",
+        nextCommand: "greenhouse-spec tend",
       }),
     );
-    expect(formatStatusReport(report)).toContain("Status: degraded");
+    expect(formatStatusReport(report)).toContain("State: degraded");
+    expect(formatStatusReport(report)).toContain("Next: greenhouse-spec tend");
   });
 
   it("status passes when latest evidence covers the current changed route", () => {
@@ -154,7 +169,7 @@ describe("lifecycle commands", () => {
         summary: "latest passing evidence covers current route.",
       }),
     );
-    expect(output).toContain("latest passing evidence covers current route");
+    expect(output).toContain("Validation: covered by latest passing evidence.");
   });
 
   it("status degrades when latest matching evidence failed", () => {
@@ -224,7 +239,7 @@ describe("lifecycle commands", () => {
 
     expect(report.generatedOnlyDirty).toBe(true);
     expect(report.verify.route.commands).toHaveLength(0);
-    expect(output).toContain("generated-only dirty: yes");
+    expect(output).toContain("Generated-only dirty: yes");
   });
 
   it("status reports repeated generated failure observations", () => {
@@ -241,8 +256,8 @@ describe("lifecycle commands", () => {
         count: 2,
       }),
     );
-    expect(formatStatusReport(report)).toContain("Status: degraded");
-    expect(formatStatusReport(report)).toContain("## Repeated Failures");
+    expect(formatStatusReport(report)).toContain("State: degraded");
+    expect(formatStatusVerboseReport(report)).toContain("## Repeated Failures");
   });
 
   it("status fails when doctor finds a blocking install issue", () => {
@@ -297,7 +312,7 @@ describe("lifecycle commands", () => {
         { from: "node" },
       );
       expect(process.exitCode).toBeUndefined();
-      expect(output.join("\n")).toContain("Status: degraded");
+      expect(output.join("\n")).toContain("State: degraded");
     } finally {
       console.log = originalLog;
       process.exitCode = originalExitCode;
@@ -339,6 +354,30 @@ describe("lifecycle commands", () => {
           state: "degraded",
         }),
       );
+    } finally {
+      console.log = originalLog;
+      process.exitCode = originalExitCode;
+    }
+  });
+
+  it("status CLI prints verbose Markdown when requested", async () => {
+    const repo = createHealthyRepo();
+    const originalLog = console.log;
+    const originalExitCode = process.exitCode;
+    const output: string[] = [];
+    console.log = (message?: unknown) => {
+      output.push(String(message));
+    };
+    process.exitCode = undefined;
+
+    try {
+      await createProgram().parseAsync(
+        ["node", "greenhouse-spec", "status", "--cwd", repo, "--verbose"],
+        { from: "node" },
+      );
+      expect(process.exitCode).toBeUndefined();
+      expect(output.join("\n")).toContain("# Greenhouse Status Report");
+      expect(output.join("\n")).toContain("## Health Summary");
     } finally {
       console.log = originalLog;
       process.exitCode = originalExitCode;

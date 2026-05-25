@@ -9,6 +9,7 @@ import {
 import { join } from "node:path";
 
 import { discoverRepoShape } from "../discovery/repo-shape.js";
+import { runDoctor, type DoctorReport } from "../doctor/run-doctor.js";
 import {
   readFailureSignatures,
   repeatedFailureSummaries,
@@ -17,20 +18,45 @@ import { pruneGeneratedRecords } from "../evidence/prune.js";
 import { buildValidationProposals } from "../proposals/build-proposals.js";
 import type { ValidationProposal } from "../schemas/validation-proposals.js";
 import { getChangedFiles } from "../validation/changed-files.js";
+import { runVerify, type VerifyReport } from "../verify/run-verify.js";
 
 export type TendProposal = {
   kind: "validation" | "protected-boundary" | "context";
   message: string;
 };
 
+export type TendState = "pass" | "warning" | "fail";
+
+export type TendFlow = "finish-gate" | "structural-check";
+
+export type TendValidationSummary = {
+  executed: boolean;
+  evidenceWritten: boolean;
+  commands: string[];
+  reason: string;
+};
+
+export type TendWriteSummary = {
+  authoredRootsMutated: boolean;
+  packageScriptsMutated: boolean;
+  tendReportPath: string | null;
+  evidencePath: string | null;
+};
+
 export type TendReport = {
   cwd: string;
   ok: boolean;
+  state: TendState;
+  flow: TendFlow;
   check: boolean;
   changedFiles: string[];
   latestEvidencePath: string | null;
   proposals: TendProposal[];
   repeatedFailures: ReturnType<typeof repeatedFailureSummaries>;
+  doctor?: DoctorReport;
+  verify?: VerifyReport;
+  validation: TendValidationSummary;
+  writes: TendWriteSummary;
   selfTending?: {
     total: number;
     pending: number;
@@ -54,33 +80,120 @@ export function runTend(options: { cwd: string; check?: boolean; noPrune?: boole
     ? readFileSync(latestEvidencePath, "utf8")
     : "";
   const proposals = buildProposals(changedFiles, latestEvidence);
-  const repeatedFailures = repeatedFailureSummaries(
+  let repeatedFailures = repeatedFailureSummaries(
     readFailureSignatures(options.cwd),
   );
   const report: TendReport = {
     cwd: options.cwd,
     ok: true,
+    state: "pass",
+    flow: options.check ? "structural-check" : "finish-gate",
     check: Boolean(options.check),
     changedFiles,
     latestEvidencePath,
     proposals,
     repeatedFailures,
+    validation: {
+      executed: false,
+      evidenceWritten: false,
+      commands: [],
+      reason: options.check
+        ? "tend --check is structural-only and does not execute validation."
+        : "validation has not run yet.",
+    },
+    writes: {
+      authoredRootsMutated: false,
+      packageScriptsMutated: false,
+      tendReportPath: null,
+      evidencePath: null,
+    },
   };
 
   if (options.check) {
     report.selfTending = buildSelfTendingCheck(options.cwd);
     report.ok = report.selfTending.blocking.length === 0;
+    report.state = report.ok ? "pass" : "fail";
     return report;
   }
 
-  if (proposals.length > 0) {
+  report.doctor = runDoctor({ cwd: options.cwd });
+  report.selfTending = buildSelfTendingCheck(options.cwd);
+
+  if (!report.doctor.ok) {
+    report.ok = false;
+    report.state = "fail";
+    report.validation.reason = "install/root health failed; validation was not run.";
+    maybeWriteProposalReport(report, options);
+    return report;
+  }
+
+  if (report.selfTending.blocking.length > 0) {
+    report.ok = false;
+    report.state = "fail";
+    report.validation.reason = "structural drift blocks validation; run proposals before tending.";
+    maybeWriteProposalReport(report, options);
+    return report;
+  }
+
+  const dryRun = runVerify({ cwd: options.cwd, changed: true, dryRun: true });
+  if (dryRun.route.commands.length === 0) {
+    report.verify = dryRun;
+    report.validation.reason =
+      dryRun.route.skippedValidation ?? "No validation commands were selected.";
+  } else {
+    const verify = runVerify({
+      cwd: options.cwd,
+      changed: true,
+      writeEvidence: true,
+      noPrune: options.noPrune,
+    });
+    report.verify = verify;
+    report.ok = verify.ok;
+    report.validation = {
+      executed: true,
+      evidenceWritten: Boolean(verify.evidencePath),
+      commands: verify.route.commands.map((command) => command.command),
+      reason: verify.ok
+        ? "selected validation passed."
+        : "selected validation failed.",
+    };
+    report.writes.evidencePath = verify.evidencePath ?? null;
+    report.latestEvidencePath = verify.evidencePath ?? report.latestEvidencePath;
+    repeatedFailures = repeatedFailureSummaries(readFailureSignatures(options.cwd));
+    report.repeatedFailures = repeatedFailures;
+  }
+
+  report.state = finalTendState(report);
+  maybeWriteProposalReport(report, options);
+
+  return report;
+}
+
+function finalTendState(report: TendReport): TendState {
+  if (!report.ok) {
+    return "fail";
+  }
+  if (
+    report.proposals.length > 0 ||
+    report.repeatedFailures.length > 0 ||
+    (report.verify?.route.manualChecks.length ?? 0) > 0
+  ) {
+    return "warning";
+  }
+  return "pass";
+}
+
+function maybeWriteProposalReport(
+  report: TendReport,
+  options: { cwd: string; noPrune?: boolean },
+): void {
+  if (report.proposals.length > 0) {
     report.writtenReportPath = writeTendReport(report);
+    report.writes.tendReportPath = report.writtenReportPath;
     if (!options.noPrune) {
       pruneGeneratedRecords({ cwd: options.cwd });
     }
   }
-
-  return report;
 }
 
 export function formatTendReport(report: TendReport): string {
@@ -88,8 +201,8 @@ export function formatTendReport(report: TendReport): string {
     "# Greenhouse Tend Report",
     "",
     `Repository: ${report.cwd}`,
-    `Mode: ${report.check ? "check" : "report"}`,
-    `Status: ${report.ok ? "pass" : "fail"}`,
+    `Flow: ${report.flow}`,
+    `Status: ${report.state}`,
     "",
     "## Changed files",
     "",
@@ -103,8 +216,31 @@ export function formatTendReport(report: TendReport): string {
     }
   }
 
+  lines.push("", "## Install health", "");
+  if (!report.doctor) {
+    lines.push("- skipped");
+  } else if (report.doctor.findings.length === 0) {
+    lines.push("- pass: doctor found no issues");
+  } else {
+    for (const finding of report.doctor.findings) {
+      lines.push(`- ${finding.severity}: ${finding.check} - ${finding.message}`);
+    }
+  }
+
   lines.push("", "## Evidence", "");
   lines.push(report.latestEvidencePath ? `- ${report.latestEvidencePath}` : "- none");
+
+  lines.push("", "## Validation", "");
+  if (report.validation.executed) {
+    lines.push(
+      `- executed: ${report.validation.commands.length === 0 ? "none" : report.validation.commands.join(", ")}`,
+    );
+  } else {
+    lines.push(`- not run: ${report.validation.reason}`);
+  }
+  lines.push(
+    `- evidence written: ${report.validation.evidenceWritten ? report.writes.evidencePath ?? "yes" : "no"}`,
+  );
 
   lines.push("", "## Proposals", "");
 

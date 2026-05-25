@@ -70,7 +70,7 @@ greenhouse-spec proposals
 greenhouse-spec apply-proposals --safe --dry-run
 greenhouse-spec apply-proposals --safe
 greenhouse-spec adopt-proposals --id <proposal-id>
-greenhouse-spec verify --changed --write-evidence
+greenhouse-spec tend
 ```
 
 The normal intent is:
@@ -79,7 +79,8 @@ The normal intent is:
 status
   One read-only health report for install state, drift, changed-file routing,
   repeated failures, and latest evidence. It reports pass, degraded, or fail.
-  Use `status --json` for stable machine-readable output.
+  Use `status --verbose` for detailed Markdown and `status --json` for stable
+  machine-readable output.
 
 init
   Install the base Greenhouse contract in a new target repo.
@@ -222,7 +223,8 @@ adopt-proposals
   Route commands are not changed.
 
 tend
-  Write a durable tend report from changed files and recent evidence.
+  Tend the repository before finishing work. Runs install health, structural
+  drift, changed-file validation, evidence writing, and proposal summary.
 
 tend --check
   Run fresh in-memory discovery and fail on pending, adoptable, or conflict

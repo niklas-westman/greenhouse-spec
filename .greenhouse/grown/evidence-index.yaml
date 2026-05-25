@@ -1,19 +1,192 @@
 schema_version: 1
 managed_by: greenhouse-spec
-generated_at: 2026-05-24T20:09:47.289Z
+generated_at: 2026-05-25T15:39:01.329Z
 policy:
   agent_reading: Do not bulk-read evidence. Read specific evidence only when continuing a change, debugging validation, or following a tend/report pointer.
   retention: Keep recent evidence indexed here; archive or prune old records when they no longer help future validation decisions.
 recent:
+  - path: evidence/2026-05-25T15-39-01-328Z-verify.md
+    modified_at: 2026-05-25T15:39:01.328Z
+    summary: "Verification: verify-2026-05-25; mode patch; files none"
+    status: pass
+    mode: patch
+    changed_files: []
+    commands: []
+    manual_checks: []
+    impact_warnings: []
   - path: evidence/2026-05-24T17-01-28-083Z-verify.md
-    modified_at: 2026-05-24T17:01:28.084Z
+    modified_at: 2026-05-24T20:52:15.428Z
     summary: "Verification: verify-2026-05-24; mode guarded; files README.md, docs/README.md, docs/commands.md, docs/installation.md, docs/operating-playbook.md, src/cli.ts, src/commands/doctor.ts, src/commands/tend.ts, src/commands/verify.ts, src/doctor"
+    status: pass
+    mode: guarded
+    changed_files:
+      - README.md
+      - docs/README.md
+      - docs/commands.md
+      - docs/installation.md
+      - docs/operating-playbook.md
+      - src/cli.ts
+      - src/commands/doctor.ts
+      - src/commands/tend.ts
+      - src/commands/verify.ts
+      - src/doctor/run-doctor.ts
+      - src/evidence/evidence-index.ts
+      - src/evidence/write-evidence.ts
+      - src/native-scripts/package-script-proposals.ts
+      - src/plant/run-plant.ts
+      - src/proposals/build-proposals.ts
+      - src/schemas/project.ts
+      - src/tend/run-tend.ts
+      - src/verify/run-verify.ts
+      - templates/installed/project.yaml
+      - tests/cli.test.ts
+      - tests/proposals.test.ts
+      - src/commands/evidence.ts
+      - src/commands/init.ts
+      - src/commands/status.ts
+      - src/commands/update.ts
+      - src/evidence/prune.ts
+      - src/lifecycle/
+      - src/status/
+      - src/version.ts
+      - tests/evidence.test.ts
+      - tests/lifecycle.test.ts
+      - package.json
+      - .greenhouse/project.yaml
+      - .greenhouse/roots/validation.yaml
+    commands:
+      - pnpm test:templates
+      - pnpm typecheck
+      - pnpm test:cli
+      - pnpm test:schemas
+      - pnpm test:proposals
+      - pnpm test:validation
+      - pnpm test:plant
+      - pnpm test:tend
+      - pnpm test:doctor
+      - pnpm test:native-scripts
+      - pnpm check
+      - pnpm test:lifecycle
+      - pnpm test:evidence
+      - pnpm test
+      - pnpm build
+    manual_checks:
+      - Review Greenhouse self-bootstrap and package validation changes.
+      - Review Greenhouse authored config changes before relying on validation routing.
+      - Human must review guarded risk notes before merge.
+    impact_warnings: []
   - path: evidence/2026-05-24T16-32-33-409Z-verify.md
-    modified_at: 2026-05-24T16:32:33.410Z
+    modified_at: 2026-05-24T20:52:15.428Z
     summary: "Verification: verify-2026-05-24; mode guarded; files README.md, docs/README.md, docs/commands.md, docs/installation.md, docs/operating-playbook.md, src/cli.ts, src/commands/doctor.ts, src/commands/tend.ts, src/commands/verify.ts, src/doctor"
+    status: pass
+    mode: guarded
+    changed_files:
+      - README.md
+      - docs/README.md
+      - docs/commands.md
+      - docs/installation.md
+      - docs/operating-playbook.md
+      - src/cli.ts
+      - src/commands/doctor.ts
+      - src/commands/tend.ts
+      - src/commands/verify.ts
+      - src/doctor/run-doctor.ts
+      - src/evidence/write-evidence.ts
+      - src/native-scripts/package-script-proposals.ts
+      - src/plant/run-plant.ts
+      - src/proposals/build-proposals.ts
+      - src/schemas/project.ts
+      - src/tend/run-tend.ts
+      - src/verify/run-verify.ts
+      - templates/installed/project.yaml
+      - tests/cli.test.ts
+      - tests/proposals.test.ts
+      - src/commands/evidence.ts
+      - src/commands/init.ts
+      - src/commands/status.ts
+      - src/commands/update.ts
+      - src/evidence/prune.ts
+      - src/lifecycle/
+      - src/status/
+      - src/version.ts
+      - tests/evidence.test.ts
+      - tests/lifecycle.test.ts
+      - package.json
+      - .greenhouse/project.yaml
+      - .greenhouse/roots/validation.yaml
+    commands:
+      - pnpm test:templates
+      - pnpm typecheck
+      - pnpm test:cli
+      - pnpm test:schemas
+      - pnpm test:proposals
+      - pnpm test:validation
+      - pnpm test:plant
+      - pnpm test:tend
+      - pnpm test:doctor
+      - pnpm test:native-scripts
+      - pnpm check
+      - pnpm test:lifecycle
+      - pnpm test:evidence
+      - pnpm test
+      - pnpm build
+    manual_checks:
+      - Review Greenhouse self-bootstrap and package validation changes.
+      - Review Greenhouse authored config changes before relying on validation routing.
+      - Human must review guarded risk notes before merge.
+    impact_warnings: []
   - path: evidence/2026-05-24T15-28-21-384Z-verify.md
     modified_at: 2026-05-24T15:28:21.385Z
     summary: "Verification: verify-2026-05-24; mode guarded; files src/doctor/run-doctor.ts, src/native-scripts/package-script-proposals.ts, src/proposals/build-proposals.ts, src/tend/run-tend.ts, tests/doctor.test.ts, tests/native-scripts.test.ts, tests"
+    status: pass
+    mode: guarded
+    changed_files:
+      - src/doctor/run-doctor.ts
+      - src/native-scripts/package-script-proposals.ts
+      - src/proposals/build-proposals.ts
+      - src/tend/run-tend.ts
+      - tests/doctor.test.ts
+      - tests/native-scripts.test.ts
+      - tests/proposals.test.ts
+      - tests/tend.test.ts
+      - package.json
+    commands:
+      - pnpm test:proposals
+      - pnpm typecheck
+      - pnpm test:tend
+      - pnpm test:doctor
+      - pnpm test:native-scripts
+      - pnpm check
+      - pnpm test
+      - pnpm test:cli
+      - pnpm build
+    manual_checks:
+      - Review Greenhouse self-bootstrap and package validation changes.
+      - Human must review guarded risk notes before merge.
+    impact_warnings: []
   - path: evidence/2026-05-24T15-26-54-798Z-verify.md
     modified_at: 2026-05-24T15:26:54.799Z
     summary: "Verification: verify-2026-05-24; mode guarded; files src/doctor/run-doctor.ts, src/native-scripts/package-script-proposals.ts, src/proposals/build-proposals.ts, tests/doctor.test.ts, tests/native-scripts.test.ts, tests/proposals.test.ts, pa"
+    status: pass
+    mode: guarded
+    changed_files:
+      - src/doctor/run-doctor.ts
+      - src/native-scripts/package-script-proposals.ts
+      - src/proposals/build-proposals.ts
+      - tests/doctor.test.ts
+      - tests/native-scripts.test.ts
+      - tests/proposals.test.ts
+      - package.json
+    commands:
+      - pnpm test:proposals
+      - pnpm typecheck
+      - pnpm test:doctor
+      - pnpm test:native-scripts
+      - pnpm check
+      - pnpm test
+      - pnpm test:cli
+      - pnpm build
+    manual_checks:
+      - Review Greenhouse self-bootstrap and package validation changes.
+      - Human must review guarded risk notes before merge.
+    impact_warnings: []

@@ -1,6 +1,6 @@
 schema_version: 1
 managed_by: greenhouse-spec
-generated_at: 2026-05-24T20:09:47.291Z
+generated_at: 2026-05-25T15:39:01.333Z
 policy:
   effect: Generated observations only. Matching failures must still fail validation.
 signatures: []

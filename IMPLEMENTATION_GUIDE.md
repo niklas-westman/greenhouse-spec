@@ -1,7 +1,7 @@
 # Implementation Guide: Tending Reliability
 
 Created: 2026-05-25
-Status: draft
+Status: complete
 Branch: main
 
 ---
@@ -10,16 +10,16 @@ Branch: main
 
 This guide MUST be updated during implementation:
 
-- [ ] Check off tasks as they are completed.
-- [ ] Add notes when reality diverges from plan.
-- [ ] Reorder or split phases when blockers are discovered.
-- [ ] Add new tasks discovered during implementation.
-- [ ] Mark tasks as skipped with a concrete reason when they become irrelevant.
-- [ ] Record timestamps on phase completions for velocity tracking.
-- [ ] Update test coverage map as tests are written.
+- [x] Check off tasks as they are completed.
+- [x] Add notes when reality diverges from plan.
+- [x] Reorder or split phases when blockers are discovered.
+- [x] Add new tasks discovered during implementation.
+- [x] Mark tasks as skipped with a concrete reason when they become irrelevant.
+- [x] Record timestamps on phase completions for velocity tracking.
+- [x] Update test coverage map as tests are written.
 
 Last updated: 2026-05-25
-Current phase: 6
+Current phase: complete
 
 ---
 
@@ -121,16 +121,16 @@ agentic scenarios can be tested without local repo paths.
 
 ### Non-Negotiables
 
-- [ ] Do not add mandatory new public workflow commands.
-- [ ] Keep normal usage as `greenhouse-spec status` then `greenhouse-spec tend`.
-- [ ] Keep `status` read-only.
-- [ ] Keep `tend --check` structural-only.
-- [ ] Do not silently mutate `.greenhouse/roots/**`, package scripts, or human-owned decisions.
-- [ ] Known/repeated failures must be explained, not made green.
-- [ ] Generated Greenhouse artifacts must not pollute product validation routing.
-- [ ] Source changes must never appear clean solely because no route matched.
-- [ ] Evidence must remain bounded and redacted.
-- [ ] Real repo alignment must pass before this phase is considered done.
+- [x] Do not add mandatory new public workflow commands.
+- [x] Keep normal usage as `greenhouse-spec status` then `greenhouse-spec tend`.
+- [x] Keep `status` read-only.
+- [x] Keep `tend --check` structural-only.
+- [x] Do not silently mutate `.greenhouse/roots/**`, package scripts, or human-owned decisions.
+- [x] Known/repeated failures must be explained, not made green.
+- [x] Generated Greenhouse artifacts must not pollute product validation routing.
+- [x] Source changes must never appear clean solely because no route matched.
+- [x] Evidence must remain bounded and redacted.
+- [x] Real repo alignment must pass before this phase is considered done.
 
 ### Out Of Scope
 
@@ -800,8 +800,8 @@ Unit done when:
 | Impact warning wording/severity | Complete | pass | pass | Resolution hints and blocking command drift |
 | Evidence prune/index summary | Complete | pass | pass | Preserves latest failure context |
 | Proposal review output | Complete | pass | pass | Grouped report and apply summary |
-| Fixture alignment scenarios | Not started | pending | pending | CI-safe confidence |
-| Real repo proof | Not started | pending | pending | Shows AI benefit in target repos |
+| Fixture alignment scenarios | Complete | pass | pass | CI-safe confidence |
+| Real repo proof | Complete | pass | pass | Shows AI benefit in target repos |
 
 ---
 

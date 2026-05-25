@@ -103,6 +103,7 @@ export function formatDismissProposalsReport(report: DismissProposalsReport): st
     `Repository: ${report.cwd}`,
     `Mode: ${report.dryRun ? "dry-run" : "write"}`,
     `Status: ${report.ok ? "pass" : "fail"}`,
+    "Decision ledger: .greenhouse/roots/proposal-decisions.yaml",
     "",
     "## Results",
     "",

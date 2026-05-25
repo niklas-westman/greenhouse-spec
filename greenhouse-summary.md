@@ -237,6 +237,11 @@ greenhouse-spec apply-proposals --safe
 Dismissals are recorded in `.greenhouse/roots/proposal-decisions.yaml` so the
 same noise does not keep returning without a visible repo-local decision.
 
+Proposal reports are grouped by state: pending, adoptable, conflicts, applied,
+and skipped. Safe-apply reports summarize changed, skipped, and conflicting
+items before listing details, so agents can decide quickly whether a repo needs
+mechanical application, adoption, or manual review.
+
 ## Validation Routing
 
 Greenhouse routes validation from changed files instead of blindly running every

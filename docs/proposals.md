@@ -41,6 +41,15 @@ skipped
   The proposal was intentionally not applied.
 ```
 
+`greenhouse-spec proposals` groups output by these states so an agent can review
+pending work without opening generated YAML. Conflicts include the human-owned
+collision explanation. Skipped proposals point back to the authored decision
+ledger:
+
+```text
+.greenhouse/roots/proposal-decisions.yaml
+```
+
 ## Safe Apply
 
 Run dry-run first:
@@ -60,6 +69,10 @@ Safe apply can:
 - Add missing Greenhouse package scripts.
 - Add missing validation routes with `managed_by: greenhouse-spec`.
 - Update routes already managed by Greenhouse.
+
+The apply report summarizes changed, skipped, and conflicting proposals before
+listing individual results. In dry-run mode, "changed" means Greenhouse found a
+safe write it would make.
 
 Safe apply cannot:
 
@@ -104,3 +117,16 @@ match the generated proposal. Resolve conflicts by choosing one of these paths:
 
 `tend --check` fails while conflicts remain because the repo has unresolved
 maintenance ownership drift.
+
+## Dismissal
+
+Dismissal records an authored decision when a proposal is intentionally not
+wanted:
+
+```bash
+greenhouse-spec proposals dismiss --id <proposal-id> --reason "Reviewed manually"
+```
+
+The decision is written to `.greenhouse/roots/proposal-decisions.yaml`. Future
+`inspect` runs mark matching proposals as skipped instead of repeatedly
+returning the same noise.

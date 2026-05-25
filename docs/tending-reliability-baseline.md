@@ -329,3 +329,32 @@ Product improvement:
   per command.
 - Known/repeated failures remain failing when validation fails; pruning only
   preserves explanation context.
+
+## Phase 5 After Snapshot: Proposal Review UX Reliability
+
+After Phase 5, proposal output is grouped by review state:
+
+```text
+Pending
+Adoptable
+Conflicts
+Applied
+Skipped
+```
+
+Safe apply reports now include a summary:
+
+```text
+Summary:
+  changed: 4
+  skipped: 18
+  conflicts: 0
+```
+
+Product improvement:
+
+- Agents can see the exact proposal bucket that needs action without opening
+  `.greenhouse/grown/validation-proposals.yaml`.
+- Conflict output includes the human-owned collision explanation.
+- Dismissed/skipped proposals point to
+  `.greenhouse/roots/proposal-decisions.yaml`.

@@ -13,8 +13,14 @@ import { parse as parseYaml } from "yaml";
 import { afterEach, describe, expect, it } from "vitest";
 
 import { adoptProposals } from "../src/proposals/adopt-proposals.js";
-import { applyProposals } from "../src/proposals/apply-proposals.js";
-import { dismissProposals } from "../src/proposals/dismiss-proposals.js";
+import {
+  applyProposals,
+  formatApplyProposalsReport,
+} from "../src/proposals/apply-proposals.js";
+import {
+  dismissProposals,
+  formatDismissProposalsReport,
+} from "../src/proposals/dismiss-proposals.js";
 import { readValidationProposals } from "../src/proposals/read-proposals.js";
 import { formatProposalsReport, runProposals } from "../src/proposals/run-proposals.js";
 import { runInspect } from "../src/inspect/run-inspect.js";
@@ -67,6 +73,21 @@ describe("structured proposals", () => {
     expect(formatProposalsReport(runProposals({ cwd: repo }))).toContain(
       "idempotency: validation-route:frontend-react/src/**",
     );
+  });
+
+  it("groups proposal output by review state", () => {
+    const repo = createSourcerLikeRepo();
+    runPlant({ cwd: repo });
+    runInspect({ cwd: repo });
+
+    const output = formatProposalsReport(runProposals({ cwd: repo }));
+
+    expect(output).toContain("## Pending");
+    expect(output).toContain("## Adoptable");
+    expect(output).toContain("## Conflicts");
+    expect(output).toContain("## Applied");
+    expect(output).toContain("## Skipped");
+    expect(output).toContain("package-script:greenhouse:tend");
   });
 
   it("does not generate validation route proposals for Declarion-like single-package repos", () => {
@@ -194,6 +215,22 @@ describe("structured proposals", () => {
     expect(readGreenhouseFile(repo, "roots/validation.yaml")).toBe(validationBefore);
   });
 
+  it("safe apply report summarizes changed, skipped, and conflicts", () => {
+    const repo = createSourcerLikeRepo();
+    runPlant({ cwd: repo });
+    runInspect({ cwd: repo });
+
+    const output = formatApplyProposalsReport(
+      applyProposals({ cwd: repo, dryRun: true, safe: true }),
+    );
+
+    expect(output).toContain("## Summary");
+    expect(output).toContain("- changed:");
+    expect(output).toContain("- skipped:");
+    expect(output).toContain("- conflicts:");
+    expect(output).toContain("Would set package script");
+  });
+
   it("safe apply adds missing package scripts and managed validation routes", () => {
     const repo = createSourcerLikeRepo();
     runPlant({ cwd: repo });
@@ -246,6 +283,11 @@ describe("structured proposals", () => {
     expect(updatedValidation.paths["frontend-react/src/**"].required).toEqual([
       { id: "custom", command: "pnpm custom" },
     ]);
+
+    const output = formatProposalsReport(runProposals({ cwd: repo }));
+
+    expect(output).toContain("## Conflicts");
+    expect(output).toContain("human-owned");
   });
 
   it("dismisses proposals through an authored decision ledger", () => {
@@ -283,6 +325,16 @@ describe("structured proposals", () => {
         reason:
           "Proposal was dismissed in .greenhouse/roots/proposal-decisions.yaml.",
       }),
+    );
+
+    const output = formatProposalsReport(runProposals({ cwd: repo }));
+
+    expect(formatDismissProposalsReport(report)).toContain(
+      "Decision ledger: .greenhouse/roots/proposal-decisions.yaml",
+    );
+    expect(output).toContain("## Skipped");
+    expect(output).toContain(
+      "decision ledger: .greenhouse/roots/proposal-decisions.yaml",
     );
   });
 

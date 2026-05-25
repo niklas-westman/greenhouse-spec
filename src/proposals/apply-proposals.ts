@@ -107,12 +107,23 @@ export function applyProposals(options: {
 }
 
 export function formatApplyProposalsReport(report: ApplyProposalsReport): string {
+  const changed = report.results.filter((result) =>
+    ["applied", "dry-run"].includes(result.status),
+  );
+  const skipped = report.results.filter((result) => result.status === "skipped");
+  const conflicts = report.results.filter((result) => result.status === "conflict");
   const lines = [
     "# Greenhouse Apply Proposals Report",
     "",
     `Repository: ${report.cwd}`,
     `Mode: ${report.dryRun ? "dry-run" : "write"}`,
     `Status: ${report.ok ? "pass" : "fail"}`,
+    "",
+    "## Summary",
+    "",
+    `- changed: ${changed.length}`,
+    `- skipped: ${skipped.length}`,
+    `- conflicts: ${conflicts.length}`,
     "",
     "## Results",
     "",

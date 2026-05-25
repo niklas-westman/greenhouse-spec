@@ -50,6 +50,13 @@ export function runProposals(options: { cwd: string }): ProposalsReport {
 }
 
 export function formatProposalsReport(report: ProposalsReport): string {
+  const groups = [
+    ["pending", "Pending"],
+    ["adoptable", "Adoptable"],
+    ["conflict", "Conflicts"],
+    ["applied", "Applied"],
+    ["skipped", "Skipped"],
+  ] as const;
   const lines = [
     "# Greenhouse Proposals Report",
     "",
@@ -62,24 +69,38 @@ export function formatProposalsReport(report: ProposalsReport): string {
     `Applied: ${report.counts.applied}`,
     `Skipped: ${report.counts.skipped}`,
     "",
-    "## Proposals",
-    "",
   ];
 
   if (report.proposals.length === 0) {
-    lines.push("No proposals found.");
+    lines.push("## Proposals", "", "No proposals found.");
   } else {
-    for (const proposal of report.proposals) {
-      lines.push(
-        `- ${proposal.status}: ${proposal.id} (${proposal.kind}, ${proposal.target}) - ${proposal.reason}`,
+    for (const [status, heading] of groups) {
+      const proposals = report.proposals.filter(
+        (proposal) => proposal.status === status,
       );
-      lines.push(`  - idempotency: ${proposal.idempotencyKey}`);
-      if (proposal.preconditions.length > 0) {
-        lines.push(`  - preconditions: ${proposal.preconditions.join("; ")}`);
+      lines.push(`## ${heading}`, "");
+      if (proposals.length === 0) {
+        lines.push("- none");
+      } else {
+        for (const proposal of proposals) {
+          lines.push(
+            `- ${proposal.id} (${proposal.kind}, ${proposal.target}) - ${proposal.reason}`,
+          );
+          lines.push(`  - idempotency: ${proposal.idempotencyKey}`);
+          if (proposal.preconditions.length > 0) {
+            lines.push(`  - preconditions: ${proposal.preconditions.join("; ")}`);
+          }
+          if (proposal.collision) {
+            lines.push(`  - collision: ${proposal.collision}`);
+          }
+          if (proposal.status === "skipped") {
+            lines.push(
+              "  - decision ledger: .greenhouse/roots/proposal-decisions.yaml",
+            );
+          }
+        }
       }
-      if (proposal.collision) {
-        lines.push(`  - collision: ${proposal.collision}`);
-      }
+      lines.push("");
     }
   }
 

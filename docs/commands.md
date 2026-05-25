@@ -7,10 +7,29 @@ from another working directory.
 
 ```bash
 greenhouse-spec status
+greenhouse-spec status --json
 ```
 
 Prints one read-only health report by combining doctor, self-tending drift
 checks, changed-file validation dry-run, and latest evidence discovery.
+
+`status` uses three top-level states:
+
+- `pass`: install health, structural drift, routing, evidence, and generated
+  failure observations are all clear.
+- `degraded`: Greenhouse is operational, but an agent should not ignore pending
+  context such as selected validation commands or repeated unresolved failures.
+- `fail`: install health or structural self-tending checks require action.
+
+`degraded` is advisory and exits successfully. `fail` exits non-zero.
+
+Use `--json` when another agent or script needs stable fields instead of
+Markdown. The JSON report includes `overallStatus`, categorized `health`,
+`generatedOnlyDirty`, changed-file groups, repeated failures, and the next
+recommended command.
+
+When only generated Greenhouse artifacts are dirty, status says
+`generated-only dirty: yes`; those files do not affect validation routing.
 
 Side effects: none.
 

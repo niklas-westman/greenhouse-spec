@@ -77,7 +77,9 @@ The normal intent is:
 
 ```text
 status
-  One read-only health report for install state, drift, changed-file routing, and latest evidence.
+  One read-only health report for install state, drift, changed-file routing,
+  repeated failures, and latest evidence. It reports pass, degraded, or fail.
+  Use `status --json` for stable machine-readable output.
 
 init
   Install the base Greenhouse contract in a new target repo.
@@ -107,6 +109,16 @@ failure signatures
   Explain repeated validation failures from generated evidence without changing
   pass/fail behavior.
 ```
+
+`status: degraded` means Greenhouse is installed and operational, but there is
+unresolved context an agent should not ignore. Examples include changed-file
+validation selected but not executed by `status`, or repeated unresolved
+failures from generated evidence. Degraded status is advisory and exits
+successfully; install or structural failures still return `fail`.
+
+When only generated `.greenhouse/grown/**`, `.greenhouse/evidence/**`, or
+`.greenhouse/reports/**` files are dirty, `status` reports that as
+`generated-only dirty`; those files do not affect validation routing.
 
 ## The `.greenhouse` Folder
 

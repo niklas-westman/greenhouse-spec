@@ -190,18 +190,46 @@ export function normalizeFailureText(text: string): string {
   return (signal ?? normalized).trim().slice(0, 500);
 }
 
+export function isLowSignalFailureText(normalizedFailure: string): boolean {
+  const text = normalizedFailure.trim().toLowerCase();
+  if (text.length === 0) {
+    return true;
+  }
+
+  const hasPreciseSignal =
+    /\b(typeerror|referenceerror|syntaxerror|assertionerror):/.test(text) ||
+    /\bis not a function\b/.test(text) ||
+    /\bcannot\s+\w+/.test(text) ||
+    /\bexpected\s+.+\breceived\b/.test(text);
+
+  if (hasPreciseSignal) {
+    return false;
+  }
+
+  return (
+    text.startsWith("> ") ||
+    /\b(vitest|jest|playwright|tsc|eslint)\s+(run|test|check)\b/.test(text) ||
+    /^[✓✕×⨯]\s/.test(text)
+  );
+}
+
 function readFailureObservations(cwd: string): FailureObservation[] {
   return recentEvidenceFiles(cwd).flatMap((path) => {
     const content = readFileSync(path, "utf8");
     const modifiedAt = new Date(statSync(path).mtimeMs).toISOString();
     const evidencePath = relative(join(cwd, ".greenhouse"), path).replace(/\\/g, "/");
 
-    return parseFailedCommandRows(content).map((row) => ({
-      command: row.command,
-      normalizedFailure: normalizeFailureText(row.notes),
-      evidencePath,
-      seenAt: modifiedAt,
-    }));
+    return parseFailedCommandRows(content)
+      .map((row) => ({
+        command: row.command,
+        normalizedFailure: normalizeFailureText(row.notes),
+        evidencePath,
+        seenAt: modifiedAt,
+      }))
+      .filter(
+        (observation) =>
+          !isLowSignalFailureText(observation.normalizedFailure),
+      );
   });
 }
 

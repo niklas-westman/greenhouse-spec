@@ -13,7 +13,10 @@ greenhouse-spec verify --changed --dry-run
 
 If `status` passes, the install is healthy, there is no known structural
 Greenhouse drift, and changed-file routing can be explained without running
-commands.
+commands. If it is `degraded`, Greenhouse is still operational, but there is
+context an agent should not ignore, such as pending changed-file validation or
+repeated unresolved failures. If it fails, repair the install or structural drift
+before trusting validation routing.
 
 ## Before Push
 
@@ -23,6 +26,9 @@ Run:
 greenhouse-spec tend --check
 greenhouse-spec verify --changed --write-evidence
 ```
+
+`status` is advisory and read-only. The conservative prepush gate remains
+`tend --check` plus `verify --changed --write-evidence`.
 
 Package-based repos should usually expose this as:
 

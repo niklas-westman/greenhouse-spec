@@ -16,6 +16,7 @@ import {
   annotateRepeatedFailures,
   buildFailureSignatures,
   failureExcerpt,
+  isLowSignalFailureText,
   normalizeFailureText,
   writeFailureSignatures,
 } from "../src/evidence/failure-signatures.js";
@@ -86,6 +87,17 @@ describe("failure signatures", () => {
     );
   });
 
+  it("detects low-signal runner summaries", () => {
+    expect(
+      isLowSignalFailureText(
+        "> declarion@0.1.0 test <path> > vitest run run v2.1.9 <path>",
+      ),
+    ).toBe(true);
+    expect(isLowSignalFailureText("localstorage.clear is not a function")).toBe(
+      false,
+    );
+  });
+
   it("groups repeated failed command evidence and ignores passing commands", () => {
     const repo = createRepoWithEvidence(0);
     writeEvidenceFile(repo, "first.md", [
@@ -108,6 +120,24 @@ describe("failure signatures", () => {
       count: 2,
       normalized_failure: "localstorage.clear is not a function",
     });
+  });
+
+  it("does not index repeated runner-only summaries as failure signatures", () => {
+    const repo = createRepoWithEvidence(0);
+    writeEvidenceFile(repo, "first.md", [
+      "| Command | Result | Notes |",
+      "|---|---:|---|",
+      "| `pnpm test` | fail | > declarion@0.1.0 test /repo > vitest run run v2.1.9 /repo |",
+    ]);
+    writeEvidenceFile(repo, "second.md", [
+      "| Command | Result | Notes |",
+      "|---|---:|---|",
+      "| `pnpm test` | fail | > declarion@0.1.0 test /repo > vitest run run v2.1.9 /repo |",
+    ]);
+
+    const index = buildFailureSignatures(repo);
+
+    expect(index.signatures).toHaveLength(0);
   });
 
   it("annotates matching failures without changing command results", () => {

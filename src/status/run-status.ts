@@ -9,9 +9,27 @@ import {
 import { runTend, type TendReport } from "../tend/run-tend.js";
 import { runVerify, type VerifyReport } from "../verify/run-verify.js";
 
+export type HealthState = "pass" | "degraded" | "fail";
+
+export type HealthCategory = {
+  id:
+    | "install"
+    | "self-tending"
+    | "changed-validation"
+    | "repeated-failures"
+    | "evidence";
+  label: string;
+  state: HealthState;
+  summary: string;
+  nextCommand?: string;
+};
+
 export type StatusReport = {
   cwd: string;
   ok: boolean;
+  overallStatus: HealthState;
+  health: HealthCategory[];
+  generatedOnlyDirty: boolean;
   doctor: DoctorReport;
   tend: TendReport;
   verify: VerifyReport;
@@ -23,15 +41,28 @@ export function runStatus(options: { cwd: string }): StatusReport {
   const doctor = runDoctor({ cwd: options.cwd });
   const tend = runTend({ cwd: options.cwd, check: true });
   const verify = runVerify({ cwd: options.cwd, changed: true, dryRun: true });
-
-  return {
-    cwd: options.cwd,
-    ok: doctor.ok && tend.ok && verify.ok,
+  const repeatedFailures = repeatedFailureSummaries(readFailureSignatures(options.cwd));
+  const latestEvidencePath = findLatestEvidence(options.cwd);
+  const health = buildHealthCategories({
     doctor,
     tend,
     verify,
-    repeatedFailures: repeatedFailureSummaries(readFailureSignatures(options.cwd)),
-    latestEvidencePath: findLatestEvidence(options.cwd),
+    repeatedFailures,
+    latestEvidencePath,
+  });
+  const overallStatus = aggregateHealth(health);
+
+  return {
+    cwd: options.cwd,
+    ok: overallStatus !== "fail",
+    overallStatus,
+    health,
+    generatedOnlyDirty: isGeneratedOnlyDirty(verify),
+    doctor,
+    tend,
+    verify,
+    repeatedFailures,
+    latestEvidencePath,
   };
 }
 
@@ -40,7 +71,14 @@ export function formatStatusReport(report: StatusReport): string {
     "# Greenhouse Status Report",
     "",
     `Repository: ${report.cwd}`,
-    `Status: ${report.ok ? "pass" : "fail"}`,
+    `Status: ${report.overallStatus}`,
+    "",
+    "## Health Summary",
+    "",
+    ...report.health.map((category) => {
+      const next = category.nextCommand ? ` Next: ${category.nextCommand}` : "";
+      return `- ${category.state}: ${category.label} - ${category.summary}${next}`;
+    }),
     "",
     "## Install Health",
     "",
@@ -73,6 +111,11 @@ export function formatStatusReport(report: StatusReport): string {
   } else {
     lines.push(`- routed files: ${report.verify.route.changedFiles.join(", ")}`);
   }
+  if (report.generatedOnlyDirty) {
+    lines.push(
+      "- generated-only dirty: yes; generated Greenhouse artifacts do not affect validation routing.",
+    );
+  }
 
   if (report.verify.route.commands.length === 0) {
     lines.push(`- commands: none (${report.verify.route.skippedValidation})`);
@@ -103,20 +146,188 @@ export function formatStatusReport(report: StatusReport): string {
   return lines.join("\n");
 }
 
+export function formatStatusJsonReport(report: StatusReport): string {
+  return `${JSON.stringify(
+    {
+      schema_version: 1,
+      repository: report.cwd,
+      ok: report.ok,
+      overallStatus: report.overallStatus,
+      generatedOnlyDirty: report.generatedOnlyDirty,
+      health: report.health,
+      changedValidation: {
+        changedFiles: report.verify.route.allChangedFiles ?? report.verify.route.changedFiles,
+        routedFiles: report.verify.route.changedFiles,
+        groups: report.verify.classification.groups,
+        commands: report.verify.route.commands,
+        skippedValidation: report.verify.route.skippedValidation,
+      },
+      repeatedFailures: report.repeatedFailures,
+      latestEvidencePath: report.latestEvidencePath,
+      nextCommand: recommendedNextCommand(report),
+    },
+    null,
+    2,
+  )}\n`;
+}
+
 function nextCommand(report: StatusReport): string {
-  if (!report.doctor.ok) {
-    return "- greenhouse-spec doctor";
-  }
-  if (!report.tend.ok) {
-    return "- greenhouse-spec inspect && greenhouse-spec proposals";
-  }
-  if (report.verify.route.commands.length > 0) {
-    return "- greenhouse-spec verify --changed --write-evidence";
-  }
-  if (report.repeatedFailures.length > 0) {
-    return "- review repeated failures before assuming validation baseline is healthy";
+  const command = recommendedNextCommand(report);
+  if (command) {
+    return `- ${command}`;
   }
   return "- no action needed";
+}
+
+function recommendedNextCommand(report: StatusReport): string | null {
+  return report.health.find((item) => item.nextCommand)?.nextCommand ?? null;
+}
+
+function buildHealthCategories(options: {
+  doctor: DoctorReport;
+  tend: TendReport;
+  verify: VerifyReport;
+  repeatedFailures: ReturnType<typeof repeatedFailureSummaries>;
+  latestEvidencePath: string | null;
+}): HealthCategory[] {
+  return [
+    installHealth(options.doctor),
+    selfTendingHealth(options.tend),
+    changedValidationHealth(options.verify),
+    repeatedFailuresHealth(options.repeatedFailures),
+    evidenceHealth(options.repeatedFailures, options.latestEvidencePath),
+  ];
+}
+
+function installHealth(doctor: DoctorReport): HealthCategory {
+  if (!doctor.ok) {
+    return {
+      id: "install",
+      label: "Install health",
+      state: "fail",
+      summary: `${doctor.findings.length} doctor finding(s) need attention.`,
+      nextCommand: "greenhouse-spec doctor",
+    };
+  }
+
+  return {
+    id: "install",
+    label: "Install health",
+    state: "pass",
+    summary: "doctor found no blocking issues.",
+  };
+}
+
+function selfTendingHealth(tend: TendReport): HealthCategory {
+  if (!tend.ok) {
+    const blocking = tend.selfTending?.blocking.length ?? 0;
+    return {
+      id: "self-tending",
+      label: "Self-tending",
+      state: "fail",
+      summary: `${blocking} structural proposal(s) require review.`,
+      nextCommand: "greenhouse-spec inspect && greenhouse-spec proposals",
+    };
+  }
+
+  return {
+    id: "self-tending",
+    label: "Self-tending",
+    state: "pass",
+    summary: "no structural drift found.",
+  };
+}
+
+function changedValidationHealth(verify: VerifyReport): HealthCategory {
+  if (!verify.ok) {
+    return {
+      id: "changed-validation",
+      label: "Changed validation",
+      state: "fail",
+      summary: "changed-file validation routing failed.",
+      nextCommand: "greenhouse-spec verify --changed --dry-run",
+    };
+  }
+
+  if (verify.route.commands.length > 0) {
+    return {
+      id: "changed-validation",
+      label: "Changed validation",
+      state: "degraded",
+      summary: `${verify.route.commands.length} validation command(s) selected but not executed by status.`,
+      nextCommand: "greenhouse-spec verify --changed --write-evidence",
+    };
+  }
+
+  return {
+    id: "changed-validation",
+    label: "Changed validation",
+    state: "pass",
+    summary: "no routed changed-file validation is pending.",
+  };
+}
+
+function repeatedFailuresHealth(
+  repeatedFailures: ReturnType<typeof repeatedFailureSummaries>,
+): HealthCategory {
+  if (repeatedFailures.length > 0) {
+    return {
+      id: "repeated-failures",
+      label: "Repeated failures",
+      state: "degraded",
+      summary: `${repeatedFailures.length} repeated failure signature(s) observed.`,
+      nextCommand: "review repeated failures before assuming validation baseline is healthy",
+    };
+  }
+
+  return {
+    id: "repeated-failures",
+    label: "Repeated failures",
+    state: "pass",
+    summary: "no repeated failure signatures observed.",
+  };
+}
+
+function evidenceHealth(
+  repeatedFailures: ReturnType<typeof repeatedFailureSummaries>,
+  latestEvidencePath: string | null,
+): HealthCategory {
+  if (repeatedFailures.length > 0 && !latestEvidencePath) {
+    return {
+      id: "evidence",
+      label: "Evidence",
+      state: "degraded",
+      summary: "repeated failures exist without a latest evidence pointer.",
+      nextCommand: "greenhouse-spec inspect",
+    };
+  }
+
+  return {
+    id: "evidence",
+    label: "Evidence",
+    state: "pass",
+    summary: latestEvidencePath
+      ? `latest evidence: ${latestEvidencePath}.`
+      : "no latest evidence required.",
+  };
+}
+
+function aggregateHealth(categories: HealthCategory[]): HealthState {
+  if (categories.some((category) => category.state === "fail")) {
+    return "fail";
+  }
+  if (categories.some((category) => category.state === "degraded")) {
+    return "degraded";
+  }
+  return "pass";
+}
+
+function isGeneratedOnlyDirty(verify: VerifyReport): boolean {
+  return (
+    verify.classification.all.length > 0 &&
+    verify.classification.groups["greenhouse-generated"].length ===
+      verify.classification.all.length
+  );
 }
 
 function findLatestEvidence(cwd: string): string | null {

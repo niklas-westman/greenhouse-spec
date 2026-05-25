@@ -13,9 +13,15 @@ import { execFileSync } from "node:child_process";
 import { parse as parseYaml } from "yaml";
 import { afterEach, describe, expect, it } from "vitest";
 
+import { createProgram } from "../src/cli.js";
 import { runInit } from "../src/lifecycle/run-init.js";
 import { runUpdate } from "../src/lifecycle/run-update.js";
-import { formatStatusReport, runStatus } from "../src/status/run-status.js";
+import { greenhouseCommandForRepo } from "../src/native-scripts/package-script-proposals.js";
+import {
+  formatStatusJsonReport,
+  formatStatusReport,
+  runStatus,
+} from "../src/status/run-status.js";
 import { runPlant } from "../src/plant/run-plant.js";
 
 const tempRepos: string[] = [];
@@ -79,46 +85,218 @@ describe("lifecycle commands", () => {
     const report = runStatus({ cwd: repo });
 
     expect(report.ok).toBe(false);
+    expect(report.overallStatus).toBe("fail");
     expect(readFileSync(proposalsPath, "utf8")).toBe(before);
     expect(existsSync(join(repo, ".greenhouse", "reports", "tend"))).toBe(false);
   });
 
-  it("status reports repeated generated failure observations", () => {
-    const repo = createRepo();
-    runPlant({ cwd: repo });
-    initGitRepo(repo);
+  it("status passes for a healthy clean repo", () => {
+    const repo = createHealthyRepo();
+
+    const report = runStatus({ cwd: repo });
+    const output = formatStatusReport(report);
+
+    expect(report.ok).toBe(true);
+    expect(report.overallStatus).toBe("pass");
+    expect(report.health.map((category) => category.state)).toEqual([
+      "pass",
+      "pass",
+      "pass",
+      "pass",
+      "pass",
+    ]);
+    expect(output).toContain("Status: pass");
+    expect(output).toContain("## Health Summary");
+    expect(output).toContain("## Install Health");
+    expect(output).toContain("## Self-tending");
+    expect(output).toContain("## Changed Validation");
+    expect(output).toContain("## Repeated Failures");
+  });
+
+  it("status degrades when changed-file validation is pending", () => {
+    const repo = createHealthyRepo();
+    writeFileSync(join(repo, "README.md"), "# Lifecycle fixture\n\nChanged.\n", "utf8");
+
+    const report = runStatus({ cwd: repo });
+
+    expect(report.ok).toBe(true);
+    expect(report.overallStatus).toBe("degraded");
+    expect(report.health).toContainEqual(
+      expect.objectContaining({
+        id: "changed-validation",
+        state: "degraded",
+        nextCommand: "greenhouse-spec verify --changed --write-evidence",
+      }),
+    );
+    expect(formatStatusReport(report)).toContain("Status: degraded");
+  });
+
+  it("status identifies generated-only dirty trees without routing validation", () => {
+    const repo = createHealthyRepo();
     writeFileSync(
-      join(repo, ".greenhouse", "grown", "failure-signatures.yaml"),
-      [
-        "schema_version: 1",
-        "managed_by: greenhouse-spec",
-        "generated_at: 2026-05-24T00:00:00.000Z",
-        "policy:",
-        "  effect: Generated observations only. Matching failures must still fail validation.",
-        "signatures:",
-        "  - id: failure:abc123",
-        "    command: pnpm test",
-        "    normalized_failure: 'localstorage.clear is not a function'",
-        "    count: 2",
-        "    first_seen_at: 2026-05-23T00:00:00.000Z",
-        "    last_seen_at: 2026-05-24T00:00:00.000Z",
-        "    evidence_paths:",
-        "      - evidence/first.md",
-        "      - evidence/second.md",
-        "",
-      ].join("\n"),
+      join(repo, ".greenhouse", "evidence", "generated-only.md"),
+      "# Generated evidence\n",
       "utf8",
     );
 
     const report = runStatus({ cwd: repo });
+    const output = formatStatusReport(report);
 
+    expect(report.generatedOnlyDirty).toBe(true);
+    expect(report.verify.route.commands).toHaveLength(0);
+    expect(output).toContain("generated-only dirty: yes");
+  });
+
+  it("status reports repeated generated failure observations", () => {
+    const repo = createHealthyRepo();
+    writeRepeatedFailureSignature(repo);
+
+    const report = runStatus({ cwd: repo });
+
+    expect(report.ok).toBe(true);
+    expect(report.overallStatus).toBe("degraded");
     expect(report.repeatedFailures).toContainEqual(
       expect.objectContaining({
         command: "pnpm test",
         count: 2,
       }),
     );
+    expect(formatStatusReport(report)).toContain("Status: degraded");
     expect(formatStatusReport(report)).toContain("## Repeated Failures");
+  });
+
+  it("status fails when doctor finds a blocking install issue", () => {
+    const repo = createHealthyRepo();
+    rmSync(join(repo, ".greenhouse", "grown", "repo-map.yaml"));
+
+    const report = runStatus({ cwd: repo });
+
+    expect(report.ok).toBe(false);
+    expect(report.overallStatus).toBe("fail");
+    expect(report.health).toContainEqual(
+      expect.objectContaining({
+        id: "install",
+        state: "fail",
+        nextCommand: "greenhouse-spec doctor",
+      }),
+    );
+  });
+
+  it("status fails when self-tending finds structural drift", () => {
+    const repo = createRepo();
+    runPlant({ cwd: repo });
+    initGitRepo(repo);
+
+    const report = runStatus({ cwd: repo });
+
+    expect(report.ok).toBe(false);
+    expect(report.overallStatus).toBe("fail");
+    expect(report.health).toContainEqual(
+      expect.objectContaining({
+        id: "self-tending",
+        state: "fail",
+        nextCommand: "greenhouse-spec inspect && greenhouse-spec proposals",
+      }),
+    );
+  });
+
+  it("status CLI exits successfully for degraded health", async () => {
+    const repo = createHealthyRepo();
+    writeRepeatedFailureSignature(repo);
+    const originalLog = console.log;
+    const originalExitCode = process.exitCode;
+    const output: string[] = [];
+    console.log = (message?: unknown) => {
+      output.push(String(message));
+    };
+    process.exitCode = undefined;
+
+    try {
+      await createProgram().parseAsync(
+        ["node", "greenhouse-spec", "status", "--cwd", repo],
+        { from: "node" },
+      );
+      expect(process.exitCode).toBeUndefined();
+      expect(output.join("\n")).toContain("Status: degraded");
+    } finally {
+      console.log = originalLog;
+      process.exitCode = originalExitCode;
+    }
+  });
+
+  it("status CLI prints machine-readable JSON", async () => {
+    const repo = createHealthyRepo();
+    writeRepeatedFailureSignature(repo);
+    const originalLog = console.log;
+    const originalExitCode = process.exitCode;
+    const output: string[] = [];
+    console.log = (message?: unknown) => {
+      output.push(String(message));
+    };
+    process.exitCode = undefined;
+
+    try {
+      await createProgram().parseAsync(
+        ["node", "greenhouse-spec", "status", "--cwd", repo, "--json"],
+        { from: "node" },
+      );
+      const parsed = JSON.parse(output.join("\n"));
+      expect(process.exitCode).toBeUndefined();
+      expect(parsed).toMatchObject({
+        schema_version: 1,
+        ok: true,
+        overallStatus: "degraded",
+        generatedOnlyDirty: true,
+        nextCommand: "review repeated failures before assuming validation baseline is healthy",
+      });
+      expect(parsed.health).toContainEqual(
+        expect.objectContaining({
+          id: "repeated-failures",
+          state: "degraded",
+        }),
+      );
+    } finally {
+      console.log = originalLog;
+      process.exitCode = originalExitCode;
+    }
+  });
+
+  it("status JSON formatter exposes routed files and generated-only dirty state", () => {
+    const repo = createHealthyRepo();
+    writeFileSync(
+      join(repo, ".greenhouse", "evidence", "generated-only.md"),
+      "# Generated evidence\n",
+      "utf8",
+    );
+
+    const parsed = JSON.parse(formatStatusJsonReport(runStatus({ cwd: repo })));
+
+    expect(parsed.generatedOnlyDirty).toBe(true);
+    expect(parsed.changedValidation.routedFiles).toEqual([]);
+    expect(parsed.changedValidation.groups["greenhouse-generated"]).toEqual([
+      ".greenhouse/evidence/",
+    ]);
+  });
+
+  it("status CLI exits non-zero for failed health", async () => {
+    const repo = createRepo();
+    runPlant({ cwd: repo });
+    initGitRepo(repo);
+    const originalLog = console.log;
+    const originalExitCode = process.exitCode;
+    console.log = () => {};
+    process.exitCode = undefined;
+
+    try {
+      await createProgram().parseAsync(
+        ["node", "greenhouse-spec", "status", "--cwd", repo],
+        { from: "node" },
+      );
+      expect(process.exitCode).toBe(1);
+    } finally {
+      console.log = originalLog;
+      process.exitCode = originalExitCode;
+    }
   });
 });
 
@@ -144,6 +322,68 @@ function createRepo(): string {
     "utf8",
   );
   return repo;
+}
+
+function createHealthyRepo(): string {
+  const repo = createRepo();
+  runPlant({ cwd: repo });
+  writePackageJson(repo, {
+    test: "node -e \"process.exit(0)\"",
+    typecheck: "node -e \"process.exit(0)\"",
+    greenhouse: greenhouseCommandForRepo(repo),
+    "check:greenhouse": greenhouseCommandForRepo(repo, "doctor"),
+    "check:changed": greenhouseCommandForRepo(repo, "verify --changed"),
+    "check:changed:evidence": greenhouseCommandForRepo(
+      repo,
+      "verify --changed --write-evidence",
+    ),
+    "validate:scope": greenhouseCommandForRepo(repo, "verify --paths"),
+    tend: greenhouseCommandForRepo(repo, "tend"),
+    "check:tend": greenhouseCommandForRepo(repo, "tend --check"),
+    prepush: "pnpm check:tend && pnpm check:changed:evidence",
+  });
+  initGitRepo(repo);
+  return repo;
+}
+
+function writePackageJson(repo: string, scripts: Record<string, string>): void {
+  writeFileSync(
+    join(repo, "package.json"),
+    JSON.stringify(
+      {
+        name: "lifecycle-fixture",
+        scripts,
+      },
+      null,
+      2,
+    ),
+    "utf8",
+  );
+}
+
+function writeRepeatedFailureSignature(repo: string): void {
+  writeFileSync(
+    join(repo, ".greenhouse", "grown", "failure-signatures.yaml"),
+    [
+      "schema_version: 1",
+      "managed_by: greenhouse-spec",
+      "generated_at: 2026-05-24T00:00:00.000Z",
+      "policy:",
+      "  effect: Generated observations only. Matching failures must still fail validation.",
+      "signatures:",
+      "  - id: failure:abc123",
+      "    command: pnpm test",
+      "    normalized_failure: 'localstorage.clear is not a function'",
+      "    count: 2",
+      "    first_seen_at: 2026-05-23T00:00:00.000Z",
+      "    last_seen_at: 2026-05-24T00:00:00.000Z",
+      "    evidence_paths:",
+      "      - evidence/first.md",
+      "      - evidence/second.md",
+      "",
+    ].join("\n"),
+    "utf8",
+  );
 }
 
 function initGitRepo(repo: string): void {

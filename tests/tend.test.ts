@@ -469,6 +469,14 @@ function createRepo(): string {
   const repo = mkdtempSync(join(tmpdir(), "greenhouse-spec-tend-"));
   tempRepos.push(repo);
   writeFileSync(join(repo, "README.md"), "# Tend fixture\n");
+  mkdirSync(join(repo, "docs"), { recursive: true });
+  writeFileSync(join(repo, "docs", "commands.md"), "# Commands\n", "utf8");
+  writeFileSync(join(repo, "docs", "installation.md"), "# Installation\n", "utf8");
+  writeFileSync(
+    join(repo, "docs", "validation-routing.md"),
+    "# Validation routing\n",
+    "utf8",
+  );
   writeFileSync(join(repo, "pnpm-lock.yaml"), "lockfileVersion: '9.0'\n");
   writeFileSync(
     join(repo, "package.json"),

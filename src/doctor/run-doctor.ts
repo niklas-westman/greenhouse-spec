@@ -12,7 +12,7 @@ import {
 import { parseYamlWithSchema } from "../schemas/common.js";
 import { evidenceIndexSchema } from "../schemas/evidence-index.js";
 import { failureSignaturesSchema } from "../schemas/failure-signatures.js";
-import { docsRootSchema } from "../schemas/docs-root.js";
+import { docsRootSchema, type DocsRoot } from "../schemas/docs-root.js";
 import { projectSchema, type ProjectConfig } from "../schemas/project.js";
 import { repoMapSchema, type RepoMap } from "../schemas/repo-map.js";
 import { repoShapeSchema } from "../schemas/repo-shape.js";
@@ -139,6 +139,10 @@ export function runDoctor(options: RunDoctorOptions): DoctorReport {
     validateContextManifestPaths(cwd, greenhousePath, parsed.manifest, findings);
   }
 
+  if (parsed.docsRoot) {
+    validateTrackedDocs(cwd, parsed.docsRoot, findings);
+  }
+
   if (parsed.repoMap) {
     validateGeneratedSourceSeparation(cwd, parsed.repoMap, findings);
   }
@@ -201,8 +205,18 @@ function validateSchemaFiles(
   cwd: string,
   greenhousePath: string,
   findings: DoctorFinding[],
-): { manifest?: ContextManifest; repoMap?: RepoMap; project?: ProjectConfig } {
-  const parsed: { manifest?: ContextManifest; repoMap?: RepoMap; project?: ProjectConfig } = {};
+): {
+  docsRoot?: DocsRoot;
+  manifest?: ContextManifest;
+  repoMap?: RepoMap;
+  project?: ProjectConfig;
+} {
+  const parsed: {
+    docsRoot?: DocsRoot;
+    manifest?: ContextManifest;
+    repoMap?: RepoMap;
+    project?: ProjectConfig;
+  } = {};
 
   for (const schemaFile of schemaFiles) {
     const path = join(greenhousePath, schemaFile.path);
@@ -215,6 +229,9 @@ function validateSchemaFiles(
       const result = readYaml(path, schemaFile.schema);
       if (schemaFile.path === "project.yaml") {
         parsed.project = result as ProjectConfig;
+      }
+      if (schemaFile.path === "roots/docs.yaml") {
+        parsed.docsRoot = result as DocsRoot;
       }
       if (schemaFile.path === "context/manifest.yaml") {
         parsed.manifest = result as ContextManifest;
@@ -233,6 +250,24 @@ function validateSchemaFiles(
   }
 
   return parsed;
+}
+
+function validateTrackedDocs(
+  cwd: string,
+  docsRoot: DocsRoot,
+  findings: DoctorFinding[],
+): void {
+  for (const doc of docsRoot.tracked_docs) {
+    const path = join(cwd, doc.path);
+    if (!existsSync(path)) {
+      findings.push({
+        severity: "warning",
+        check: "tracked-doc",
+        message: `Tracked docs path is missing: ${doc.path}`,
+        path: formatPath(cwd, path),
+      });
+    }
+  }
 }
 
 function validateContextManifestPaths(

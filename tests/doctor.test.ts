@@ -171,6 +171,56 @@ describe("doctor", () => {
     );
   });
 
+  it("warns when docs ownership points to a missing doc", () => {
+    const repo = createFixtureRepo();
+    writeFileSync(
+      join(repo, ".greenhouse", "roots", "docs.yaml"),
+      [
+        "schema_version: 1",
+        "tracked_docs:",
+        "  - path: docs/missing.md",
+        "    owns:",
+        "      - setup",
+        "",
+      ].join("\n"),
+      "utf8",
+    );
+
+    const report = runDoctor({ cwd: repo });
+
+    expect(report.ok).toBe(true);
+    expect(report.findings).toContainEqual(
+      expect.objectContaining({
+        severity: "warning",
+        check: "tracked-doc",
+        message: "Tracked docs path is missing: docs/missing.md",
+      }),
+    );
+  });
+
+  it("accepts docs ownership paths that exist", () => {
+    const repo = createFixtureRepo();
+    mkdirSync(join(repo, "docs"), { recursive: true });
+    writeFileSync(join(repo, "docs", "setup.md"), "# Setup\n", "utf8");
+    writeFileSync(
+      join(repo, ".greenhouse", "roots", "docs.yaml"),
+      [
+        "schema_version: 1",
+        "tracked_docs:",
+        "  - path: docs/setup.md",
+        "    owns:",
+        "      - setup",
+        "",
+      ].join("\n"),
+      "utf8",
+    );
+
+    const report = runDoctor({ cwd: repo });
+
+    expect(report.ok).toBe(true);
+    expect(report.findings).toEqual([]);
+  });
+
   it("accepts local node CLI package script aliases", () => {
     const repo = createFixtureRepo();
     writeFileSync(
@@ -258,6 +308,16 @@ function createFixtureRepo(): string {
   for (const directory of mvpInstalledDirectories) {
     mkdirSync(join(greenhousePath, directory), { recursive: true });
   }
+
+  mkdirSync(join(repo, "docs"), { recursive: true });
+  writeFileSync(join(repo, "README.md"), "# Fixture\n", "utf8");
+  writeFileSync(join(repo, "docs", "commands.md"), "# Commands\n", "utf8");
+  writeFileSync(join(repo, "docs", "installation.md"), "# Installation\n", "utf8");
+  writeFileSync(
+    join(repo, "docs", "validation-routing.md"),
+    "# Validation routing\n",
+    "utf8",
+  );
 
   return repo;
 }

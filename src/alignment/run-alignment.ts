@@ -5,7 +5,7 @@ import { discoverRepoShape } from "../discovery/repo-shape.js";
 import { findPackageRoot } from "../filesystem/package-root.js";
 import { buildValidationProposals } from "../proposals/build-proposals.js";
 import { runStatus, type HealthState } from "../status/run-status.js";
-import { runTend } from "../tend/run-tend.js";
+import { runTend, type TendState } from "../tend/run-tend.js";
 import { runVerify } from "../verify/run-verify.js";
 
 export type AlignmentRepoName = "declarion" | "sourcer" | "ensember";
@@ -39,6 +39,21 @@ type VerifyScenario = {
   manualChecks?: string[];
 };
 
+type ImpactScenario = {
+  id: string;
+  path: string;
+  warnings: Array<{
+    id: string;
+    severity?: "advisory" | "warning" | "guarded" | "blocking";
+  }>;
+};
+
+type TendScenario = {
+  expectedState: TendState;
+  validationExecuted: boolean;
+  evidenceWritten: boolean;
+};
+
 export type AlignmentRepoContract = {
   name: string;
   path: string;
@@ -48,6 +63,8 @@ export type AlignmentRepoContract = {
     path: string;
     reason: string;
   }>;
+  tend?: TendScenario;
+  impact?: ImpactScenario[];
   verify: VerifyScenario[];
 };
 
@@ -59,6 +76,13 @@ export function defaultAlignmentContracts(): AlignmentRepoContract[] {
       name: "declarion",
       path: join(projectsRoot, "declarion"),
       expectedStatus: ["degraded"],
+      impact: [
+        {
+          id: "package-script-impact",
+          path: "package.json",
+          warnings: [{ id: "impact.package-scripts-docs", severity: "warning" }],
+        },
+      ],
       verify: [
         {
           id: "app-route",
@@ -72,6 +96,13 @@ export function defaultAlignmentContracts(): AlignmentRepoContract[] {
       name: "sourcer",
       path: join(projectsRoot, "sourcer"),
       expectedStatus: ["pass"],
+      impact: [
+        {
+          id: "package-script-impact",
+          path: "package.json",
+          warnings: [{ id: "impact.package-scripts-docs", severity: "warning" }],
+        },
+      ],
       verify: [
         {
           id: "frontend-route",
@@ -94,6 +125,13 @@ export function defaultAlignmentContracts(): AlignmentRepoContract[] {
         {
           path: "src-tauri/target/",
           reason: "Rust/Cargo build output",
+        },
+      ],
+      impact: [
+        {
+          id: "tauri-impact",
+          path: "src-tauri/src/orchestration/runtime.rs",
+          warnings: [{ id: "impact.tauri-packaging", severity: "advisory" }],
         },
       ],
       verify: [
@@ -197,8 +235,18 @@ function runRepoAlignment(contract: AlignmentRepoContract): AlignmentRepoReport 
 
   checks.push(...safeCheck("status", () => checkStatus(contract)));
   checks.push(...safeCheck("self-tending", () => checkSelfTending(contract)));
+  const tendScenario = contract.tend;
+  if (tendScenario) {
+    checks.push(...safeCheck("tend", () => checkTend(contract, tendScenario)));
+  }
   checks.push(...safeCheck("proposals", () => checkProposals(contract)));
   checks.push(...safeCheck("repo-shape", () => checkRepoShape(contract)));
+
+  for (const scenario of contract.impact ?? []) {
+    checks.push(...safeCheck(`impact:${scenario.id}`, () =>
+      checkImpactScenario(contract, scenario),
+    ));
+  }
 
   for (const scenario of contract.verify) {
     checks.push(...safeCheck(`verify:${scenario.id}`, () =>
@@ -251,6 +299,38 @@ function checkSelfTending(contract: AlignmentRepoContract): AlignmentCheck[] {
       summary: tend.ok
         ? "no blocking structural drift."
         : `${tend.selfTending?.blocking.length ?? 0} blocking proposal(s).`,
+    },
+  ];
+}
+
+function checkTend(
+  contract: AlignmentRepoContract,
+  scenario: TendScenario,
+): AlignmentCheck[] {
+  const tend = runTend({ cwd: contract.path });
+  const failures = [
+    ...(tend.state === scenario.expectedState
+      ? []
+      : [`expected state ${scenario.expectedState}, got ${tend.state}`]),
+    ...(tend.validation.executed === scenario.validationExecuted
+      ? []
+      : [
+          `expected validation executed ${String(scenario.validationExecuted)}, got ${String(tend.validation.executed)}`,
+        ]),
+    ...(tend.validation.evidenceWritten === scenario.evidenceWritten
+      ? []
+      : [
+          `expected evidence written ${String(scenario.evidenceWritten)}, got ${String(tend.validation.evidenceWritten)}`,
+        ]),
+  ];
+
+  return [
+    {
+      id: "tend",
+      state: failures.length === 0 ? "pass" : "fail",
+      summary: failures.length === 0
+        ? `finish gate returned ${tend.state}.`
+        : failures.join("; "),
     },
   ];
 }
@@ -315,6 +395,39 @@ function checkRepoShape(contract: AlignmentRepoContract): AlignmentCheck[] {
           summary: "no repo-shape assertions for this repository.",
         },
       ];
+}
+
+function checkImpactScenario(
+  contract: AlignmentRepoContract,
+  scenario: ImpactScenario,
+): AlignmentCheck[] {
+  const verify = runVerify({
+    cwd: contract.path,
+    paths: [scenario.path],
+    dryRun: true,
+  });
+  const failures = scenario.warnings.flatMap((expected) => {
+    const warning = verify.impactWarnings.find((item) => item.id === expected.id);
+    if (!warning) {
+      return [`missing impact warning ${expected.id}`];
+    }
+    if (expected.severity && warning.severity !== expected.severity) {
+      return [
+        `expected impact warning ${expected.id} severity ${expected.severity}, got ${warning.severity}`,
+      ];
+    }
+    return [];
+  });
+
+  return [
+    {
+      id: `impact:${scenario.id}`,
+      state: failures.length === 0 ? "pass" : "fail",
+      summary: failures.length === 0
+        ? `${scenario.path} produced expected impact warning(s).`
+        : failures.join("; "),
+    },
+  ];
 }
 
 function checkVerifyScenario(

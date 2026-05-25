@@ -42,6 +42,8 @@ describe("alignment checks", () => {
 
     expect(report.ok).toBe(true);
     expect(output).toContain("# Greenhouse Alignment Report");
+    expect(output).toContain("tend - finish gate returned pass.");
+    expect(output).toContain("impact:package-script-impact");
     expect(output).toContain("verify:tauri-source-route");
     expect(output).toContain("src-tauri/target/ is Rust/Cargo build output");
   });
@@ -75,6 +77,23 @@ function ensemberContract(repo: string): AlignmentRepoContract {
       {
         path: "src-tauri/target/",
         reason: "Rust/Cargo build output",
+      },
+    ],
+    tend: {
+      expectedState: "pass",
+      validationExecuted: false,
+      evidenceWritten: false,
+    },
+    impact: [
+      {
+        id: "package-script-impact",
+        path: "package.json",
+        warnings: [{ id: "impact.package-scripts-docs", severity: "warning" }],
+      },
+      {
+        id: "tauri-impact",
+        path: "src-tauri/src/lib.rs",
+        warnings: [{ id: "impact.tauri-packaging", severity: "advisory" }],
       },
     ],
     verify: [

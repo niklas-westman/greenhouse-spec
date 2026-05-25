@@ -8,41 +8,46 @@ Run:
 
 ```bash
 greenhouse-spec status
-greenhouse-spec verify --changed --dry-run
 ```
 
 If `status` passes, the install is healthy, there is no known structural
-Greenhouse drift, and changed-file routing can be explained without running
-commands. If it is `degraded`, Greenhouse is still operational, but there is
-context an agent should not ignore, such as pending changed-file validation or
-repeated unresolved failures. If it fails, repair the install or structural drift
-before trusting validation routing.
+Greenhouse drift, and changed-file routing has no pending evidence gap. If it is
+`degraded`, Greenhouse is still operational, but there is context an agent
+should not ignore, such as pending changed-file validation, guarded impact
+warnings, or repeated unresolved failures. If it fails, repair the install or
+structural drift before trusting validation routing.
 
 If the latest passing evidence exactly matches the current routed files and
 commands, `status` keeps changed validation passing. If the route changed after
 that evidence was written, it degrades and points back to
-`verify --changed --write-evidence`.
+`greenhouse-spec tend`.
+
+For routing debugging without running commands:
+
+```bash
+greenhouse-spec verify --changed --dry-run
+```
 
 ## Before Push
 
 Run:
 
 ```bash
-greenhouse-spec tend --check
-greenhouse-spec verify --changed --write-evidence
+greenhouse-spec tend
 ```
 
-`status` is advisory and read-only. The conservative prepush gate remains
-`tend --check` plus `verify --changed --write-evidence`.
+`status` is advisory and read-only. `tend` is the everyday finish gate: it
+checks install/root health, structural drift, changed-file validation, impact
+warnings, repeated failures, evidence writing, and proposals in one command.
+For CI or structural-only debugging, use `greenhouse-spec tend --check`.
 
 Package-based repos should usually expose this as:
 
 ```bash
-pnpm check:tend
-pnpm check:changed:evidence
+pnpm greenhouse:tend
 ```
 
-or as a combined prepush script:
+or, if the repo wants separate structural and validation gates:
 
 ```bash
 pnpm check:tend && pnpm check:changed:evidence
@@ -77,7 +82,7 @@ After resolving drift:
 ```bash
 greenhouse-spec status
 greenhouse-spec doctor
-greenhouse-spec verify --changed --dry-run
+greenhouse-spec tend
 ```
 
 ## When The Repo Structure Changes

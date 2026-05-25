@@ -3,6 +3,32 @@
 Every command accepts `--cwd <path>` so it can operate on a target repository
 from another working directory.
 
+## Command Model
+
+Primary everyday commands:
+
+```bash
+greenhouse-spec status
+greenhouse-spec tend
+```
+
+`status` is the quiet read-only entry point. `tend` is the composed pre-finish
+gate that checks drift, runs changed-file validation, writes evidence, and
+summarizes impact warnings/proposals.
+
+Secondary commands expose the same layers directly:
+
+```bash
+greenhouse-spec verify --changed --dry-run
+greenhouse-spec verify --changed --write-evidence
+greenhouse-spec tend --check
+greenhouse-spec inspect
+greenhouse-spec proposals
+greenhouse-spec apply-proposals --safe
+```
+
+Use these when debugging routing, repairing drift, or evolving repo wiring.
+
 ## `status`
 
 ```bash
@@ -154,10 +180,11 @@ greenhouse-spec tend
 greenhouse-spec tend --check
 ```
 
-Without `--check`, `tend` is the pre-finish Greenhouse surface. It checks
-install/root health, runs the structural drift gate, routes changed-file
+Without `--check`, `tend` is the everyday pre-finish Greenhouse surface. It
+checks install/root health, runs the structural drift gate, routes changed-file
 validation, executes selected validation commands, writes evidence when
-commands run, reports repeated failure context, and summarizes proposals.
+commands run, reports repeated failure context, includes impact warnings, and
+summarizes proposals.
 
 With `--check`, runs fresh discovery in memory and fails if any pending,
 adoptable, or conflict proposal exists.

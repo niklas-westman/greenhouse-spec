@@ -61,21 +61,27 @@ docs/operating-playbook.md     day-to-day usage and drift repair loop
 
 ## Core Loop
 
+Everyday work should stay small:
+
 ```bash
 greenhouse-spec status
-greenhouse-spec init --dry-run
-greenhouse-spec init
-greenhouse-spec update --dry-run
-greenhouse-spec update
+# work normally
+greenhouse-spec tend
+```
+
+When `status` or `tend` reports repo evolution work, use the proposal loop:
+
+```bash
 greenhouse-spec inspect
 greenhouse-spec proposals
 greenhouse-spec apply-proposals --safe --dry-run
 greenhouse-spec apply-proposals --safe
 greenhouse-spec adopt-proposals --id <proposal-id>
+greenhouse-spec proposals dismiss --id <proposal-id> --reason "..."
 greenhouse-spec tend
 ```
 
-The normal intent is:
+The command model is:
 
 ```text
 status
@@ -90,8 +96,14 @@ init
 update
   Refresh generated intelligence, helper scripts, templates, and install metadata.
 
+tend
+  The everyday finish gate. It checks install health, structural drift, routes
+  changed-file validation, runs selected commands, writes evidence, and reports
+  impact warnings and proposals.
+
 tend --check
-  Is the repo structurally aligned?
+  Structural-only gate for CI/debugging. It does not run validation or write
+  evidence.
 
 inspect
   Refresh generated repo intelligence under .greenhouse/grown/**.
@@ -109,7 +121,8 @@ adopt-proposals
   Add Greenhouse ownership metadata to matching human-authored routes.
 
 verify --changed --write-evidence
-  Run scoped validation and record proof.
+  Advanced/direct validation command. `tend` uses the same validation and
+  evidence layers for the normal finish gate.
 
 failure signatures
   Explain repeated validation failures from generated evidence without changing

@@ -1,7 +1,7 @@
 # Implementation Guide: Lightweight Greenhouse Tending
 
 Created: 2026-05-25
-Status: in progress
+Status: complete
 Branch: main
 
 ---
@@ -10,16 +10,16 @@ Branch: main
 
 This guide MUST be updated during implementation:
 
-- [ ] Check off tasks as they are completed
-- [ ] Add notes when reality diverges from plan
-- [ ] Reorder or split phases when blockers are discovered
-- [ ] Add new tasks discovered during implementation
-- [ ] Mark tasks as "skipped - <reason>" when they become irrelevant
-- [ ] Record timestamps on phase completions for velocity tracking
-- [ ] Update test coverage map as tests are written
+- [x] Check off tasks as they are completed
+- [x] Add notes when reality diverges from plan
+- [x] Reorder or split phases when blockers are discovered
+- [x] Add new tasks discovered during implementation
+- [x] Mark tasks as "skipped - <reason>" when they become irrelevant
+- [x] Record timestamps on phase completions for velocity tracking
+- [x] Update test coverage map as tests are written
 
 Last updated: 2026-05-25
-Current phase: Phase 8
+Current phase: complete
 
 ---
 
@@ -671,7 +671,7 @@ Status: Complete - 2026-05-25
 
 Goal: Prove the simplified top-layer workflow across Greenhouse and the three local alignment repos.
 Depends on: Phases 1-7 as applicable
-Status: Not started
+Status: Complete
 
 #### Inputs
 
@@ -701,19 +701,19 @@ Status: Not started
 
 #### Tasks
 
-- [ ] Update README to present `status` and `tend` as the top-layer workflow.
+- [x] Update README to present `status` and `tend` as the top-layer workflow.
   - Tool: edit
   - Verify: `pnpm typecheck`
 
-- [ ] Update command docs with primary, secondary, and advanced command model.
+- [x] Update command docs with primary, secondary, and advanced command model.
   - Tool: edit
   - Verify: `pnpm typecheck`
 
-- [ ] Add/adjust alignment expectations for default `tend`.
+- [x] Add/adjust alignment expectations for default `tend`.
   - Tool: edit
   - Verify: `pnpm test:alignment`
 
-- [ ] Run real repo alignment.
+- [x] Run real repo alignment.
   - Tool: bash
   - Verify: `pnpm alignment:check`
 
@@ -727,10 +727,20 @@ Status: Not started
 
 #### Phase Exit Criteria
 
-- [ ] `pnpm test:alignment` passes.
-- [ ] `pnpm alignment:check` passes.
-- [ ] `pnpm check` passes.
-- [ ] Docs match implemented behavior.
+- [x] `pnpm test:alignment` passes.
+- [x] `pnpm alignment:check` passes.
+- [x] `pnpm check` passes.
+- [x] Docs match implemented behavior.
+
+#### Phase Notes
+
+- Completed on 2026-05-25.
+- Docs now position `greenhouse-spec status` and `greenhouse-spec tend` as the
+  normal top-layer workflow, with verify/inspect/proposals as repair and debug
+  surfaces.
+- Alignment contracts now assert stable impact warnings in real repos and
+  default `tend` finish-gate behavior in the portable Ensember-like fixture.
+- Real repo alignment stayed read-only for Declarion, Sourcer, and Ensember.
 
 ---
 

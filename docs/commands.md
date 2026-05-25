@@ -195,6 +195,11 @@ Failed commands always fail validation. If a failed command resembles a recent
 generated failure signature, the report may annotate it as repeated, but the
 command status remains `fail`.
 
+Evidence is repo-local memory, not permission to ignore validation. Evidence
+records include selected commands, route reasons, manual checks, impact
+warnings, bounded/redacted command excerpts, and, when written by `tend`, the
+final tending state. Full command logs are not stored by default.
+
 ## `doctor`
 
 ```bash

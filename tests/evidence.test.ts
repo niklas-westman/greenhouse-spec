@@ -79,7 +79,7 @@ describe("failure signatures", () => {
       " RUN  v2.1.9 /repo",
       "src/app.test.tsx:15",
       "TypeError: localStorage.clear is not a function",
-      "    at /Users/niklas/project/src/app.test.tsx:15:18",
+      "Cannot read /Users/niklas/project/src/app.test.tsx",
     ].join("\n");
 
     expect(failureExcerpt(output)).toContain(
@@ -88,6 +88,24 @@ describe("failure signatures", () => {
     expect(normalizeFailureText(failureExcerpt(output))).toBe(
       "localstorage.clear is not a function",
     );
+  });
+
+  it("bounds and redacts failure excerpts", () => {
+    const output = [
+      "Error: SECRET=super-secret-token",
+      "TypeError: request failed with OPENAI_API_KEY=sk-testsecret1234567890",
+      "Cannot read /Users/niklas/project/src/app.test.tsx",
+      "x".repeat(1200),
+    ].join("\n");
+
+    const excerpt = failureExcerpt(output);
+
+    expect(excerpt.length).toBeLessThanOrEqual(500);
+    expect(excerpt).not.toContain("/Users/niklas");
+    expect(excerpt).not.toContain("super-secret-token");
+    expect(excerpt).not.toContain("sk-testsecret1234567890");
+    expect(excerpt).toContain("<path>");
+    expect(excerpt).toContain("<redacted");
   });
 
   it("detects low-signal runner summaries", () => {
@@ -215,12 +233,32 @@ describe("failure signatures", () => {
         mode: "patch",
         changedFiles: ["package.json"],
         risks: [],
-        commands: [],
+        commands: [
+          {
+            id: "check:greenhouse",
+            command: "pnpm check:greenhouse",
+            reason: "Inferred repository configuration route.",
+            source: "inferred-route",
+            matched: "repo-config",
+          },
+        ],
         manualChecks: [],
         skippedValidation: "No commands were selected.",
-        explanations: [],
+        explanations: [
+          {
+            kind: "inferred-route",
+            message: "Inferred repository configuration route.",
+          },
+        ],
       },
-      commandResults: [],
+      commandResults: [
+        {
+          command: "pnpm check:greenhouse",
+          result: "pass",
+          exitCode: 0,
+          output: "ok",
+        },
+      ],
       impactWarnings: [
         {
           id: "impact.package-scripts-docs",
@@ -232,6 +270,12 @@ describe("failure signatures", () => {
             "package.json changed; setup docs and Greenhouse validation roots may describe stale scripts.",
         },
       ],
+      tending: {
+        flow: "finish-gate",
+        state: "warning",
+        ok: true,
+        reason: "selected validation passed.",
+      },
       noPrune: true,
     });
 
@@ -239,6 +283,15 @@ describe("failure signatures", () => {
 
     expect(evidence).toContain("## Impact warnings");
     expect(evidence).toContain("| warning | documentation-drift | package.json");
+    expect(evidence).toContain("## Route reasons");
+    expect(evidence).toContain(
+      "| `pnpm check:greenhouse` | inferred-route (repo-config) | Inferred repository configuration route. |",
+    );
+    expect(evidence).toContain("## Tending state");
+    expect(evidence).toContain("- State: warning");
+    expect(evidence).toContain(
+      "Evidence policy: bounded command excerpts; full logs are not stored by default.",
+    );
   });
 });
 
@@ -281,6 +334,7 @@ describe("evidence index", () => {
       changed_files: ["package.json"],
       commands: ["pnpm check:greenhouse"],
       manual_checks: [],
+      impact_warnings: [],
     });
     expect(index.recent[0].summary).toContain("files package.json");
   });
@@ -355,6 +409,50 @@ describe("evidence index", () => {
       status: "pass",
       changed_files: ["package.json"],
       commands: ["pnpm check:greenhouse"],
+    });
+  });
+
+  it("indexes impact warnings and tending state", () => {
+    const repo = createRepoWithEvidence(0);
+
+    writeEvidence({
+      cwd: repo,
+      route: {
+        mode: "patch",
+        changedFiles: ["package.json"],
+        risks: [],
+        commands: [],
+        manualChecks: [],
+        skippedValidation: "No commands were selected.",
+        explanations: [],
+      },
+      commandResults: [],
+      impactWarnings: [
+        {
+          id: "impact.package-scripts-docs",
+          severity: "warning",
+          kind: "documentation-drift",
+          changedFiles: ["package.json"],
+          affected: ["README.md"],
+          reason: "package.json changed; setup docs may be stale.",
+        },
+      ],
+      tending: {
+        flow: "finish-gate",
+        state: "warning",
+        ok: true,
+        reason: "selected validation passed.",
+      },
+      noPrune: true,
+    });
+
+    const index = buildEvidenceIndex(repo);
+
+    expect(index.recent[0]).toMatchObject({
+      impact_warnings: [
+        "warning:documentation-drift:package.json changed; setup docs may be stale.",
+      ],
+      tending_state: "warning",
     });
   });
 });

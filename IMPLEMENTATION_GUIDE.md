@@ -19,7 +19,7 @@ This guide MUST be updated during implementation:
 - [ ] Update test coverage map as tests are written
 
 Last updated: 2026-05-25
-Current phase: Phase 6
+Current phase: Phase 7
 
 ---
 
@@ -107,7 +107,7 @@ Preserve the existing command modules and build `greenhouse-spec tend` as a comp
 - [x] Change-impact documentation warnings are severity-based, not always blocking.
 - [ ] Existing commands remain available for compatibility.
 - [ ] Generated `.greenhouse/grown/**` remains disposable.
-- [ ] Evidence must not capture sensitive full logs by default.
+- [x] Evidence must not capture sensitive full logs by default.
 
 ---
 
@@ -528,7 +528,7 @@ Status: Complete - 2026-05-25
 
 Goal: Make evidence useful as repo-local memory without turning it into a noisy or sensitive log store.
 Depends on: Phase 5
-Status: Not started
+Status: Complete - 2026-05-25
 
 #### Inputs
 
@@ -554,36 +554,43 @@ Status: Not started
 
 #### Tasks
 
-- [ ] Extend evidence payload with impact warnings and manual checks.
+- [x] Extend evidence payload with impact warnings and manual checks.
   - Tool: edit
   - Verify: `pnpm test:evidence`
 
-- [ ] Add bounded failure excerpt policy if current capture is insufficient.
+- [x] Add bounded failure excerpt policy if current capture is insufficient.
   - Tool: edit
   - Verify: `pnpm test:evidence`
 
-- [ ] Ensure evidence index remains stable after new fields.
+- [x] Ensure evidence index remains stable after new fields.
   - Tool: edit
   - Verify: `pnpm test:evidence`
 
-- [ ] Add docs describing evidence as local memory, not permission.
+- [x] Add docs describing evidence as local memory, not permission.
   - Tool: edit
   - Verify: `pnpm typecheck`
+
+#### Phase Notes
+
+- Evidence records now include route reasons, impact warnings, bounded/redacted command excerpts, and optional tending state.
+- `tend` writes evidence with final tending state instead of relying on direct verify evidence.
+- Evidence index accepts impact warning summaries and tending state while preserving existing recent evidence metadata.
+- Failure excerpts redact home paths, common secret-like environment values, and OpenAI-style secret tokens.
 
 #### Tests for This Phase
 
 | Test Type | What to Test | Exists? | Path / Command |
 |---|---|---|---|
-| Unit | Evidence includes impact warnings | Existing - extend | `pnpm test:evidence` |
-| Unit | Failure excerpts are bounded | Existing - extend | `pnpm test:evidence` |
-| Unit | Repeated failure annotations remain failing | Existing - extend | `pnpm test:evidence` |
+| Unit | Evidence includes impact warnings | Yes - extended | `pnpm test:evidence` |
+| Unit | Failure excerpts are bounded | Yes - extended | `pnpm test:evidence` |
+| Unit | Repeated failure annotations remain failing | Yes - extended | `pnpm test:evidence` |
 | Type safety | Schema changes compile | Auto | `pnpm typecheck` |
 
 #### Phase Exit Criteria
 
-- [ ] `pnpm test:evidence` passes.
-- [ ] `pnpm typecheck` passes.
-- [ ] `pnpm build` passes.
+- [x] `pnpm test:evidence` passes.
+- [x] `pnpm typecheck` passes.
+- [x] `pnpm build` passes.
 
 ---
 

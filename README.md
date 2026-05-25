@@ -54,6 +54,8 @@ docs/operating-playbook.md     day-to-day usage and drift repair loop
 - Lets human-owned rules be adopted only when they already match Greenhouse.
 - Routes changed files to scoped validation commands.
 - Writes validation evidence without forcing agents to read every old report.
+- Keeps evidence bounded and redacted; evidence is local memory, not permission
+  to ignore failing validation.
 - Prunes old generated evidence/report files so the folder stays bounded.
 - Blocks before push with `tend --check` when structural drift needs attention.
 

@@ -15,6 +15,7 @@ import {
   repeatedFailureSummaries,
 } from "../evidence/failure-signatures.js";
 import { pruneGeneratedRecords } from "../evidence/prune.js";
+import { writeEvidence } from "../evidence/write-evidence.js";
 import {
   detectChangeImpact,
   type ImpactWarning,
@@ -153,22 +154,38 @@ export function runTend(options: { cwd: string; check?: boolean; noPrune?: boole
     const verify = runVerify({
       cwd: options.cwd,
       changed: true,
-      writeEvidence: true,
-      noPrune: options.noPrune,
     });
     report.verify = verify;
     report.impactWarnings = verify.impactWarnings;
     report.ok = verify.ok;
+    report.state = finalTendState(report);
+    const evidence = writeEvidence({
+      cwd: options.cwd,
+      route: verify.route,
+      commandResults: verify.commandResults,
+      failureAnnotations: verify.failureAnnotations,
+      impactWarnings: verify.impactWarnings,
+      tending: {
+        flow: report.flow,
+        state: report.state,
+        ok: report.ok,
+        reason: verify.ok
+          ? "selected validation passed."
+          : "selected validation failed.",
+      },
+      noPrune: options.noPrune,
+    });
+    verify.evidencePath = evidence.path;
     report.validation = {
       executed: true,
-      evidenceWritten: Boolean(verify.evidencePath),
+      evidenceWritten: true,
       commands: verify.route.commands.map((command) => command.command),
       reason: verify.ok
         ? "selected validation passed."
         : "selected validation failed.",
     };
-    report.writes.evidencePath = verify.evidencePath ?? null;
-    report.latestEvidencePath = verify.evidencePath ?? report.latestEvidencePath;
+    report.writes.evidencePath = evidence.path;
+    report.latestEvidencePath = evidence.path;
     repeatedFailures = repeatedFailureSummaries(readFailureSignatures(options.cwd));
     report.repeatedFailures = repeatedFailures;
   }

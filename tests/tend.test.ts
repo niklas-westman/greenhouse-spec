@@ -72,6 +72,12 @@ describe("tend", () => {
     expect(report.writes.evidencePath).toMatch(/\.greenhouse\/evidence\/.+-verify\.md$/);
     expect(report.latestEvidencePath).toBe(report.writes.evidencePath);
     expect(existsSync(report.writes.evidencePath ?? "")).toBe(true);
+    expect(readFileSync(report.writes.evidencePath ?? "", "utf8")).toContain(
+      "## Tending state",
+    );
+    expect(readFileSync(report.writes.evidencePath ?? "", "utf8")).toContain(
+      "- State: pass",
+    );
   });
 
   it("surfaces impact warnings in the finish gate without mutating roots", () => {

@@ -62,6 +62,8 @@ function evidenceEntry(cwd: string, path: string): EvidenceIndex["recent"][numbe
     changed_files: metadata.changedFiles,
     commands: metadata.commands,
     manual_checks: metadata.manualChecks,
+    impact_warnings: metadata.impactWarnings,
+    tending_state: metadata.tendingState,
   };
 }
 
@@ -87,6 +89,8 @@ function parseEvidenceMetadata(content: string): {
   changedFiles: string[];
   commands: string[];
   manualChecks: string[];
+  impactWarnings: string[];
+  tendingState?: string;
 } {
   const mode = content.match(/Change mode:\s*([^\n]+)/i)?.[1]?.trim();
   const changedFiles = splitCsv(
@@ -94,12 +98,17 @@ function parseEvidenceMetadata(content: string): {
   );
   const commandRows = parseTableRows(content, "## Commands run");
   const manualRows = parseTableRows(content, "## Manual checks");
+  const impactRows = parseTableRows(content, "## Impact warnings");
   const commands = commandRows
     .map((row) => row[0]?.replace(/^`|`$/g, "").trim())
     .filter((command) => Boolean(command) && command !== "none");
   const manualChecks = manualRows
     .filter((row) => row[0] && row[0] !== "none" && row[1] === "pending")
     .map((row) => row[0]);
+  const impactWarnings = impactRows
+    .filter((row) => row[0] && row[0] !== "none")
+    .map((row) => `${row[0]}:${row[1]}:${row[4]}`.trim());
+  const tendingState = content.match(/^- State:\s*([^\n]+)/m)?.[1]?.trim();
 
   return {
     status: commandRows.some((row) => row[1] === "fail") ? "fail" : "pass",
@@ -107,6 +116,8 @@ function parseEvidenceMetadata(content: string): {
     changedFiles,
     commands,
     manualChecks,
+    impactWarnings,
+    tendingState,
   };
 }
 
@@ -129,7 +140,7 @@ function parseTableRows(content: string, heading: string): string[][] {
       .slice(1, -1)
       .split("|")
       .map((cell) => cell.trim().replace(/\\\|/g, "|"));
-    if (["Command", "Check"].includes(row[0] ?? "")) {
+    if (["Command", "Check", "Severity"].includes(row[0] ?? "")) {
       continue;
     }
     rows.push(row);

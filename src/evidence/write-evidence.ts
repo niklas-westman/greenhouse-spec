@@ -16,12 +16,20 @@ export type EvidenceWriteResult = {
   path: string;
 };
 
+export type EvidenceTendingContext = {
+  flow: string;
+  state: string;
+  ok: boolean;
+  reason: string;
+};
+
 export function writeEvidence(options: {
   cwd: string;
   route: ValidationRoute;
   commandResults: CommandExecutionResult[];
   failureAnnotations?: FailureAnnotation[];
   impactWarnings?: ImpactWarning[];
+  tending?: EvidenceTendingContext;
   noPrune?: boolean;
 }): EvidenceWriteResult {
   const evidenceDirectory = join(options.cwd, ".greenhouse", "evidence");
@@ -45,6 +53,7 @@ function formatEvidence(options: {
   commandResults: CommandExecutionResult[];
   failureAnnotations?: FailureAnnotation[];
   impactWarnings?: ImpactWarning[];
+  tending?: EvidenceTendingContext;
 }): string {
   const lines = [
     `# Verification: verify-${new Date().toISOString().slice(0, 10)}`,
@@ -55,6 +64,8 @@ function formatEvidence(options: {
     `- Changed files: ${options.route.changedFiles.join(", ") || "none"}`,
     `- Risks: ${options.route.risks.join(", ") || "none"}`,
     "- Context loaded: none",
+    `- Evidence source: ${options.tending ? "tend" : "verify"}`,
+    `- Evidence policy: bounded command excerpts; full logs are not stored by default.`,
     "",
     "## Commands run",
     "",
@@ -81,6 +92,33 @@ function formatEvidence(options: {
 
   if (options.commandResults.length === 0) {
     lines.push("| none | not run | No commands were selected. |");
+  }
+
+  lines.push(
+    "",
+    "## Route reasons",
+    "",
+    "| Item | Source | Reason |",
+    "|---|---|---|",
+  );
+
+  for (const command of options.route.commands) {
+    lines.push(
+      `| \`${command.command}\` | ${command.source}${command.matched ? ` (${command.matched})` : ""} | ${sanitizeCell(command.reason)} |`,
+    );
+  }
+
+  for (const explanation of options.route.explanations ?? []) {
+    lines.push(
+      `| ${explanation.kind} | route | ${sanitizeCell(explanation.message)} |`,
+    );
+  }
+
+  if (
+    options.route.commands.length === 0 &&
+    (options.route.explanations ?? []).length === 0
+  ) {
+    lines.push("| none | none | No route reasons recorded. |");
   }
 
   lines.push(
@@ -117,6 +155,16 @@ function formatEvidence(options: {
     lines.push("| none | none | none | none | No impact warnings detected. |");
   }
 
+  lines.push("", "## Tending state", "");
+  if (options.tending) {
+    lines.push(`- Flow: ${options.tending.flow}`);
+    lines.push(`- State: ${options.tending.state}`);
+    lines.push(`- OK: ${options.tending.ok ? "true" : "false"}`);
+    lines.push(`- Reason: ${options.tending.reason}`);
+  } else {
+    lines.push("- not recorded: evidence was written by direct verify.");
+  }
+
   lines.push(
     "",
     "## Blocked or skipped validation",
@@ -140,7 +188,14 @@ function formatEvidence(options: {
 }
 
 function summarize(output: string): string {
-  return output.replace(/\s+/g, " ").slice(0, 180).replace(/\|/g, "\\|");
+  return output
+    .replace(/\/Users\/[^\s|]+/g, "<path>")
+    .replace(/\/private\/[^\s|]+/g, "<path>")
+    .replace(/\b[A-Z0-9_]*(TOKEN|SECRET|PASSWORD|KEY)=([^\s|]+)/gi, "$1=<redacted>")
+    .replace(/\bsk-[A-Za-z0-9_-]{8,}\b/g, "<redacted-token>")
+    .replace(/\s+/g, " ")
+    .slice(0, 180)
+    .replace(/\|/g, "\\|");
 }
 
 function sanitizeCell(value: string): string {

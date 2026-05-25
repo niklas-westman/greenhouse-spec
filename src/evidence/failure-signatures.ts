@@ -156,7 +156,7 @@ export function repeatedFailureSummaries(
 }
 
 export function failureExcerpt(output: string): string {
-  const clean = stripAnsi(output)
+  const clean = redactSensitiveOutput(stripAnsi(output))
     .split("\n")
     .map((line) => line.trim())
     .filter(Boolean);
@@ -167,7 +167,7 @@ export function failureExcerpt(output: string): string {
   );
   const selected = signal.length > 0 ? signal : clean;
 
-  return selected.slice(0, 12).join(" ").replace(/\|/g, "\\|").slice(0, 800);
+  return selected.slice(0, 8).join(" ").replace(/\|/g, "\\|").slice(0, 500);
 }
 
 export function normalizeFailureText(text: string): string {
@@ -270,6 +270,14 @@ function signatureKey(command: string, normalizedFailure: string): string {
 
 function stripAnsi(value: string): string {
   return value.replace(/\u001b\[[0-9;]*m/g, "");
+}
+
+function redactSensitiveOutput(value: string): string {
+  return value
+    .replace(/\/Users\/[^\s|]+/g, "<path>")
+    .replace(/\/private\/[^\s|]+/g, "<path>")
+    .replace(/\b[A-Z0-9_]*(TOKEN|SECRET|PASSWORD|KEY)=([^\s|]+)/gi, "$1=<redacted>")
+    .replace(/\bsk-[A-Za-z0-9_-]{8,}\b/g, "<redacted-token>");
 }
 
 function emptyFailureSignatures(): FailureSignatures {

@@ -20,6 +20,8 @@ export const evidenceIndexSchema = z.object({
       changed_files: z.array(z.string()).optional(),
       commands: z.array(z.string()).optional(),
       manual_checks: z.array(z.string()).optional(),
+      impact_warnings: z.array(z.string()).optional(),
+      tending_state: z.string().min(1).optional(),
     }),
   ),
 });

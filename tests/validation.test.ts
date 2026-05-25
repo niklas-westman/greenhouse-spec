@@ -385,6 +385,39 @@ describe("validation routing and evidence", () => {
     ]);
   });
 
+  it("keeps app test and setup patches on the app route", () => {
+    const route = routeValidation({
+      changedFiles: ["src/app.test.tsx", "src/app.tsx", "src/test-setup.ts"],
+      validation: {
+        schema_version: 1,
+        defaults: {
+          required: [
+            { id: "format:check", command: "pnpm format:check" },
+            { id: "typecheck", command: "pnpm typecheck" },
+            { id: "test", command: "pnpm test" },
+            { id: "test:cli", command: "pnpm test:cli" },
+          ],
+          recommended: [],
+          manual: [],
+        },
+      },
+    });
+
+    expect(route.mode).toBe("patch");
+    expect(route.commands.map((command) => command.command)).toEqual([
+      "pnpm format:check",
+      "pnpm typecheck",
+      "pnpm test",
+    ]);
+    expect(route.commands.map((command) => command.command)).not.toContain(
+      "pnpm test:cli",
+    );
+    expect(route.explanations).toContainEqual({
+      kind: "inferred-route",
+      message: "Inferred app patch route.",
+    });
+  });
+
   it("combines app and CLI patch validation when both areas change", () => {
     const route = routeValidation({
       changedFiles: ["src/app.tsx", "src/cli/main.ts"],

@@ -16,6 +16,7 @@ import {
   failureSignaturesSchema,
   type FailureSignatures,
 } from "../schemas/failure-signatures.js";
+import type { EvidenceIndex } from "../schemas/evidence-index.js";
 import type { CommandExecutionResult } from "../validation/run-command.js";
 
 export type FailureAnnotation = {
@@ -23,6 +24,14 @@ export type FailureAnnotation = {
   signatureId: string;
   previousCount: number;
   message: string;
+};
+
+export type RepeatedFailureSummary = {
+  id: string;
+  command: string;
+  count: number;
+  normalizedFailure: string;
+  lastSeenAt: string;
 };
 
 type FailureObservation = {
@@ -137,13 +146,7 @@ export function annotateRepeatedFailures(options: {
 
 export function repeatedFailureSummaries(
   signatures: FailureSignatures,
-): Array<{
-  id: string;
-  command: string;
-  count: number;
-  normalizedFailure: string;
-  lastSeenAt: string;
-}> {
+): RepeatedFailureSummary[] {
   return signatures.signatures
     .filter((signature) => signature.count >= 2)
     .map((signature) => ({
@@ -153,6 +156,42 @@ export function repeatedFailureSummaries(
       normalizedFailure: signature.normalized_failure,
       lastSeenAt: signature.last_seen_at,
     }));
+}
+
+export function unresolvedRepeatedFailureSummaries(
+  signatures: FailureSignatures,
+  evidenceIndex: EvidenceIndex | null,
+): RepeatedFailureSummary[] {
+  return repeatedFailureSummaries(signatures).filter(
+    (signature) => !hasNewerPassingEvidence(signature, evidenceIndex),
+  );
+}
+
+function hasNewerPassingEvidence(
+  signature: RepeatedFailureSummary,
+  evidenceIndex: EvidenceIndex | null,
+): boolean {
+  if (!evidenceIndex) {
+    return false;
+  }
+
+  const lastSeenAt = new Date(String(signature.lastSeenAt)).getTime();
+  if (Number.isNaN(lastSeenAt)) {
+    return false;
+  }
+
+  return evidenceIndex.recent.some((record) => {
+    const modifiedAt = new Date(String(record.modified_at)).getTime();
+    return (
+      !Number.isNaN(modifiedAt) &&
+      modifiedAt > lastSeenAt &&
+      record.status === "pass" &&
+      (record.commands ?? []).includes(signature.command) &&
+      !(record.failed_commands ?? []).some(
+        (failed) => failed.command === signature.command,
+      )
+    );
+  });
 }
 
 export function failureExcerpt(output: string): string {

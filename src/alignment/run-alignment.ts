@@ -75,7 +75,7 @@ export function defaultAlignmentContracts(): AlignmentRepoContract[] {
     {
       name: "declarion",
       path: join(projectsRoot, "declarion"),
-      expectedStatus: ["degraded"],
+      expectedStatus: ["pass"],
       impact: [
         {
           id: "package-script-impact",

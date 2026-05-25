@@ -12,8 +12,10 @@ import { discoverRepoShape } from "../discovery/repo-shape.js";
 import { runDoctor, type DoctorReport } from "../doctor/run-doctor.js";
 import {
   readFailureSignatures,
-  repeatedFailureSummaries,
+  type RepeatedFailureSummary,
+  unresolvedRepeatedFailureSummaries,
 } from "../evidence/failure-signatures.js";
+import { readEvidenceIndex } from "../evidence/evidence-index.js";
 import { pruneGeneratedRecords } from "../evidence/prune.js";
 import { writeEvidence } from "../evidence/write-evidence.js";
 import {
@@ -58,7 +60,7 @@ export type TendReport = {
   changedFiles: string[];
   latestEvidencePath: string | null;
   proposals: TendProposal[];
-  repeatedFailures: ReturnType<typeof repeatedFailureSummaries>;
+  repeatedFailures: RepeatedFailureSummary[];
   impactWarnings: ImpactWarning[];
   doctor?: DoctorReport;
   verify?: VerifyReport;
@@ -90,8 +92,9 @@ export function runTend(options: { cwd: string; check?: boolean; noPrune?: boole
   const proposals = buildProposals(changedFiles, latestEvidence);
   const docsRoot = readDocsRoot(options.cwd);
   const impactWarnings = detectChangeImpact({ changedFiles, docsRoot, repoShape });
-  let repeatedFailures = repeatedFailureSummaries(
+  let repeatedFailures = unresolvedRepeatedFailureSummaries(
     readFailureSignatures(options.cwd),
+    readEvidenceIndex(options.cwd),
   );
   const report: TendReport = {
     cwd: options.cwd,
@@ -198,7 +201,10 @@ export function runTend(options: { cwd: string; check?: boolean; noPrune?: boole
     };
     report.writes.evidencePath = evidence.path;
     report.latestEvidencePath = evidence.path;
-    repeatedFailures = repeatedFailureSummaries(readFailureSignatures(options.cwd));
+    repeatedFailures = unresolvedRepeatedFailureSummaries(
+      readFailureSignatures(options.cwd),
+      readEvidenceIndex(options.cwd),
+    );
     report.repeatedFailures = repeatedFailures;
   }
 

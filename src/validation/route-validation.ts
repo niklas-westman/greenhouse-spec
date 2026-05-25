@@ -536,8 +536,16 @@ function isAppSourcePath(file: string): boolean {
   return (
     lowerFile === "src/app.tsx" ||
     lowerFile === "src/app.ts" ||
+    lowerFile === "src/app.test.tsx" ||
+    lowerFile === "src/app.test.ts" ||
     lowerFile === "src/main.tsx" ||
     lowerFile === "src/main.ts" ||
+    lowerFile === "src/main.test.tsx" ||
+    lowerFile === "src/main.test.ts" ||
+    lowerFile === "src/test-setup.ts" ||
+    lowerFile === "src/test-setup.tsx" ||
+    lowerFile === "src/setuptests.ts" ||
+    lowerFile === "src/setuptests.tsx" ||
     normalizedFile.startsWith("src/components/") ||
     file.startsWith("src/features/") ||
     file.startsWith("src/hooks/") ||

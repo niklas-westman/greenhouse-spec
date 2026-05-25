@@ -5,7 +5,8 @@ import { runDoctor, type DoctorReport } from "../doctor/run-doctor.js";
 import { readEvidenceIndex } from "../evidence/evidence-index.js";
 import {
   readFailureSignatures,
-  repeatedFailureSummaries,
+  type RepeatedFailureSummary,
+  unresolvedRepeatedFailureSummaries,
 } from "../evidence/failure-signatures.js";
 import type { EvidenceIndex } from "../schemas/evidence-index.js";
 import { runTend, type TendReport } from "../tend/run-tend.js";
@@ -50,7 +51,7 @@ export type StatusReport = {
   doctor: DoctorReport;
   tend: TendReport;
   verify: VerifyReport;
-  repeatedFailures: ReturnType<typeof repeatedFailureSummaries>;
+  repeatedFailures: RepeatedFailureSummary[];
   latestEvidencePath: string | null;
 };
 
@@ -58,10 +59,14 @@ export function runStatus(options: { cwd: string }): StatusReport {
   const doctor = runDoctor({ cwd: options.cwd });
   const tend = runTend({ cwd: options.cwd, check: true });
   const verify = runVerify({ cwd: options.cwd, changed: true, dryRun: true });
-  const repeatedFailures = repeatedFailureSummaries(readFailureSignatures(options.cwd));
+  const evidenceIndex = readEvidenceIndex(options.cwd);
+  const repeatedFailures = unresolvedRepeatedFailureSummaries(
+    readFailureSignatures(options.cwd),
+    evidenceIndex,
+  );
   const latestEvidencePath = findLatestEvidence(options.cwd);
   const evidenceCoverage = routeEvidenceCoverage({
-    evidenceIndex: readEvidenceIndex(options.cwd),
+    evidenceIndex,
     verify,
   });
   const health = buildHealthCategories({
@@ -295,7 +300,7 @@ function buildHealthCategories(options: {
   tend: TendReport;
   verify: VerifyReport;
   evidenceCoverage: EvidenceCoverage;
-  repeatedFailures: ReturnType<typeof repeatedFailureSummaries>;
+  repeatedFailures: RepeatedFailureSummary[];
   latestEvidencePath: string | null;
 }): HealthCategory[] {
   return [
@@ -398,7 +403,7 @@ function changedValidationHealth(
 }
 
 function repeatedFailuresHealth(
-  repeatedFailures: ReturnType<typeof repeatedFailureSummaries>,
+  repeatedFailures: RepeatedFailureSummary[],
 ): HealthCategory {
   if (repeatedFailures.length > 0) {
     return {
@@ -465,7 +470,7 @@ function impactSummary(warnings: VerifyReport["impactWarnings"]): string {
 }
 
 function evidenceHealth(
-  repeatedFailures: ReturnType<typeof repeatedFailureSummaries>,
+  repeatedFailures: RepeatedFailureSummary[],
   latestEvidencePath: string | null,
 ): HealthCategory {
   if (repeatedFailures.length > 0 && !latestEvidencePath) {

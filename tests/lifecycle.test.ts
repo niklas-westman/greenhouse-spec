@@ -337,6 +337,19 @@ describe("lifecycle commands", () => {
     expect(formatStatusVerboseReport(report)).toContain("## Repeated Failures");
   });
 
+  it("status treats repeated failures as resolved after newer passing evidence", () => {
+    const repo = createHealthyRepo();
+    writeRepeatedFailureSignature(repo);
+    writeResolvedEvidenceIndex(repo);
+
+    const report = runStatus({ cwd: repo });
+
+    expect(report.ok).toBe(true);
+    expect(report.overallStatus).toBe("pass");
+    expect(report.repeatedFailures).toEqual([]);
+    expect(formatStatusReport(report)).toContain("Repeated failures: none.");
+  });
+
   it("status fails when doctor finds a blocking install issue", () => {
     const repo = createHealthyRepo();
     rmSync(join(repo, ".greenhouse", "grown", "repo-map.yaml"));
@@ -582,6 +595,30 @@ function writeRepeatedFailureSignature(repo: string): void {
       "    evidence_paths:",
       "      - evidence/first.md",
       "      - evidence/second.md",
+      "",
+    ].join("\n"),
+    "utf8",
+  );
+}
+
+function writeResolvedEvidenceIndex(repo: string): void {
+  writeFileSync(
+    join(repo, ".greenhouse", "grown", "evidence-index.yaml"),
+    [
+      "schema_version: 1",
+      "managed_by: greenhouse-spec",
+      "generated_at: 2026-05-25T00:00:00.000Z",
+      "policy:",
+      "  agent_reading: Do not bulk-read evidence.",
+      "  retention: Keep recent evidence indexed here.",
+      "recent:",
+      "  - path: evidence/pass.md",
+      "    modified_at: 2026-05-25T00:00:00.000Z",
+      "    summary: passing test evidence",
+      "    status: pass",
+      "    commands:",
+      "      - pnpm test",
+      "    failed_commands: []",
       "",
     ].join("\n"),
     "utf8",

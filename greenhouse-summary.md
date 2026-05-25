@@ -317,7 +317,10 @@ fails validation when the command fails. Greenhouse may explain that a failure i
 repeated, but it does not turn red into green.
 
 Evidence is summarized through generated indexes so agents do not need to read
-every old report.
+every old report. The index records the latest tending state and latest failure
+evidence by command. Pruning keeps recent records and preserves the latest
+failure evidence per command, so local memory stays useful without becoming a
+junk drawer.
 
 ## Repeated Failures
 

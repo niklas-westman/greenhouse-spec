@@ -34,6 +34,7 @@ export function buildEvidenceIndex(cwd: string): EvidenceIndex {
         .sort((left, right) => statSync(right).mtimeMs - statSync(left).mtimeMs)
         .slice(0, maxRecentEvidenceEntries)
     : [];
+  const recent = evidenceFiles.map((path) => evidenceEntry(cwd, path));
 
   return {
     schema_version: 1,
@@ -45,7 +46,40 @@ export function buildEvidenceIndex(cwd: string): EvidenceIndex {
       retention:
         "Keep recent evidence indexed here; archive or prune old records when they no longer help future validation decisions.",
     },
-    recent: evidenceFiles.map((path) => evidenceEntry(cwd, path)),
+    summary: evidenceSummary(recent),
+    recent,
+  };
+}
+
+function evidenceSummary(
+  recent: EvidenceIndex["recent"],
+): NonNullable<EvidenceIndex["summary"]> {
+  const latestTending = recent.find((entry) => entry.tending_state);
+  const latestFailuresByCommand = new Map<
+    string,
+    { command: string; evidence: string; notes: string }
+  >();
+
+  for (const entry of recent) {
+    if (entry.status !== "fail") {
+      continue;
+    }
+    for (const failure of entry.failed_commands ?? []) {
+      if (latestFailuresByCommand.has(failure.command)) {
+        continue;
+      }
+      latestFailuresByCommand.set(failure.command, {
+        command: failure.command,
+        evidence: entry.path,
+        notes: failure.notes,
+      });
+    }
+  }
+
+  return {
+    latest_tending_state: latestTending?.tending_state,
+    latest_tending_evidence: latestTending?.path,
+    latest_failures_by_command: [...latestFailuresByCommand.values()],
   };
 }
 
@@ -63,6 +97,7 @@ function evidenceEntry(cwd: string, path: string): EvidenceIndex["recent"][numbe
     commands: metadata.commands,
     manual_checks: metadata.manualChecks,
     impact_warnings: metadata.impactWarnings,
+    failed_commands: metadata.failedCommands,
     tending_state: metadata.tendingState,
   };
 }
@@ -88,6 +123,10 @@ function parseEvidenceMetadata(content: string): {
   mode?: string;
   changedFiles: string[];
   commands: string[];
+  failedCommands: Array<{
+    command: string;
+    notes: string;
+  }>;
   manualChecks: string[];
   impactWarnings: string[];
   tendingState?: string;
@@ -102,6 +141,13 @@ function parseEvidenceMetadata(content: string): {
   const commands = commandRows
     .map((row) => row[0]?.replace(/^`|`$/g, "").trim())
     .filter((command) => Boolean(command) && command !== "none");
+  const failedCommands = commandRows
+    .filter((row) => row[1] === "fail")
+    .map((row) => ({
+      command: row[0]?.replace(/^`|`$/g, "").trim() ?? "",
+      notes: row[2]?.trim() || "failed",
+    }))
+    .filter((row) => row.command && row.command !== "none");
   const manualChecks = manualRows
     .filter((row) => row[0] && row[0] !== "none" && row[1] === "pending")
     .map((row) => row[0]);
@@ -115,6 +161,7 @@ function parseEvidenceMetadata(content: string): {
     mode,
     changedFiles,
     commands,
+    failedCommands,
     manualChecks,
     impactWarnings,
     tendingState,

@@ -296,4 +296,9 @@ greenhouse-spec evidence prune --keep 50
 ```
 
 Prunes old generated evidence/report markdown files. The default retention is
-the latest 20 markdown files per generated record folder.
+the latest 20 markdown files per generated record folder. Evidence pruning also
+preserves the latest failed evidence per command so repeated failure context is
+not deleted simply because newer passing records exist.
+
+The prune report includes both `Pruned` and `Kept` sections. Kept records include
+preservation reasons such as retention window or latest failure evidence.

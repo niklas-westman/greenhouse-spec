@@ -161,3 +161,5 @@ Greenhouse
 - Drift should be visible before push through `tend --check`.
 - Evidence should inform future proposals, but agents should not bulk-read old
   evidence by default.
+- Evidence pruning must preserve latest failure context by command, not only the
+  newest files.

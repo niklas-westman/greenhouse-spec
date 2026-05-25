@@ -19,7 +19,7 @@ This guide MUST be updated during implementation:
 - [ ] Update test coverage map as tests are written.
 
 Last updated: 2026-05-25
-Current phase: 4
+Current phase: 5
 
 ---
 
@@ -480,7 +480,7 @@ Status: Complete - 2026-05-25
 
 Goal: Keep evidence useful as local memory without growing into clutter.
 Depends on: Phase 3
-Status: Not started
+Status: Complete - 2026-05-25
 
 #### Inputs
 
@@ -508,21 +508,31 @@ Status: Not started
 
 #### Tasks
 
-- [ ] Add tests for prune preserving latest evidence and latest failure context.
+- [x] Add tests for prune preserving latest evidence and latest failure context.
   - Tool: edit
   - Verify: `pnpm test:evidence`
 
-- [ ] Improve prune report to include kept records and preservation reason.
+- [x] Improve prune report to include kept records and preservation reason.
   - Tool: edit
   - Verify: `pnpm test:evidence`
 
-- [ ] Extend evidence index only if current index cannot answer latest tending/failure questions.
+- [x] Extend evidence index only if current index cannot answer latest tending/failure questions.
   - Tool: edit
   - Verify: `pnpm test:evidence`
 
-- [ ] Ensure known/repeated failures remain failing when validation fails.
+- [x] Ensure known/repeated failures remain failing when validation fails.
   - Tool: edit
   - Verify: `pnpm test:evidence`
+
+#### Phase Notes
+
+- Completed on 2026-05-25.
+- Evidence index now includes a generated `summary` with latest tending state
+  and latest failed evidence by command.
+- Evidence prune now preserves the newest records per folder plus the latest
+  failed evidence per command.
+- Prune reports include kept records and preservation reasons.
+- Evidence remains explanatory local memory; failed validation still fails.
 
 #### Tests for This Phase
 
@@ -534,9 +544,9 @@ Status: Not started
 
 #### Phase Exit Criteria
 
-- [ ] `pnpm test:evidence` passes.
-- [ ] `pnpm typecheck` passes.
-- [ ] `pnpm build` passes.
+- [x] `pnpm test:evidence` passes.
+- [x] `pnpm typecheck` passes.
+- [x] `pnpm build` passes.
 
 ---
 
@@ -776,7 +786,7 @@ Unit done when:
 | `tend` finish report | Complete | pass | pass | State-first finish report |
 | `verify --changed --dry-run` explanation | Complete | pass | pass | Detailed diagnostic layer |
 | Impact warning wording/severity | Complete | pass | pass | Resolution hints and blocking command drift |
-| Evidence prune/index summary | Not started | pending | pending | Preserve useful local memory |
+| Evidence prune/index summary | Complete | pass | pass | Preserves latest failure context |
 | Proposal review output | Not started | pending | pending | Make decisions readable without YAML |
 | Fixture alignment scenarios | Not started | pending | pending | CI-safe confidence |
 | Real repo proof | Not started | pending | pending | Shows AI benefit in target repos |
@@ -865,7 +875,7 @@ pnpm alignment:check
 | 1 | Product-Grade `tend` Report | Complete | pass | pass | 2026-05-25 |
 | 2 | Dry-Run Explanation Reliability | Complete | pass | pass | 2026-05-25 |
 | 3 | Impact Severity Discipline | Complete | pass | pass | 2026-05-25 |
-| 4 | Evidence Summary And Prune Reliability | Not started | pending | pending | - |
+| 4 | Evidence Summary And Prune Reliability | Complete | pass | pass | 2026-05-25 |
 | 5 | Proposal Review UX Reliability | Not started | pending | pending | - |
 | 6 | Portable Fixture Alignment | Not started | pending | pending | - |
 | 7 | Real Repo Agent-Readiness Proof | Not started | pending | pending | - |

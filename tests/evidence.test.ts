@@ -23,7 +23,10 @@ import {
   normalizeFailureText,
   writeFailureSignatures,
 } from "../src/evidence/failure-signatures.js";
-import { pruneGeneratedRecords } from "../src/evidence/prune.js";
+import {
+  formatPruneGeneratedRecordsReport,
+  pruneGeneratedRecords,
+} from "../src/evidence/prune.js";
 import { writeEvidence } from "../src/evidence/write-evidence.js";
 
 const tempRepos: string[] = [];
@@ -70,6 +73,55 @@ describe("evidence pruning", () => {
       "record-0.md",
     ]);
     expect(markdownFiles(tendPath)).toEqual(["report-2.md"]);
+  });
+
+  it("preserves latest failure evidence by command outside the normal keep window", () => {
+    const repo = createRepoWithEvidence(0);
+    writeTimedEvidenceFile(repo, "failed-test.md", 0, [
+      "## Commands run",
+      "",
+      "| Command | Result | Notes |",
+      "|---|---:|---|",
+      "| `pnpm test` | fail | TypeError: localStorage.clear is not a function |",
+    ]);
+    writeTimedEvidenceFile(repo, "passing-typecheck.md", 1, [
+      "## Commands run",
+      "",
+      "| Command | Result | Notes |",
+      "|---|---:|---|",
+      "| `pnpm typecheck` | pass | ok |",
+    ]);
+    writeTimedEvidenceFile(repo, "latest-pass.md", 2, [
+      "## Commands run",
+      "",
+      "| Command | Result | Notes |",
+      "|---|---:|---|",
+      "| `pnpm test` | pass | ok |",
+    ]);
+
+    const report = pruneGeneratedRecords({ cwd: repo, keep: 1 });
+
+    expect(markdownFiles(join(repo, ".greenhouse", "evidence"))).toEqual([
+      "failed-test.md",
+      "latest-pass.md",
+    ]);
+    expect(report.deleted).toEqual([".greenhouse/evidence/passing-typecheck.md"]);
+    expect(report.keptRecords).toContainEqual({
+      path: ".greenhouse/evidence/failed-test.md",
+      reason: "latest failure evidence for pnpm test",
+    });
+  });
+
+  it("formats kept prune records with preservation reasons", () => {
+    const repo = createRepoWithEvidence(2);
+
+    const output = formatPruneGeneratedRecordsReport(
+      pruneGeneratedRecords({ cwd: repo, dryRun: true, keep: 1 }),
+    );
+
+    expect(output).toContain("## Kept");
+    expect(output).toContain("- kept: .greenhouse/evidence/record-1.md");
+    expect(output).toContain("within latest 1 record(s)");
   });
 });
 
@@ -461,6 +513,54 @@ describe("evidence index", () => {
       tending_state: "warning",
     });
   });
+
+  it("summarizes latest tending state and latest failure by command", () => {
+    const repo = createRepoWithEvidence(0);
+    writeTimedEvidenceFile(repo, "failed-test.md", 0, [
+      "## Commands run",
+      "",
+      "| Command | Result | Notes |",
+      "|---|---:|---|",
+      "| `pnpm test` | fail | TypeError: localStorage.clear is not a function |",
+      "",
+      "## Tending state",
+      "",
+      "- State: fail",
+    ]);
+    writeTimedEvidenceFile(repo, "warning-tend.md", 1, [
+      "## Commands run",
+      "",
+      "| Command | Result | Notes |",
+      "|---|---:|---|",
+      "| `pnpm typecheck` | pass | ok |",
+      "",
+      "## Tending state",
+      "",
+      "- State: warning",
+    ]);
+
+    const index = buildEvidenceIndex(repo);
+
+    expect(index.summary).toMatchObject({
+      latest_tending_state: "warning",
+      latest_tending_evidence: "evidence/warning-tend.md",
+      latest_failures_by_command: [
+        {
+          command: "pnpm test",
+          evidence: "evidence/failed-test.md",
+          notes: "TypeError: localStorage.clear is not a function",
+        },
+      ],
+    });
+    expect(index.recent[1]).toMatchObject({
+      failed_commands: [
+        {
+          command: "pnpm test",
+          notes: "TypeError: localStorage.clear is not a function",
+        },
+      ],
+    });
+  });
 });
 
 function createRepoWithEvidence(count: number): string {
@@ -478,6 +578,20 @@ function createRepoWithEvidence(count: number): string {
 
 function writeTimedFile(path: string, index: number): void {
   writeFileSync(path, `# ${index}\n`, "utf8");
+  const time = new Date(2026, 0, 1, 0, 0, index);
+  utimesSync(path, time, time);
+}
+
+function writeTimedEvidenceFile(
+  repo: string,
+  name: string,
+  index: number,
+  lines: string[],
+): void {
+  const evidencePath = join(repo, ".greenhouse", "evidence");
+  mkdirSync(evidencePath, { recursive: true });
+  const path = join(evidencePath, name);
+  writeFileSync(path, ["# Verification", "", ...lines, ""].join("\n"), "utf8");
   const time = new Date(2026, 0, 1, 0, 0, index);
   utimesSync(path, time, time);
 }

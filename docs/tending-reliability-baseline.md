@@ -295,3 +295,37 @@ Product improvement:
   validation plan itself is known stale.
 - Evidence records include impact warning resolutions, giving future agents a
   repair path without opening generated YAML.
+
+## Phase 4 After Snapshot: Evidence Summary And Prune Reliability
+
+After Phase 4, generated evidence memory has a compact summary and safer prune
+behavior:
+
+```yaml
+summary:
+  latest_tending_state: warning
+  latest_tending_evidence: evidence/2026-05-25T...
+  latest_failures_by_command:
+    - command: pnpm test
+      evidence: evidence/failed-test.md
+      notes: TypeError: localStorage.clear is not a function
+```
+
+Prune reports now explain retained records:
+
+```text
+Kept:
+  kept: .greenhouse/evidence/latest-pass.md
+    reason: within latest 20 record(s)
+  kept: .greenhouse/evidence/failed-test.md
+    reason: latest failure evidence for pnpm test
+```
+
+Product improvement:
+
+- Agents can inspect `.greenhouse/grown/evidence-index.yaml` before opening old
+  evidence records.
+- Pruning still removes old generated records, but keeps latest failure context
+  per command.
+- Known/repeated failures remain failing when validation fails; pruning only
+  preserves explanation context.

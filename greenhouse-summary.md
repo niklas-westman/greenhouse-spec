@@ -433,6 +433,9 @@ Greenhouse now has:
 - Generated Greenhouse artifacts excluded from product validation routing.
 - Portable fixture alignment for CI-safe agentic repo scenarios.
 - Real repo alignment against Declarion, Sourcer, and Ensember.
+- A real repo proof document at `docs/tending-reliability-proof.md` showing
+  how status, proposals, structural checks, and representative dry-runs help an
+  AI understand each alignment repo.
 - Documentation for installation, command usage, architecture, proposal flow,
   validation routing, and day-to-day operation.
 
@@ -445,8 +448,8 @@ The next improvements should stay inside the lightweight tending model:
 2. Add better impact rules only where real repo usage proves value.
 3. Make proposal dismissals and decisions easier to review.
 4. Improve evidence summarization and pruning before evidence grows noisy.
-5. Add the real repo proof document that shows the agent-facing benefit in
-   Declarion, Sourcer, and Ensember.
+5. Test default `greenhouse-spec tend` intentionally in target repos when
+   evidence/report writes are acceptable.
 
 Avoid for now:
 

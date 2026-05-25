@@ -705,7 +705,7 @@ Status: Complete
 
 Goal: Prove that Greenhouse visibly helps an AI session work in Declarion, Sourcer, and Ensember.
 Depends on: Phase 6
-Status: Not started
+Status: Complete
 
 #### Inputs
 
@@ -731,23 +731,24 @@ Status: Not started
 
 #### Tasks
 
-- [ ] Run `status`, `tend`, `verify --changed --dry-run`, and `proposals` in a controlled way for each target repo.
+- [x] Run `status`, `tend`, `verify --changed --dry-run`, and `proposals` in a controlled way for each target repo.
   - Tool: bash
   - Verify: outputs recorded in proof document.
+  - Note: target repos were treated as read-only, so `tend --check` was used instead of default `tend`.
 
-- [ ] Confirm Declarion still explains repeated failure context without treating it as green.
+- [x] Confirm Declarion still explains repeated failure context without treating it as green.
   - Tool: bash
   - Verify: `pnpm alignment:check`
 
-- [ ] Confirm Sourcer remains understandable as a polyglot React/Java/API/infra repo.
+- [x] Confirm Sourcer remains understandable as a polyglot React/Java/API/infra repo.
   - Tool: bash
   - Verify: `pnpm alignment:check`
 
-- [ ] Confirm Ensember remains understandable as React/Tauri/Rust/Cargo.
+- [x] Confirm Ensember remains understandable as React/Tauri/Rust/Cargo.
   - Tool: bash
   - Verify: `pnpm alignment:check`
 
-- [ ] Write final agent-readiness proof.
+- [x] Write final agent-readiness proof.
   - Tool: write/edit
   - Verify: `pnpm typecheck`
 
@@ -761,12 +762,12 @@ Status: Not started
 
 #### Phase Exit Criteria
 
-- [ ] `pnpm check` passes.
-- [ ] `pnpm alignment:fixtures` passes.
-- [ ] `pnpm alignment:check` passes.
-- [ ] `docs/tending-reliability-proof.md` exists.
-- [ ] Proof document shows how AI is helped in Declarion, Sourcer, and Ensember.
-- [ ] Remaining follow-ups are documented.
+- [x] `pnpm check` passes.
+- [x] `pnpm alignment:fixtures` passes.
+- [x] `pnpm alignment:check` passes.
+- [x] `docs/tending-reliability-proof.md` exists.
+- [x] Proof document shows how AI is helped in Declarion, Sourcer, and Ensember.
+- [x] Remaining follow-ups are documented.
 
 ---
 
@@ -889,22 +890,22 @@ pnpm alignment:check
 | 4 | Evidence Summary And Prune Reliability | Complete | pass | pass | 2026-05-25 |
 | 5 | Proposal Review UX Reliability | Complete | pass | pass | 2026-05-25 |
 | 6 | Portable Fixture Alignment | Complete | pass | pass | 2026-05-25 |
-| 7 | Real Repo Agent-Readiness Proof | Not started | pending | pending | - |
+| 7 | Real Repo Agent-Readiness Proof | Complete | pass | pass | 2026-05-25 |
 
 ---
 
 ## 7. Post-Completion Checklist
 
-- [ ] All phases marked complete or intentionally skipped with reason.
-- [ ] `pnpm check` passes.
-- [ ] `pnpm alignment:fixtures` passes.
-- [ ] `pnpm alignment:check` passes.
-- [ ] `greenhouse-summary.md` reflects final behavior.
-- [ ] `docs/tending-reliability-proof.md` exists and shows real repo benefit.
-- [ ] No skipped tests without documented reason.
-- [ ] No silent authored-root mutation introduced.
-- [ ] No known/repeated failure is treated as success.
-- [ ] Follow-up work is documented.
+- [x] All phases marked complete or intentionally skipped with reason.
+- [x] `pnpm check` passes.
+- [x] `pnpm alignment:fixtures` passes.
+- [x] `pnpm alignment:check` passes.
+- [x] `greenhouse-summary.md` reflects final behavior.
+- [x] `docs/tending-reliability-proof.md` exists and shows real repo benefit.
+- [x] No skipped tests without documented reason.
+- [x] No silent authored-root mutation introduced.
+- [x] No known/repeated failure is treated as success.
+- [x] Follow-up work is documented.
 
 ---
 

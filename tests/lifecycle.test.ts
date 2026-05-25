@@ -154,17 +154,15 @@ describe("lifecycle commands", () => {
     writePackageJson(repo, {
       test: "node -e \"process.exit(0)\"",
       typecheck: "node -e \"process.exit(0)\"",
-      greenhouse: greenhouseCommandForRepo(repo),
-      "check:greenhouse": greenhouseCommandForRepo(repo, "doctor"),
-      "check:changed": greenhouseCommandForRepo(repo, "verify --changed"),
-      "check:changed:evidence": greenhouseCommandForRepo(
+      greenhouse: greenhouseCommandForRepo(repo, "status"),
+      "greenhouse:tend": greenhouseCommandForRepo(repo, "tend"),
+      "greenhouse:tend:check": greenhouseCommandForRepo(repo, "tend --check"),
+      "greenhouse:verify:dry": greenhouseCommandForRepo(
         repo,
-        "verify --changed --write-evidence",
+        "verify --changed --dry-run",
       ),
-      "validate:scope": greenhouseCommandForRepo(repo, "verify --paths"),
-      tend: greenhouseCommandForRepo(repo, "tend"),
-      "check:tend": greenhouseCommandForRepo(repo, "tend --check"),
-      prepush: "pnpm check:tend && pnpm check:changed:evidence",
+      "greenhouse:proposals": greenhouseCommandForRepo(repo, "proposals"),
+      prepush: "pnpm greenhouse:tend",
       "new-script": "node -e \"process.exit(0)\"",
     });
 
@@ -496,17 +494,15 @@ function createHealthyRepo(): string {
   writePackageJson(repo, {
     test: "node -e \"process.exit(0)\"",
     typecheck: "node -e \"process.exit(0)\"",
-    greenhouse: greenhouseCommandForRepo(repo),
-    "check:greenhouse": greenhouseCommandForRepo(repo, "doctor"),
-    "check:changed": greenhouseCommandForRepo(repo, "verify --changed"),
-    "check:changed:evidence": greenhouseCommandForRepo(
+    greenhouse: greenhouseCommandForRepo(repo, "status"),
+    "greenhouse:tend": greenhouseCommandForRepo(repo, "tend"),
+    "greenhouse:tend:check": greenhouseCommandForRepo(repo, "tend --check"),
+    "greenhouse:verify:dry": greenhouseCommandForRepo(
       repo,
-      "verify --changed --write-evidence",
+      "verify --changed --dry-run",
     ),
-    "validate:scope": greenhouseCommandForRepo(repo, "verify --paths"),
-    tend: greenhouseCommandForRepo(repo, "tend"),
-    "check:tend": greenhouseCommandForRepo(repo, "tend --check"),
-    prepush: "pnpm check:tend && pnpm check:changed:evidence",
+    "greenhouse:proposals": greenhouseCommandForRepo(repo, "proposals"),
+    prepush: "pnpm greenhouse:tend",
   });
   initGitRepo(repo);
   return repo;

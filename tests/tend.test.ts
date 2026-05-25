@@ -356,7 +356,7 @@ describe("tend", () => {
     expect(report.ok).toBe(false);
     expect(report.selfTending?.blocking).toContainEqual(
       expect.objectContaining({
-        id: "package-script:check:tend",
+        id: "package-script:greenhouse:tend",
         status: "pending",
       }),
     );

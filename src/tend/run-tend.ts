@@ -327,7 +327,7 @@ export function formatTendReport(report: TendReport): string {
         "- greenhouse-spec apply-proposals --safe --dry-run",
         "- greenhouse-spec apply-proposals --safe",
         "- greenhouse-spec adopt-proposals --id <proposal-id>",
-        "- greenhouse-spec verify --changed --write-evidence",
+        "- greenhouse-spec tend",
       );
     }
   }

@@ -40,37 +40,27 @@ describe("native scripts", () => {
     expect(proposals).toEqual([
       {
         name: "greenhouse",
-        command: expect.stringContaining("greenhouse-spec/dist/cli.js"),
+        command: expect.stringContaining("greenhouse-spec/dist/cli.js status"),
         status: "add",
       },
       {
-        name: "check:greenhouse",
-        command: expect.stringContaining("greenhouse-spec/dist/cli.js doctor"),
-        status: "add",
-      },
-      {
-        name: "check:changed",
-        command: expect.stringContaining("greenhouse-spec/dist/cli.js verify --changed"),
-        status: "add",
-      },
-      {
-        name: "check:changed:evidence",
-        command: expect.stringContaining("greenhouse-spec/dist/cli.js verify --changed --write-evidence"),
-        status: "add",
-      },
-      {
-        name: "validate:scope",
-        command: expect.stringContaining("greenhouse-spec/dist/cli.js verify --paths"),
-        status: "add",
-      },
-      {
-        name: "tend",
+        name: "greenhouse:tend",
         command: expect.stringContaining("greenhouse-spec/dist/cli.js tend"),
         status: "add",
       },
       {
-        name: "check:tend",
+        name: "greenhouse:tend:check",
         command: expect.stringContaining("greenhouse-spec/dist/cli.js tend --check"),
+        status: "add",
+      },
+      {
+        name: "greenhouse:verify:dry",
+        command: expect.stringContaining("greenhouse-spec/dist/cli.js verify --changed --dry-run"),
+        status: "add",
+      },
+      {
+        name: "greenhouse:proposals",
+        command: expect.stringContaining("greenhouse-spec/dist/cli.js proposals"),
         status: "add",
       },
       {
@@ -80,7 +70,7 @@ describe("native scripts", () => {
       },
       {
         name: "prepush",
-        command: "pnpm check:tend && pnpm check:changed:evidence",
+        command: "pnpm greenhouse:tend",
         status: "add",
       },
     ]);
@@ -89,63 +79,49 @@ describe("native scripts", () => {
   it("proposes safe updates for accepted local node CLI aliases", () => {
     const repo = createRepo({
       scripts: {
-        greenhouse: "node ../greenhouse/code/greenhouse-spec/dist/cli.js",
-        "check:greenhouse": "node ../greenhouse/code/greenhouse-spec/dist/cli.js doctor",
-        "check:changed": "node ../greenhouse/code/greenhouse-spec/dist/cli.js verify --changed",
-        "check:changed:evidence":
-          "node ../greenhouse/code/greenhouse-spec/dist/cli.js verify --changed --write-evidence",
-        "validate:scope": "node ../greenhouse/code/greenhouse-spec/dist/cli.js verify --paths",
-        tend: "node ../greenhouse/code/greenhouse-spec/dist/cli.js tend",
-        "check:tend": "node ../greenhouse/code/greenhouse-spec/dist/cli.js tend --check",
-        prepush: "pnpm check:tend && pnpm check:changed:evidence",
+        greenhouse: "node ../greenhouse/code/greenhouse-spec/dist/cli.js status",
+        "greenhouse:tend": "node ../greenhouse/code/greenhouse-spec/dist/cli.js tend",
+        "greenhouse:tend:check": "node ../greenhouse/code/greenhouse-spec/dist/cli.js tend --check",
+        "greenhouse:verify:dry":
+          "node ../greenhouse/code/greenhouse-spec/dist/cli.js verify --changed --dry-run",
+        "greenhouse:proposals": "node ../greenhouse/code/greenhouse-spec/dist/cli.js proposals",
+        prepush: "pnpm greenhouse:tend",
       },
     });
 
     expect(proposePackageScripts(repo)).toEqual([
       {
         name: "greenhouse",
-        command: expect.stringContaining("greenhouse-spec/dist/cli.js"),
+        command: expect.stringContaining("greenhouse-spec/dist/cli.js status"),
         status: "update",
-        existingCommand: "node ../greenhouse/code/greenhouse-spec/dist/cli.js",
+        existingCommand: "node ../greenhouse/code/greenhouse-spec/dist/cli.js status",
       },
       {
-        name: "check:greenhouse",
-        command: expect.stringContaining("greenhouse-spec/dist/cli.js doctor"),
-        status: "update",
-        existingCommand: "node ../greenhouse/code/greenhouse-spec/dist/cli.js doctor",
-      },
-      {
-        name: "check:changed",
-        command: expect.stringContaining("greenhouse-spec/dist/cli.js verify --changed"),
-        status: "update",
-        existingCommand: "node ../greenhouse/code/greenhouse-spec/dist/cli.js verify --changed",
-      },
-      {
-        name: "check:changed:evidence",
-        command: expect.stringContaining(
-          "greenhouse-spec/dist/cli.js verify --changed --write-evidence",
-        ),
-        status: "update",
-        existingCommand:
-          "node ../greenhouse/code/greenhouse-spec/dist/cli.js verify --changed --write-evidence",
-      },
-      {
-        name: "validate:scope",
-        command: expect.stringContaining("greenhouse-spec/dist/cli.js verify --paths"),
-        status: "update",
-        existingCommand: "node ../greenhouse/code/greenhouse-spec/dist/cli.js verify --paths",
-      },
-      {
-        name: "tend",
+        name: "greenhouse:tend",
         command: expect.stringContaining("greenhouse-spec/dist/cli.js tend"),
         status: "update",
         existingCommand: "node ../greenhouse/code/greenhouse-spec/dist/cli.js tend",
       },
       {
-        name: "check:tend",
+        name: "greenhouse:tend:check",
         command: expect.stringContaining("greenhouse-spec/dist/cli.js tend --check"),
         status: "update",
         existingCommand: "node ../greenhouse/code/greenhouse-spec/dist/cli.js tend --check",
+      },
+      {
+        name: "greenhouse:verify:dry",
+        command: expect.stringContaining(
+          "greenhouse-spec/dist/cli.js verify --changed --dry-run",
+        ),
+        status: "update",
+        existingCommand:
+          "node ../greenhouse/code/greenhouse-spec/dist/cli.js verify --changed --dry-run",
+      },
+      {
+        name: "greenhouse:proposals",
+        command: expect.stringContaining("greenhouse-spec/dist/cli.js proposals"),
+        status: "update",
+        existingCommand: "node ../greenhouse/code/greenhouse-spec/dist/cli.js proposals",
       },
     ]);
   });
@@ -175,12 +151,12 @@ describe("native scripts", () => {
           status: "add",
         },
         {
-          name: "check:greenhouse",
-          command: "pnpm greenhouse doctor",
+          name: "greenhouse:tend",
+          command: "pnpm greenhouse tend",
           status: "add",
         },
         {
-          name: "check:tend",
+          name: "greenhouse:tend:check",
           command: "pnpm greenhouse tend --check",
           status: "add",
         },
@@ -206,16 +182,44 @@ describe("native scripts", () => {
   it("reports collisions instead of overwriting existing scripts", () => {
     const repo = createRepo({
       scripts: {
-        "check:changed": "pnpm custom:changed",
+        "greenhouse:tend": "pnpm custom:tend",
       },
     });
 
     expect(proposePackageScripts(repo)).toContainEqual({
-      name: "check:changed",
-      command: expect.stringContaining("greenhouse-spec/dist/cli.js verify --changed"),
+      name: "greenhouse:tend",
+      command: expect.stringContaining("greenhouse-spec/dist/cli.js tend"),
       status: "collision",
-      existingCommand: "pnpm custom:changed",
+      existingCommand: "pnpm custom:tend",
     });
+  });
+
+  it("accepts the previous split prepush gate without rewriting it", () => {
+    const repo = createRepo({
+      scripts: {
+        prepush: "pnpm check:tend && pnpm check:changed:evidence",
+      },
+    });
+
+    expect(proposePackageScripts(repo)).not.toContainEqual(
+      expect.objectContaining({
+        name: "prepush",
+      }),
+    );
+  });
+
+  it("does not force new aliases into repos that already have the previous split install", () => {
+    const repo = createRepo({
+      scripts: {
+        "check:greenhouse": "node ../greenhouse/code/greenhouse-spec/dist/cli.js doctor",
+        "check:tend": "node ../greenhouse/code/greenhouse-spec/dist/cli.js tend --check",
+        "check:changed:evidence":
+          "node ../greenhouse/code/greenhouse-spec/dist/cli.js verify --changed --write-evidence",
+        prepush: "pnpm check:tend && pnpm check:changed:evidence",
+      },
+    });
+
+    expect(proposePackageScripts(repo)).toEqual([]);
   });
 
   it("indexes repo-native gates without replacing them", () => {

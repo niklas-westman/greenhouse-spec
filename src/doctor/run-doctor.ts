@@ -86,7 +86,11 @@ const schemaFiles: Array<{ path: string; schema: ZodType<unknown> }> = [
 ];
 
 const expectedPackageAliases = new Map([
-  ["greenhouse", "greenhouse-spec"],
+  ["greenhouse", "greenhouse-spec status"],
+  ["greenhouse:tend", "greenhouse-spec tend"],
+  ["greenhouse:tend:check", "greenhouse-spec tend --check"],
+  ["greenhouse:verify:dry", "greenhouse-spec verify --changed --dry-run"],
+  ["greenhouse:proposals", "greenhouse-spec proposals"],
   ["check:greenhouse", "greenhouse-spec doctor"],
   ["check:changed", "greenhouse-spec verify --changed"],
   ["check:changed:evidence", "greenhouse-spec verify --changed --write-evidence"],
@@ -309,17 +313,23 @@ function validatePackageAliases(cwd: string, findings: DoctorFinding[]): void {
   }
 
   const packageJson = JSON.parse(readFileSync(packageJsonPath, "utf8")) as {
+    name?: string;
     scripts?: Record<string, string>;
   };
   const scripts = packageJson.scripts ?? {};
+  const selfHosted = packageJson.name === "greenhouse-spec";
 
   for (const [scriptName, expectedCommand] of expectedPackageAliases) {
     const actualCommand = scripts[scriptName];
-    if (actualCommand && !isAcceptedGreenhouseAlias(actualCommand, expectedCommand)) {
+    const effectiveExpected =
+      selfHosted && scriptName === "greenhouse"
+        ? "greenhouse-spec"
+        : expectedCommand;
+    if (actualCommand && !isAcceptedGreenhouseAlias(actualCommand, effectiveExpected)) {
       findings.push({
         severity: "warning",
         check: "package-script-alias",
-        message: `Package script "${scriptName}" points to "${actualCommand}", expected "${expectedCommand}".`,
+        message: `Package script "${scriptName}" points to "${actualCommand}", expected "${effectiveExpected}".`,
         path: formatPath(cwd, packageJsonPath),
       });
     }

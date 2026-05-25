@@ -53,6 +53,9 @@ or, if the repo wants separate structural and validation gates:
 pnpm check:tend && pnpm check:changed:evidence
 ```
 
+The split `check:*` aliases are still supported for existing repos, but new
+installs should prefer `greenhouse:tend` as the prepush surface.
+
 ## When `tend --check` Fails
 
 Use the explicit repair loop:

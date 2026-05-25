@@ -94,18 +94,20 @@ Greenhouse should normally propose these scripts for package-based repos:
 
 ```json
 {
-  "greenhouse": "node ../greenhouse/code/greenhouse-spec/dist/cli.js",
-  "check:greenhouse": "node ../greenhouse/code/greenhouse-spec/dist/cli.js doctor",
-  "check:changed": "node ../greenhouse/code/greenhouse-spec/dist/cli.js verify --changed",
-  "check:changed:evidence": "node ../greenhouse/code/greenhouse-spec/dist/cli.js verify --changed --write-evidence",
-  "check:tend": "node ../greenhouse/code/greenhouse-spec/dist/cli.js tend --check",
-  "prepush": "pnpm check:tend && pnpm check:changed:evidence"
+  "greenhouse": "node ../greenhouse/code/greenhouse-spec/dist/cli.js status",
+  "greenhouse:tend": "node ../greenhouse/code/greenhouse-spec/dist/cli.js tend",
+  "greenhouse:tend:check": "node ../greenhouse/code/greenhouse-spec/dist/cli.js tend --check",
+  "greenhouse:verify:dry": "node ../greenhouse/code/greenhouse-spec/dist/cli.js verify --changed --dry-run",
+  "greenhouse:proposals": "node ../greenhouse/code/greenhouse-spec/dist/cli.js proposals",
+  "prepush": "pnpm greenhouse:tend"
 }
 ```
 
 If the target repo already has a stricter `prepush`, keep it human-owned and
 include the Greenhouse gate inside it. Greenhouse reports conflicting prepush
-scripts instead of overwriting them.
+scripts instead of overwriting them. Existing split aliases such as
+`check:tend` and `check:changed:evidence` remain compatible, but new installs
+should prefer the `greenhouse:*` scripts.
 
 ## Final Install Check
 
@@ -120,9 +122,9 @@ node ../greenhouse/code/greenhouse-spec/dist/cli.js verify --changed --dry-run
 When package scripts are installed, the same checks usually become:
 
 ```bash
-pnpm greenhouse status
-pnpm check:greenhouse
-pnpm check:changed --dry-run
+pnpm greenhouse
+pnpm greenhouse:tend:check
+pnpm greenhouse:verify:dry
 ```
 
 The install is healthy when `status` passes, `doctor` has no errors, and

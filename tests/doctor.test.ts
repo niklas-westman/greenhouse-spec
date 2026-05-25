@@ -178,16 +178,14 @@ describe("doctor", () => {
       JSON.stringify(
         {
           scripts: {
-            greenhouse: "node ../greenhouse/code/greenhouse-spec/dist/cli.js",
-            "check:greenhouse":
-              "node ../greenhouse/code/greenhouse-spec/dist/cli.js doctor",
-            "check:changed":
-              "node ../greenhouse/code/greenhouse-spec/dist/cli.js verify --changed",
-            "check:changed:evidence":
-              "node ../greenhouse/code/greenhouse-spec/dist/cli.js verify --changed --write-evidence",
-            "validate:scope":
-              "node ../greenhouse/code/greenhouse-spec/dist/cli.js verify --paths",
-            tend: "node ../greenhouse/code/greenhouse-spec/dist/cli.js tend",
+            greenhouse: "node ../greenhouse/code/greenhouse-spec/dist/cli.js status",
+            "greenhouse:tend": "node ../greenhouse/code/greenhouse-spec/dist/cli.js tend",
+            "greenhouse:tend:check":
+              "node ../greenhouse/code/greenhouse-spec/dist/cli.js tend --check",
+            "greenhouse:verify:dry":
+              "node ../greenhouse/code/greenhouse-spec/dist/cli.js verify --changed --dry-run",
+            "greenhouse:proposals":
+              "node ../greenhouse/code/greenhouse-spec/dist/cli.js proposals",
           },
         },
         null,
@@ -208,6 +206,7 @@ describe("doctor", () => {
       join(repo, "package.json"),
       JSON.stringify(
         {
+          name: "greenhouse-spec",
           scripts: {
             greenhouse: "pnpm build && node dist/cli.js",
             "check:greenhouse": "pnpm greenhouse doctor",
@@ -215,6 +214,10 @@ describe("doctor", () => {
             "check:changed:evidence":
               "pnpm greenhouse verify --changed --write-evidence",
             "validate:scope": "pnpm greenhouse verify --paths",
+            "greenhouse:tend": "pnpm greenhouse tend",
+            "greenhouse:tend:check": "pnpm greenhouse tend --check",
+            "greenhouse:verify:dry": "pnpm greenhouse verify --changed --dry-run",
+            "greenhouse:proposals": "pnpm greenhouse proposals",
             tend: "pnpm greenhouse tend",
             "check:tend": "pnpm greenhouse tend --check",
           },

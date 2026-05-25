@@ -253,7 +253,7 @@ tend
 
 tend --check
   Run fresh in-memory discovery and fail on pending, adoptable, or conflict
-  proposals. Intended as the prepush gate.
+  proposals. Intended as the structural-only CI/debug gate.
 
 verify
   Route changed files through validation.yaml and run selected commands.
@@ -269,17 +269,18 @@ locally:
 
 ```json
 {
-  "greenhouse": "node ../greenhouse/code/greenhouse-spec/dist/cli.js",
-  "check:greenhouse": "node ../greenhouse/code/greenhouse-spec/dist/cli.js doctor",
-  "check:changed": "node ../greenhouse/code/greenhouse-spec/dist/cli.js verify --changed",
-  "check:changed:evidence": "node ../greenhouse/code/greenhouse-spec/dist/cli.js verify --changed --write-evidence",
-  "check:tend": "node ../greenhouse/code/greenhouse-spec/dist/cli.js tend --check",
-  "prepush": "pnpm check:tend && pnpm check:changed:evidence"
+  "greenhouse": "node ../greenhouse/code/greenhouse-spec/dist/cli.js status",
+  "greenhouse:tend": "node ../greenhouse/code/greenhouse-spec/dist/cli.js tend",
+  "greenhouse:tend:check": "node ../greenhouse/code/greenhouse-spec/dist/cli.js tend --check",
+  "greenhouse:verify:dry": "node ../greenhouse/code/greenhouse-spec/dist/cli.js verify --changed --dry-run",
+  "greenhouse:proposals": "node ../greenhouse/code/greenhouse-spec/dist/cli.js proposals",
+  "prepush": "pnpm greenhouse:tend"
 }
 ```
 
 Repos may keep stricter `prepush` scripts as long as they include the Greenhouse
-gate and evidence command.
+tending gate. Existing `check:tend` and `check:changed:evidence` aliases remain
+compatible, but new installs should prefer the `greenhouse:*` scripts.
 
 ## Alignment Repos
 

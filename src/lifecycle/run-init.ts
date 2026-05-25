@@ -56,7 +56,7 @@ export function formatInitReport(report: InitReport): string {
     "- greenhouse-spec proposals",
     "- greenhouse-spec apply-proposals --safe --dry-run",
     "- greenhouse-spec apply-proposals --safe",
-    "- greenhouse-spec verify --changed --write-evidence",
+    "- greenhouse-spec tend",
     "",
   ];
 

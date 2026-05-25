@@ -86,8 +86,8 @@ describe("inspect", () => {
     expect(report.proposals).toContainEqual(
       expect.objectContaining({
         kind: "package-script",
-        name: "check:greenhouse",
-        command: expect.stringContaining("greenhouse-spec/dist/cli.js doctor"),
+        name: "greenhouse",
+        command: expect.stringContaining("greenhouse-spec/dist/cli.js status"),
       }),
     );
     expect(report.proposals).toContainEqual(

@@ -31,14 +31,13 @@ greenhouse-spec inspect
   +-- risk-index.yaml
   +-- evidence-index.yaml
 
-greenhouse-spec tend --check
+greenhouse-spec tend
   |
-  +-- pending?   -> apply-proposals --safe
-  +-- adoptable? -> adopt-proposals --id <proposal-id>
-  +-- conflict?  -> human review
-  |
-  v
-greenhouse-spec verify --changed --write-evidence
+  +-- install/root health
+  +-- structural drift
+  +-- changed-file validation
+  +-- evidence
+  +-- impact warnings and proposals
 ```
 
 ## Ownership Boundaries
@@ -118,7 +117,7 @@ adopt-proposals
 
 tend --check
   Run fresh in-memory discovery and fail when pending, adoptable, or conflict
-  proposals exist. This is the conservative prepush gate.
+  proposals exist. This is the structural-only CI/debug gate.
 
 verify
   Route changed files through validation.yaml and optionally write evidence.

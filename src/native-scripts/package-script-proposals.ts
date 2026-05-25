@@ -10,34 +10,49 @@ export type PackageScriptProposal = {
   existingCommand?: string;
 };
 
-const baseAliases: Array<{ name: string; args: string }> = [
+const installedAliases: Array<{ name: string; args: string }> = [
+  {
+    name: "greenhouse",
+    args: "status",
+  },
+  {
+    name: "greenhouse:tend",
+    args: "tend",
+  },
+  {
+    name: "greenhouse:tend:check",
+    args: "tend --check",
+  },
+  {
+    name: "greenhouse:verify:dry",
+    args: "verify --changed --dry-run",
+  },
+  {
+    name: "greenhouse:proposals",
+    args: "proposals",
+  },
+];
+
+const selfHostedAliases: Array<{ name: string; args: string }> = [
   {
     name: "greenhouse",
     args: "",
   },
   {
-    name: "check:greenhouse",
-    args: "doctor",
-  },
-  {
-    name: "check:changed",
-    args: "verify --changed",
-  },
-  {
-    name: "check:changed:evidence",
-    args: "verify --changed --write-evidence",
-  },
-  {
-    name: "validate:scope",
-    args: "verify --paths",
-  },
-  {
-    name: "tend",
+    name: "greenhouse:tend",
     args: "tend",
   },
   {
-    name: "check:tend",
+    name: "greenhouse:tend:check",
     args: "tend --check",
+  },
+  {
+    name: "greenhouse:verify:dry",
+    args: "verify --changed --dry-run",
+  },
+  {
+    name: "greenhouse:proposals",
+    args: "proposals",
   },
 ];
 
@@ -45,7 +60,13 @@ export function proposePackageScripts(cwd: string): PackageScriptProposal[] {
   const packageJson = readPackageJson(cwd);
   const scripts = packageJson?.scripts ?? {};
   const selfHosted = packageJson?.name === "greenhouse-spec";
-  const aliases = baseAliases.map((alias) => ({
+  const legacyInstalled = !selfHosted && hasLegacyGreenhouseScripts(scripts);
+  const sourceAliases = selfHosted
+    ? selfHostedAliases
+    : legacyInstalled
+      ? []
+      : installedAliases;
+  const aliases = sourceAliases.map((alias) => ({
     name: alias.name,
     command: selfHosted
       ? selfHostedGreenhouseCommand(alias.args)
@@ -62,11 +83,13 @@ export function proposePackageScripts(cwd: string): PackageScriptProposal[] {
     });
   }
 
-  aliases.push({
-    name: "prepush",
-    command: "pnpm check:tend && pnpm check:changed:evidence",
-    bareCommand: "pnpm check:tend && pnpm check:changed:evidence",
-  });
+  if (!legacyInstalled) {
+    aliases.push({
+      name: "prepush",
+      command: "pnpm greenhouse:tend",
+      bareCommand: "pnpm greenhouse:tend",
+    });
+  }
 
   for (const alias of aliases) {
     const existingCommand = scripts[alias.name];
@@ -109,6 +132,14 @@ export function proposePackageScripts(cwd: string): PackageScriptProposal[] {
   }
 
   return proposals;
+}
+
+function hasLegacyGreenhouseScripts(scripts: Record<string, string>): boolean {
+  return (
+    Boolean(scripts["check:greenhouse"]) ||
+    Boolean(scripts["check:tend"]) ||
+    Boolean(scripts["check:changed:evidence"])
+  );
 }
 
 export function greenhouseCommandForRepo(cwd: string, args = ""): string {
@@ -170,5 +201,8 @@ function shellQuotePath(path: string): string {
 
 function isAcceptedPrepushAlias(actualCommand: string): boolean {
   const parts = actualCommand.split("&&").map((part) => part.trim());
-  return parts.includes("pnpm check:tend") && parts.includes("pnpm check:changed:evidence");
+  return (
+    parts.includes("pnpm greenhouse:tend") ||
+    (parts.includes("pnpm check:tend") && parts.includes("pnpm check:changed:evidence"))
+  );
 }

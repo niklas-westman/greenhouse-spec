@@ -70,6 +70,18 @@ Authored:
 
   Greenhouse must not silently overwrite human-owned content. It may only edit
   authored files through explicit proposal commands.
+
+Important authored roots:
+
+```text
+validation.yaml
+  Owns validation modes, path routes, risk routes, and manual validation checks.
+
+docs.yaml
+  Owns documentation drift hints. It maps documentation files to repo facts they
+  describe, so impact warnings can point to the right setup, CLI, API, env,
+  desktop, generated-output, workspace, or CI docs.
+```
 ```
 
 ## Proposal States

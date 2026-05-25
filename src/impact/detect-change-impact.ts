@@ -1,4 +1,5 @@
 import type { RepoShape } from "../schemas/repo-shape.js";
+import type { DocsOwnership, DocsRoot } from "../schemas/docs-root.js";
 
 export type ImpactSeverity = "advisory" | "warning" | "guarded" | "blocking";
 
@@ -18,10 +19,12 @@ export type ImpactWarning = {
 
 export function detectChangeImpact(options: {
   changedFiles: string[];
+  docsRoot?: DocsRoot;
   repoShape?: RepoShape;
 }): ImpactWarning[] {
   const warnings: ImpactWarning[] = [];
   const changedFiles = uniqueSorted(options.changedFiles);
+  const docs = docsResolver(options.docsRoot);
   const add = (warning: ImpactWarning) => {
     if (warning.changedFiles.length > 0) {
       warnings.push({
@@ -37,7 +40,10 @@ export function detectChangeImpact(options: {
     severity: "warning",
     kind: "documentation-drift",
     changedFiles: changedFiles.filter(isPackageJson),
-    affected: ["README.md", "docs/setup.md", ".greenhouse/roots/validation.yaml"],
+    affected: [
+      ...docs(["setup", "package-scripts", "validation"], ["README.md", "docs/setup.md"]),
+      ".greenhouse/roots/validation.yaml",
+    ],
     reason:
       "package.json changed; setup docs and Greenhouse validation roots may describe stale scripts.",
   });
@@ -47,7 +53,7 @@ export function detectChangeImpact(options: {
     severity: "advisory",
     kind: "documentation-drift",
     changedFiles: changedFiles.filter(isCliSource),
-    affected: ["README.md", "docs/cli.md"],
+    affected: docs(["cli"], ["README.md", "docs/cli.md"]),
     reason: "CLI source changed; CLI docs, examples, or help text may be stale.",
   });
 
@@ -56,7 +62,10 @@ export function detectChangeImpact(options: {
     severity: "guarded",
     kind: "generated-output-drift",
     changedFiles: changedFiles.filter(isApiSpec),
-    affected: ["docs/api.md", "generated API clients or server stubs"],
+    affected: [
+      ...docs(["api", "generated"], ["docs/api.md"]),
+      "generated API clients or server stubs",
+    ],
     reason:
       "API contract changed; generated clients/server stubs and API docs may need regeneration or review.",
   });
@@ -66,7 +75,7 @@ export function detectChangeImpact(options: {
     severity: "warning",
     kind: "documentation-drift",
     changedFiles: changedFiles.filter(isEnvOrConfigSchema),
-    affected: [".env.example", "docs/deployment.md", "README.md"],
+    affected: [".env.example", ...docs(["env", "deployment", "setup"], ["docs/deployment.md", "README.md"])],
     reason:
       "environment or configuration schema changed; setup and deployment docs may be stale.",
   });
@@ -76,7 +85,11 @@ export function detectChangeImpact(options: {
     severity: "warning",
     kind: "repo-shape-drift",
     changedFiles: changedFiles.filter(isWorkspaceConfig),
-    affected: [".greenhouse/grown/repo-shape.yaml", ".greenhouse/roots/validation.yaml"],
+    affected: [
+      ".greenhouse/grown/repo-shape.yaml",
+      ".greenhouse/roots/validation.yaml",
+      ...docs(["workspace", "validation"], []),
+    ],
     reason:
       "workspace configuration changed; repo shape, package scopes, and validation routes may need refresh.",
   });
@@ -86,7 +99,10 @@ export function detectChangeImpact(options: {
     severity: "warning",
     kind: "validation-route-drift",
     changedFiles: changedFiles.filter(isCiWorkflow),
-    affected: ["README.md", "docs/setup.md", ".greenhouse/roots/validation.yaml"],
+    affected: [
+      ...docs(["ci", "setup", "validation"], ["README.md", "docs/setup.md"]),
+      ".greenhouse/roots/validation.yaml",
+    ],
     reason:
       "CI workflow changed; local validation docs and Greenhouse routes may need review.",
   });
@@ -96,7 +112,7 @@ export function detectChangeImpact(options: {
     severity: "advisory",
     kind: "documentation-drift",
     changedFiles: changedFiles.filter(isTauriPath),
-    affected: ["docs/desktop.md", "README.md"],
+    affected: docs(["desktop"], ["docs/desktop.md", "README.md"]),
     reason: "Tauri/Rust desktop files changed; packaging or desktop runtime docs may be affected.",
   });
 
@@ -113,6 +129,17 @@ export function detectChangeImpact(options: {
   });
 
   return uniqueWarnings(warnings);
+}
+
+function docsResolver(
+  docsRoot: DocsRoot | undefined,
+): (owners: DocsOwnership[], fallback: string[]) => string[] {
+  return (owners, fallback) => {
+    const tracked = docsRoot?.tracked_docs
+      .filter((doc) => doc.owns.some((owner) => owners.includes(owner)))
+      .map((doc) => doc.path) ?? [];
+    return tracked.length > 0 ? tracked : fallback;
+  };
 }
 
 function isPackageJson(file: string): boolean {

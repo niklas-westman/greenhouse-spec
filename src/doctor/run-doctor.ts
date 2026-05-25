@@ -12,6 +12,7 @@ import {
 import { parseYamlWithSchema } from "../schemas/common.js";
 import { evidenceIndexSchema } from "../schemas/evidence-index.js";
 import { failureSignaturesSchema } from "../schemas/failure-signatures.js";
+import { docsRootSchema } from "../schemas/docs-root.js";
 import { projectSchema, type ProjectConfig } from "../schemas/project.js";
 import { repoMapSchema, type RepoMap } from "../schemas/repo-map.js";
 import { repoShapeSchema } from "../schemas/repo-shape.js";
@@ -54,6 +55,10 @@ const schemaFiles: Array<{ path: string; schema: ZodType<unknown> }> = [
   {
     path: "roots/validation.yaml",
     schema: validationSchema,
+  },
+  {
+    path: "roots/docs.yaml",
+    schema: docsRootSchema,
   },
   {
     path: "grown/repo-map.yaml",

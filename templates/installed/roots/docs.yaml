@@ -1,0 +1,19 @@
+schema_version: 1
+tracked_docs:
+  - path: README.md
+    owns:
+      - setup
+      - package-scripts
+      - validation
+  - path: docs/commands.md
+    owns:
+      - cli
+      - validation
+  - path: docs/installation.md
+    owns:
+      - setup
+      - package-scripts
+  - path: docs/validation-routing.md
+    owns:
+      - validation
+      - generated

@@ -23,6 +23,36 @@ describe("change-impact detection", () => {
     );
   });
 
+  it("uses docs ownership roots for package script drift targets", () => {
+    const warnings = detectChangeImpact({
+      changedFiles: ["package.json"],
+      docsRoot: {
+        schema_version: 1,
+        tracked_docs: [
+          {
+            path: "docs/setup.md",
+            owns: ["setup", "package-scripts"],
+          },
+          {
+            path: "docs/validation.md",
+            owns: ["validation"],
+          },
+        ],
+      },
+    });
+
+    expect(warnings).toContainEqual(
+      expect.objectContaining({
+        id: "impact.package-scripts-docs",
+        affected: expect.arrayContaining([
+          "docs/setup.md",
+          "docs/validation.md",
+          ".greenhouse/roots/validation.yaml",
+        ]),
+      }),
+    );
+  });
+
   it("keeps CLI documentation drift advisory", () => {
     const warnings = detectChangeImpact({
       changedFiles: ["src/cli/main.ts"],

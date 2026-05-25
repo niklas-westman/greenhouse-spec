@@ -13,6 +13,7 @@ import {
   detectChangeImpact,
   type ImpactWarning,
 } from "../impact/detect-change-impact.js";
+import { readDocsRoot } from "../impact/docs-root.js";
 import { parseYamlWithSchema } from "../schemas/common.js";
 import { validationSchema } from "../schemas/validation.js";
 import { commandIndexSchema } from "../schemas/command-index.js";
@@ -87,6 +88,7 @@ export function runVerify(options: VerifyOptions): VerifyReport {
   });
   const impactWarnings = detectChangeImpact({
     changedFiles: classification.all,
+    docsRoot: readDocsRoot(options.cwd),
     repoShape: discoverRepoShape(options.cwd),
   });
   const fallbackSourceFiles = classification.groups["product-source"].filter(

@@ -20,6 +20,7 @@ import {
   detectChangeImpact,
   type ImpactWarning,
 } from "../impact/detect-change-impact.js";
+import { readDocsRoot } from "../impact/docs-root.js";
 import { buildValidationProposals } from "../proposals/build-proposals.js";
 import type { ValidationProposal } from "../schemas/validation-proposals.js";
 import { getChangedFiles } from "../validation/changed-files.js";
@@ -87,7 +88,8 @@ export function runTend(options: { cwd: string; check?: boolean; noPrune?: boole
     ? readFileSync(latestEvidencePath, "utf8")
     : "";
   const proposals = buildProposals(changedFiles, latestEvidence);
-  const impactWarnings = detectChangeImpact({ changedFiles, repoShape });
+  const docsRoot = readDocsRoot(options.cwd);
+  const impactWarnings = detectChangeImpact({ changedFiles, docsRoot, repoShape });
   let repeatedFailures = repeatedFailureSummaries(
     readFailureSignatures(options.cwd),
   );

@@ -104,6 +104,13 @@ Authored and protected:
 Only explicit proposal commands should mutate authored files. `inspect` and
 `tend --check` must not silently rewrite authored roots.
 
+## Documentation Ownership
+
+Documentation drift hints live in `.greenhouse/roots/docs.yaml`. That root is
+authored policy, not generated intelligence; it lets Greenhouse route impact
+warnings to the docs that own setup, package scripts, validation, CLI, API, env,
+desktop, generated-output, workspace, or CI assumptions.
+
 ## Route Metadata
 
 Validation routes in `.greenhouse/roots/validation.yaml` may include metadata:

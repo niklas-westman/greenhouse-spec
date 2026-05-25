@@ -148,8 +148,10 @@ Greenhouse also reports change-impact warnings. These are quiet signals that a
 change may stale a repo assumption beyond tests: package scripts may stale setup
 docs or validation roots, CLI source may stale CLI docs, API specs may require
 generated client review, workspace/CI changes may stale route expectations, and
-source changes that fall back to broad validation may need a scoped route. These
-warnings are visible in `status`, `tend`, `verify --dry-run`, and evidence.
+source changes that fall back to broad validation may need a scoped route. When
+`.greenhouse/roots/docs.yaml` exists, Greenhouse uses its doc ownership map to
+name the repo-specific docs that may be stale. These warnings are visible in
+`status`, `tend`, `verify --dry-run`, and evidence.
 
 ## The `.greenhouse` Folder
 
@@ -157,6 +159,7 @@ warnings are visible in `status`, `tend`, `verify --dry-run`, and evidence.
 .greenhouse/
   roots/                  human-authored contract
     validation.yaml       validation modes, path routes, risk routes
+    docs.yaml             documentation ownership and drift hints
     rules.md              agent behavior rules
     authority.md          source authority rules
     protected-boundaries.md

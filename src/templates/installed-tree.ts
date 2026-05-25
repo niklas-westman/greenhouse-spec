@@ -4,6 +4,7 @@ export const mvpInstalledTreePaths = [
   "roots/protected-boundaries.md",
   "roots/validation.yaml",
   "roots/authority.md",
+  "roots/docs.yaml",
   "grown/repo-map.yaml",
   "grown/command-index.yaml",
   "grown/docs-index.yaml",

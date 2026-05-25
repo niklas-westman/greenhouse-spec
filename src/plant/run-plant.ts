@@ -113,6 +113,7 @@ function buildPlantWrites(cwd: string): PlannedWrite[] {
     authored("roots/protected-boundaries.md", template("roots/protected-boundaries.md")),
     authored("roots/validation.yaml", validationYaml(cwd)),
     authored("roots/authority.md", template("roots/authority.md")),
+    authored("roots/docs.yaml", template("roots/docs.yaml")),
     generated("grown/repo-map.yaml", yaml(repoMap)),
     generated("grown/repo-shape.yaml", yaml(repoShape)),
     generated("grown/command-index.yaml", yaml(commandIndex)),

@@ -10,6 +10,18 @@ The source of truth is:
 Generated discovery and proposals can suggest updates, but validation execution
 must always flow through the authored root.
 
+Documentation drift hints come from a separate authored root:
+
+```text
+.greenhouse/roots/docs.yaml
+```
+
+That file maps docs to repo facts they own, such as setup commands, package
+scripts, validation, CLI behavior, API contracts, environment config, desktop
+packaging, generated output, workspace shape, and CI behavior. Impact warnings
+use this map when it exists, and fall back to common docs like `README.md` when
+it does not.
+
 ## Changed File Groups
 
 Greenhouse classifies changed files before routing them.
@@ -113,6 +125,9 @@ generated output
 Warnings are severity-based. Advisory and warning findings keep the finish gate
 visible without mutating docs. Guarded and blocking findings require review or
 repair before the repo should be treated as fully tended.
+
+`docs.yaml` does not authorize silent prose edits. It only improves impact
+targeting so an agent can see which docs deserve review.
 
 ## Repeated Failures
 

@@ -7,6 +7,7 @@ import { describe, expect, it } from "vitest";
 import { commandIndexSchema } from "../src/schemas/command-index.js";
 import { contextManifestSchema } from "../src/schemas/context-manifest.js";
 import { evidenceSchema } from "../src/schemas/evidence.js";
+import { docsRootSchema } from "../src/schemas/docs-root.js";
 import { parseYamlWithSchema } from "../src/schemas/common.js";
 import { projectSchema } from "../src/schemas/project.js";
 import { repoMapSchema } from "../src/schemas/repo-map.js";
@@ -47,6 +48,16 @@ describe("greenhouse schemas", () => {
     expect(validation.modes?.guarded.required).toHaveLength(3);
     expect(validation.paths?.["src/engine/sru/**"].mode).toBe("guarded");
     expect(validation.risks?.["financial-calculation"].mode).toBe("guarded");
+  });
+
+  it("validates roots/docs.yaml with tracked ownership", () => {
+    const docs = parseYamlWithSchema(
+      readFixture("docs-root.valid.yaml"),
+      docsRootSchema,
+    );
+
+    expect(docs.tracked_docs[0]?.path).toBe("README.md");
+    expect(docs.tracked_docs[0]?.owns).toContain("package-scripts");
   });
 
   it("validates grown repo-map.yaml", () => {

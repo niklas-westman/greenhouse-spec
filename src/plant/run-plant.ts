@@ -211,7 +211,8 @@ function projectYaml(cwd: string): string {
 function validationYaml(cwd: string): string {
   const scripts = readPackageJson(cwd)?.scripts ?? {};
   const required = [
-    commandIfPresent(scripts, "format:check", "pnpm format:check"),
+    commandIfPresent(scripts, "format:check", "pnpm format:check") ??
+      commandIfPresent(scripts, "lint", "pnpm lint"),
     commandIfPresent(scripts, "typecheck", "pnpm typecheck"),
     commandIfPresent(scripts, "test", "pnpm test"),
     commandIfPresent(scripts, "test:cli", "pnpm test:cli"),

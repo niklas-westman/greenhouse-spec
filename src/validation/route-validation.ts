@@ -168,11 +168,11 @@ function inferLightweightPatchCommands(options: {
   }
 
   if (isDocsOnly(options.changedFiles)) {
-    const formatCheck = findCommand(options, "format:check", "pnpm format:check");
-    return formatCheck
+    const styleCheck = findStyleCommand(options);
+    return styleCheck
       ? [
           {
-            ...formatCheck,
+            ...styleCheck,
             reason: "Inferred docs-only patch route.",
           },
         ]
@@ -208,11 +208,11 @@ function inferDocsCommands(options: {
     return [];
   }
 
-  const formatCheck = findCommand(options, "format:check", "pnpm format:check");
-  return formatCheck
+  const styleCheck = findStyleCommand(options);
+  return styleCheck
     ? [
         {
-          ...formatCheck,
+          ...styleCheck,
           reason: "Inferred docs patch route.",
         },
       ]
@@ -232,9 +232,9 @@ function inferCliCommands(
   }
 
   return [
-    findCommand(options, "cli:build", "pnpm cli:build"),
-    findCommand(options, "test:cli", "pnpm test:cli"),
-    findCommand(options, "typecheck", "pnpm typecheck"),
+    findCommand(options, "cli:build"),
+    findCommand(options, "test:cli"),
+    findCommand(options, "typecheck"),
   ]
     .filter((command): command is { id: string; command: string } =>
       Boolean(command),
@@ -255,9 +255,9 @@ function inferAppCommands(options: {
   }
 
   return [
-    findCommand(options, "format:check", "pnpm format:check"),
-    findCommand(options, "typecheck", "pnpm typecheck"),
-    findCommand(options, "test", "pnpm test"),
+    findStyleCommand(options),
+    findCommand(options, "typecheck"),
+    findCommand(options, "test"),
   ]
     .filter((command): command is { id: string; command: string } =>
       Boolean(command),
@@ -284,11 +284,7 @@ function inferConfigCommands(options: {
     return [];
   }
 
-  const doctor = findCommand(
-    options,
-    "check:greenhouse",
-    "greenhouse-spec doctor",
-  );
+  const doctor = findCommand(options, "check:greenhouse");
   return doctor
     ? [
         {
@@ -328,7 +324,6 @@ function findCommand(
     validation: ValidationConfig;
   },
   id: string,
-  fallbackCommand: string,
 ): { id: string; command: string } | null {
   const validationCommands = [
     ...(options.validation.defaults?.required ?? []),
@@ -361,10 +356,14 @@ function findCommand(
     };
   }
 
-  return {
-    id,
-    command: fallbackCommand,
-  };
+  return null;
+}
+
+function findStyleCommand(options: {
+  commandIndex?: CommandIndex;
+  validation: ValidationConfig;
+}): { id: string; command: string } | null {
+  return findCommand(options, "format:check") ?? findCommand(options, "lint");
 }
 
 function isDocsOnly(changedFiles: string[]): boolean {

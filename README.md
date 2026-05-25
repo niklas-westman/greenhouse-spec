@@ -116,6 +116,11 @@ validation selected but not executed by `status`, or repeated unresolved
 failures from generated evidence. Degraded status is advisory and exits
 successfully; install or structural failures still return `fail`.
 
+When latest passing evidence exactly covers the current routed files and
+commands, `status` treats changed validation as covered. This lets a dirty repo
+stay understandable after `verify --changed --write-evidence` has already proven
+the current route.
+
 When only generated `.greenhouse/grown/**`, `.greenhouse/evidence/**`, or
 `.greenhouse/reports/**` files are dirty, `status` reports that as
 `generated-only dirty`; those files do not affect validation routing.
@@ -260,13 +265,18 @@ Declarion
 Sourcer
   Polyglot workspace with React frontend, Java/Maven backend, API spec, and infra.
 
-Milibry
-  React/Vite app with generated DB artifacts, SQLite, ingest/query scripts, and
-  Playwright screenshot validation.
+Ensember
+  React/Vite desktop app with Tauri, Rust/Cargo backend, and local runtime state.
 ```
 
 This gives Greenhouse a practical spread of repo shapes without trying to solve
 every ecosystem at once.
+
+Run the read-only local alignment suite with:
+
+```bash
+pnpm alignment:check
+```
 
 ## Development
 

@@ -14,6 +14,7 @@ import { parse as parseYaml } from "yaml";
 import { afterEach, describe, expect, it } from "vitest";
 
 import { createProgram } from "../src/cli.js";
+import { writeEvidence } from "../src/evidence/write-evidence.js";
 import { runInit } from "../src/lifecycle/run-init.js";
 import { runUpdate } from "../src/lifecycle/run-update.js";
 import { greenhouseCommandForRepo } from "../src/native-scripts/package-script-proposals.js";
@@ -129,6 +130,85 @@ describe("lifecycle commands", () => {
       }),
     );
     expect(formatStatusReport(report)).toContain("Status: degraded");
+  });
+
+  it("status passes when latest evidence covers the current changed route", () => {
+    const repo = createHealthyRepo();
+    writeFileSync(join(repo, "README.md"), "# Lifecycle fixture\n\nChanged.\n", "utf8");
+    const pending = runStatus({ cwd: repo });
+    writePassingEvidence(repo, pending.verify.route);
+
+    const report = runStatus({ cwd: repo });
+    const output = formatStatusReport(report);
+
+    expect(report.ok).toBe(true);
+    expect(report.overallStatus).toBe("pass");
+    expect(report.evidenceCoverage).toMatchObject({
+      covered: true,
+      status: "pass",
+    });
+    expect(report.health).toContainEqual(
+      expect.objectContaining({
+        id: "changed-validation",
+        state: "pass",
+        summary: "latest passing evidence covers current route.",
+      }),
+    );
+    expect(output).toContain("latest passing evidence covers current route");
+  });
+
+  it("status degrades when latest matching evidence failed", () => {
+    const repo = createHealthyRepo();
+    writeFileSync(join(repo, "README.md"), "# Lifecycle fixture\n\nChanged.\n", "utf8");
+    const pending = runStatus({ cwd: repo });
+    writeEvidence({
+      cwd: repo,
+      route: pending.verify.route,
+      commandResults: pending.verify.route.commands.map((command) => ({
+        command: command.command,
+        result: "fail" as const,
+        exitCode: 1,
+        output: "TypeError: validation failed",
+      })),
+      noPrune: true,
+    });
+
+    const report = runStatus({ cwd: repo });
+
+    expect(report.overallStatus).toBe("degraded");
+    expect(report.evidenceCoverage).toMatchObject({
+      covered: false,
+      status: "fail",
+      reason: "latest matching evidence did not pass.",
+    });
+  });
+
+  it("status degrades when latest evidence does not match the current route", () => {
+    const repo = createHealthyRepo();
+    writeFileSync(join(repo, "README.md"), "# Lifecycle fixture\n\nChanged.\n", "utf8");
+    const pending = runStatus({ cwd: repo });
+    writeEvidence({
+      cwd: repo,
+      route: {
+        ...pending.verify.route,
+        changedFiles: ["package.json"],
+      },
+      commandResults: pending.verify.route.commands.map((command) => ({
+        command: command.command,
+        result: "pass" as const,
+        exitCode: 0,
+        output: "ok",
+      })),
+      noPrune: true,
+    });
+
+    const report = runStatus({ cwd: repo });
+
+    expect(report.overallStatus).toBe("degraded");
+    expect(report.evidenceCoverage).toMatchObject({
+      covered: false,
+      reason: "latest evidence does not match current routed files and commands.",
+    });
   });
 
   it("status identifies generated-only dirty trees without routing validation", () => {
@@ -248,6 +328,10 @@ describe("lifecycle commands", () => {
         overallStatus: "degraded",
         generatedOnlyDirty: true,
         nextCommand: "review repeated failures before assuming validation baseline is healthy",
+        nextAction: {
+          kind: "review",
+          command: null,
+        },
       });
       expect(parsed.health).toContainEqual(
         expect.objectContaining({
@@ -273,6 +357,10 @@ describe("lifecycle commands", () => {
 
     expect(parsed.generatedOnlyDirty).toBe(true);
     expect(parsed.changedValidation.routedFiles).toEqual([]);
+    expect(parsed.changedValidation.evidenceCoverage).toMatchObject({
+      covered: true,
+      reason: "no routed files require evidence.",
+    });
     expect(parsed.changedValidation.groups["greenhouse-generated"]).toEqual([
       ".greenhouse/evidence/",
     ]);
@@ -384,6 +472,23 @@ function writeRepeatedFailureSignature(repo: string): void {
     ].join("\n"),
     "utf8",
   );
+}
+
+function writePassingEvidence(
+  repo: string,
+  route: ReturnType<typeof runStatus>["verify"]["route"],
+): void {
+  writeEvidence({
+    cwd: repo,
+    route,
+    commandResults: route.commands.map((command) => ({
+      command: command.command,
+      result: "pass" as const,
+      exitCode: 0,
+      output: "ok",
+    })),
+    noPrune: true,
+  });
 }
 
 function initGitRepo(repo: string): void {

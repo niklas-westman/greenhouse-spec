@@ -90,6 +90,42 @@ describe("structured proposals", () => {
     );
   });
 
+  it("generates Tauri Rust validation seed proposals for Ensember-like repos", () => {
+    const repo = createEnsemberLikeRepo();
+    runPlant({ cwd: repo });
+    runInspect({ cwd: repo });
+
+    const routeProposals = readValidationProposals(repo).proposals.filter(
+      (proposal) => proposal.kind === "validation-route",
+    );
+    const routePatterns = routeProposals.map(
+      (proposal) => proposal.validation_route.pattern,
+    );
+
+    expect(routePatterns).toEqual(
+      expect.arrayContaining([
+        "src-tauri/src/**",
+        "src-tauri/Cargo.toml",
+        "src-tauri/Cargo.lock",
+      ]),
+    );
+    expect(routeProposals).toContainEqual(
+      expect.objectContaining({
+        id: "validation-route:src-tauri-src",
+        validation_route: expect.objectContaining({
+          rule: expect.objectContaining({
+            required: [
+              {
+                id: "test:tauri",
+                command: "cd src-tauri && cargo test",
+              },
+            ],
+          }),
+        }),
+      }),
+    );
+  });
+
   it("generates validation seed proposals for greenhouse-spec itself", () => {
     const repo = createGreenhouseSpecLikeRepo();
     runPlant({ cwd: repo });
@@ -465,6 +501,40 @@ function createMilibryLikeRepo(): string {
       typescript: "5.6.3",
       vite: "5.4.10",
       vitest: "2.1.4",
+    },
+  });
+  return repo;
+}
+
+function createEnsemberLikeRepo(): string {
+  const repo = createTempRepo("ensember");
+  mkdirSync(join(repo, "src"), { recursive: true });
+  mkdirSync(join(repo, "src-tauri", "src"), { recursive: true });
+  writeFileSync(join(repo, "pnpm-lock.yaml"), "lockfileVersion: '9.0'\n");
+  writeFileSync(
+    join(repo, "src-tauri", "Cargo.toml"),
+    ["[package]", 'name = "ensember"', 'version = "0.1.0"', ""].join("\n"),
+  );
+  writeFileSync(join(repo, "src-tauri", "Cargo.lock"), "# lock\n");
+  writePackageJson(repo, {
+    name: "ensember",
+    scripts: {
+      build: "tsc -b && vite build",
+      lint: "eslint .",
+      test: "vitest run",
+      typecheck: "tsc -b --pretty false",
+      tauri: "tauri",
+      "tauri:dev": "tauri dev",
+    },
+    dependencies: {
+      "@tauri-apps/api": "2.11.0",
+      react: "19.2.6",
+    },
+    devDependencies: {
+      "@tauri-apps/cli": "2.11.2",
+      typescript: "5.9.3",
+      vite: "7.2.4",
+      vitest: "4.0.14",
     },
   });
   return repo;

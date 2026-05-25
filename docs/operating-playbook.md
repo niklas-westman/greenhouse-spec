@@ -18,6 +18,11 @@ context an agent should not ignore, such as pending changed-file validation or
 repeated unresolved failures. If it fails, repair the install or structural drift
 before trusting validation routing.
 
+If the latest passing evidence exactly matches the current routed files and
+commands, `status` keeps changed validation passing. If the route changed after
+that evidence was written, it degrades and points back to
+`verify --changed --write-evidence`.
+
 ## Before Push
 
 Run:
@@ -118,6 +123,25 @@ Evaluate whether the generated routes are both scoped and sufficient. A new repo
 shape should improve Greenhouse's general detection only when the behavior is
 useful beyond that one repo. For existing installs, use `greenhouse-spec update
 --dry-run` before `greenhouse-spec update` to refresh helpers and metadata.
+
+## When Changing Greenhouse Itself
+
+Run the repo's normal checks first:
+
+```bash
+pnpm check
+```
+
+Then run the local alignment suite before trusting the change across repo
+styles:
+
+```bash
+pnpm alignment:check
+```
+
+The alignment suite is read-only. It verifies Declarion, Sourcer, and Ensember
+contracts without writing generated files, proposals, reports, or evidence in
+those target repos.
 
 ## Agent Rules Of Thumb
 

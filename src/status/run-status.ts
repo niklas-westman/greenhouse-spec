@@ -2,10 +2,12 @@ import { existsSync, readdirSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
 
 import { runDoctor, type DoctorReport } from "../doctor/run-doctor.js";
+import { readEvidenceIndex } from "../evidence/evidence-index.js";
 import {
   readFailureSignatures,
   repeatedFailureSummaries,
 } from "../evidence/failure-signatures.js";
+import type { EvidenceIndex } from "../schemas/evidence-index.js";
 import { runTend, type TendReport } from "../tend/run-tend.js";
 import { runVerify, type VerifyReport } from "../verify/run-verify.js";
 
@@ -24,12 +26,26 @@ export type HealthCategory = {
   nextCommand?: string;
 };
 
+export type NextAction = {
+  kind: "command" | "review" | "none";
+  label: string;
+  command: string | null;
+};
+
+export type EvidenceCoverage = {
+  covered: boolean;
+  path: string | null;
+  status: "pass" | "fail" | "missing";
+  reason: string;
+};
+
 export type StatusReport = {
   cwd: string;
   ok: boolean;
   overallStatus: HealthState;
   health: HealthCategory[];
   generatedOnlyDirty: boolean;
+  evidenceCoverage: EvidenceCoverage;
   doctor: DoctorReport;
   tend: TendReport;
   verify: VerifyReport;
@@ -43,10 +59,15 @@ export function runStatus(options: { cwd: string }): StatusReport {
   const verify = runVerify({ cwd: options.cwd, changed: true, dryRun: true });
   const repeatedFailures = repeatedFailureSummaries(readFailureSignatures(options.cwd));
   const latestEvidencePath = findLatestEvidence(options.cwd);
+  const evidenceCoverage = routeEvidenceCoverage({
+    evidenceIndex: readEvidenceIndex(options.cwd),
+    verify,
+  });
   const health = buildHealthCategories({
     doctor,
     tend,
     verify,
+    evidenceCoverage,
     repeatedFailures,
     latestEvidencePath,
   });
@@ -58,6 +79,7 @@ export function runStatus(options: { cwd: string }): StatusReport {
     overallStatus,
     health,
     generatedOnlyDirty: isGeneratedOnlyDirty(verify),
+    evidenceCoverage,
     doctor,
     tend,
     verify,
@@ -124,6 +146,7 @@ export function formatStatusReport(report: StatusReport): string {
       lines.push(`- command: ${command.command} (${command.reason})`);
     }
   }
+  lines.push(`- evidence coverage: ${report.evidenceCoverage.reason}`);
 
   lines.push("", "## Repeated Failures", "");
   if (report.repeatedFailures.length === 0) {
@@ -161,10 +184,12 @@ export function formatStatusJsonReport(report: StatusReport): string {
         groups: report.verify.classification.groups,
         commands: report.verify.route.commands,
         skippedValidation: report.verify.route.skippedValidation,
+        evidenceCoverage: report.evidenceCoverage,
       },
       repeatedFailures: report.repeatedFailures,
       latestEvidencePath: report.latestEvidencePath,
       nextCommand: recommendedNextCommand(report),
+      nextAction: recommendedNextAction(report),
     },
     null,
     2,
@@ -180,20 +205,50 @@ function nextCommand(report: StatusReport): string {
 }
 
 function recommendedNextCommand(report: StatusReport): string | null {
-  return report.health.find((item) => item.nextCommand)?.nextCommand ?? null;
+  const action = recommendedNextAction(report);
+  if (action.kind === "none") {
+    return null;
+  }
+  return action.command ?? action.label;
+}
+
+function recommendedNextAction(report: StatusReport): NextAction {
+  const next = report.health.find((item) => item.nextCommand)?.nextCommand;
+  if (!next) {
+    return {
+      kind: "none",
+      label: "No action needed.",
+      command: null,
+    };
+  }
+
+  if (next.startsWith("greenhouse-spec ")) {
+    return {
+      kind: "command",
+      label: `Run ${next}.`,
+      command: next,
+    };
+  }
+
+  return {
+    kind: "review",
+    label: next,
+    command: null,
+  };
 }
 
 function buildHealthCategories(options: {
   doctor: DoctorReport;
   tend: TendReport;
   verify: VerifyReport;
+  evidenceCoverage: EvidenceCoverage;
   repeatedFailures: ReturnType<typeof repeatedFailureSummaries>;
   latestEvidencePath: string | null;
 }): HealthCategory[] {
   return [
     installHealth(options.doctor),
     selfTendingHealth(options.tend),
-    changedValidationHealth(options.verify),
+    changedValidationHealth(options.verify, options.evidenceCoverage),
     repeatedFailuresHealth(options.repeatedFailures),
     evidenceHealth(options.repeatedFailures, options.latestEvidencePath),
   ];
@@ -238,7 +293,10 @@ function selfTendingHealth(tend: TendReport): HealthCategory {
   };
 }
 
-function changedValidationHealth(verify: VerifyReport): HealthCategory {
+function changedValidationHealth(
+  verify: VerifyReport,
+  evidenceCoverage: EvidenceCoverage,
+): HealthCategory {
   if (!verify.ok) {
     return {
       id: "changed-validation",
@@ -249,12 +307,30 @@ function changedValidationHealth(verify: VerifyReport): HealthCategory {
     };
   }
 
+  if (verify.route.changedFiles.length === 0) {
+    return {
+      id: "changed-validation",
+      label: "Changed validation",
+      state: "pass",
+      summary: "no routed changed-file validation is pending.",
+    };
+  }
+
+  if (evidenceCoverage.covered) {
+    return {
+      id: "changed-validation",
+      label: "Changed validation",
+      state: "pass",
+      summary: "latest passing evidence covers current route.",
+    };
+  }
+
   if (verify.route.commands.length > 0) {
     return {
       id: "changed-validation",
       label: "Changed validation",
       state: "degraded",
-      summary: `${verify.route.commands.length} validation command(s) selected but not executed by status.`,
+      summary: `${verify.route.commands.length} validation command(s) selected without matching passing evidence.`,
       nextCommand: "greenhouse-spec verify --changed --write-evidence",
     };
   }
@@ -328,6 +404,70 @@ function isGeneratedOnlyDirty(verify: VerifyReport): boolean {
     verify.classification.groups["greenhouse-generated"].length ===
       verify.classification.all.length
   );
+}
+
+function routeEvidenceCoverage(options: {
+  evidenceIndex: EvidenceIndex | null;
+  verify: VerifyReport;
+}): EvidenceCoverage {
+  const currentFiles = options.verify.route.changedFiles;
+  const currentCommands = options.verify.route.commands.map((command) => command.command);
+
+  if (currentFiles.length === 0) {
+    return {
+      covered: true,
+      path: null,
+      status: "pass",
+      reason: "no routed files require evidence.",
+    };
+  }
+
+  const latest = options.evidenceIndex?.recent[0];
+  if (!latest) {
+    return {
+      covered: false,
+      path: null,
+      status: "missing",
+      reason: "no evidence is indexed for the current route.",
+    };
+  }
+
+  const sameFiles = sameSet(currentFiles, latest.changed_files ?? []);
+  const sameCommands = sameSet(currentCommands, latest.commands ?? []);
+  if (!sameFiles || !sameCommands) {
+    return {
+      covered: false,
+      path: latest.path,
+      status: latest.status ?? "missing",
+      reason: "latest evidence does not match current routed files and commands.",
+    };
+  }
+
+  if (latest.status !== "pass") {
+    return {
+      covered: false,
+      path: latest.path,
+      status: latest.status ?? "missing",
+      reason: "latest matching evidence did not pass.",
+    };
+  }
+
+  return {
+    covered: true,
+    path: latest.path,
+    status: "pass",
+    reason: "latest passing evidence covers current route.",
+  };
+}
+
+function sameSet(left: string[], right: string[]): boolean {
+  if (left.length !== right.length) {
+    return false;
+  }
+
+  const normalizedLeft = [...left].sort();
+  const normalizedRight = [...right].sort();
+  return normalizedLeft.every((item, index) => item === normalizedRight[index]);
 }
 
 function findLatestEvidence(cwd: string): string | null {

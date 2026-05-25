@@ -15,6 +15,11 @@ export const evidenceIndexSchema = z.object({
       path: z.string().min(1),
       modified_at: z.union([z.string().min(1), z.date()]),
       summary: z.string().min(1),
+      status: z.enum(["pass", "fail"]).optional(),
+      mode: z.string().min(1).optional(),
+      changed_files: z.array(z.string()).optional(),
+      commands: z.array(z.string()).optional(),
+      manual_checks: z.array(z.string()).optional(),
     }),
   ),
 });

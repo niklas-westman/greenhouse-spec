@@ -1,0 +1,186 @@
+import type { RepoShape } from "../schemas/repo-shape.js";
+
+export type ImpactSeverity = "advisory" | "warning" | "guarded" | "blocking";
+
+export type ImpactWarning = {
+  id: string;
+  severity: ImpactSeverity;
+  kind:
+    | "documentation-drift"
+    | "validation-route-drift"
+    | "generated-boundary"
+    | "generated-output-drift"
+    | "repo-shape-drift";
+  changedFiles: string[];
+  affected: string[];
+  reason: string;
+};
+
+export function detectChangeImpact(options: {
+  changedFiles: string[];
+  repoShape?: RepoShape;
+}): ImpactWarning[] {
+  const warnings: ImpactWarning[] = [];
+  const changedFiles = uniqueSorted(options.changedFiles);
+  const add = (warning: ImpactWarning) => {
+    if (warning.changedFiles.length > 0) {
+      warnings.push({
+        ...warning,
+        changedFiles: uniqueSorted(warning.changedFiles),
+        affected: uniqueSorted(warning.affected),
+      });
+    }
+  };
+
+  add({
+    id: "impact.package-scripts-docs",
+    severity: "warning",
+    kind: "documentation-drift",
+    changedFiles: changedFiles.filter(isPackageJson),
+    affected: ["README.md", "docs/setup.md", ".greenhouse/roots/validation.yaml"],
+    reason:
+      "package.json changed; setup docs and Greenhouse validation roots may describe stale scripts.",
+  });
+
+  add({
+    id: "impact.cli-docs",
+    severity: "advisory",
+    kind: "documentation-drift",
+    changedFiles: changedFiles.filter(isCliSource),
+    affected: ["README.md", "docs/cli.md"],
+    reason: "CLI source changed; CLI docs, examples, or help text may be stale.",
+  });
+
+  add({
+    id: "impact.api-spec-generated",
+    severity: "guarded",
+    kind: "generated-output-drift",
+    changedFiles: changedFiles.filter(isApiSpec),
+    affected: ["docs/api.md", "generated API clients or server stubs"],
+    reason:
+      "API contract changed; generated clients/server stubs and API docs may need regeneration or review.",
+  });
+
+  add({
+    id: "impact.env-docs",
+    severity: "warning",
+    kind: "documentation-drift",
+    changedFiles: changedFiles.filter(isEnvOrConfigSchema),
+    affected: [".env.example", "docs/deployment.md", "README.md"],
+    reason:
+      "environment or configuration schema changed; setup and deployment docs may be stale.",
+  });
+
+  add({
+    id: "impact.workspace-shape",
+    severity: "warning",
+    kind: "repo-shape-drift",
+    changedFiles: changedFiles.filter(isWorkspaceConfig),
+    affected: [".greenhouse/grown/repo-shape.yaml", ".greenhouse/roots/validation.yaml"],
+    reason:
+      "workspace configuration changed; repo shape, package scopes, and validation routes may need refresh.",
+  });
+
+  add({
+    id: "impact.ci-validation-docs",
+    severity: "warning",
+    kind: "validation-route-drift",
+    changedFiles: changedFiles.filter(isCiWorkflow),
+    affected: ["README.md", "docs/setup.md", ".greenhouse/roots/validation.yaml"],
+    reason:
+      "CI workflow changed; local validation docs and Greenhouse routes may need review.",
+  });
+
+  add({
+    id: "impact.tauri-packaging",
+    severity: "advisory",
+    kind: "documentation-drift",
+    changedFiles: changedFiles.filter(isTauriPath),
+    affected: ["docs/desktop.md", "README.md"],
+    reason: "Tauri/Rust desktop files changed; packaging or desktop runtime docs may be affected.",
+  });
+
+  add({
+    id: "impact.generated-boundary",
+    severity: "guarded",
+    kind: "generated-boundary",
+    changedFiles: changedFiles.filter((file) =>
+      isGeneratedOutput(file, options.repoShape),
+    ),
+    affected: ["source generator", ".greenhouse/roots/validation.yaml"],
+    reason:
+      "generated output changed; verify the source generator or boundary rule instead of treating generated files as authored source.",
+  });
+
+  return uniqueWarnings(warnings);
+}
+
+function isPackageJson(file: string): boolean {
+  return file.endsWith("package.json");
+}
+
+function isCliSource(file: string): boolean {
+  return file.startsWith("src/cli/") || file.includes("/src/cli/");
+}
+
+function isApiSpec(file: string): boolean {
+  const lower = file.toLowerCase();
+  return (
+    lower.endsWith("openapi.yaml") ||
+    lower.endsWith("openapi.yml") ||
+    lower.endsWith("openapi.json") ||
+    lower.endsWith("api.yaml") ||
+    lower.endsWith("api.yml")
+  );
+}
+
+function isEnvOrConfigSchema(file: string): boolean {
+  const lower = file.toLowerCase();
+  return (
+    lower.endsWith(".env.example") ||
+    lower.endsWith("env.schema.ts") ||
+    lower.endsWith("env.schema.js") ||
+    lower.includes("/config/schema") ||
+    lower.includes("/env/schema")
+  );
+}
+
+function isWorkspaceConfig(file: string): boolean {
+  return (
+    file === "pnpm-workspace.yaml" ||
+    file === "turbo.json" ||
+    file === "nx.json" ||
+    file.endsWith("/pnpm-workspace.yaml")
+  );
+}
+
+function isCiWorkflow(file: string): boolean {
+  return file.startsWith(".github/workflows/");
+}
+
+function isTauriPath(file: string): boolean {
+  return file.startsWith("src-tauri/") || file.includes("/src-tauri/");
+}
+
+function isGeneratedOutput(file: string, repoShape?: RepoShape): boolean {
+  const generated = repoShape?.generated ?? [];
+  return generated
+    .filter((item) => !item.path.startsWith(".greenhouse/"))
+    .some((item) => file === item.path.replace(/\/$/, "") || file.startsWith(item.path));
+}
+
+function uniqueWarnings(warnings: ImpactWarning[]): ImpactWarning[] {
+  const seen = new Set<string>();
+  return warnings.filter((warning) => {
+    const key = `${warning.id}\0${warning.changedFiles.join("\0")}`;
+    if (seen.has(key)) {
+      return false;
+    }
+    seen.add(key);
+    return true;
+  });
+}
+
+function uniqueSorted(items: string[]): string[] {
+  return [...new Set(items)].sort();
+}

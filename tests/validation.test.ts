@@ -673,6 +673,47 @@ describe("validation routing and evidence", () => {
     expect(formatVerifyReport(report)).toContain("- skipped:");
   });
 
+  it("prints impact warnings in dry-run reports", () => {
+    const repo = createVerifyRepo();
+    writeValidationConfig(repo, "node -e \"process.exit(0)\"");
+
+    const report = runVerify({
+      cwd: repo,
+      paths: ["package.json"],
+      dryRun: true,
+    });
+    const output = formatVerifyReport(report);
+
+    expect(report.impactWarnings).toContainEqual(
+      expect.objectContaining({
+        id: "impact.package-scripts-docs",
+        severity: "warning",
+      }),
+    );
+    expect(output).toContain("- Impact warnings: 1 warning.");
+    expect(output).toContain("## Impact warnings");
+    expect(output).toContain("package.json changed; setup docs");
+  });
+
+  it("flags source fallback validation as a route drift impact", () => {
+    const repo = createVerifyRepo();
+    writeValidationConfig(repo, "node -e \"process.exit(0)\"");
+
+    const report = runVerify({
+      cwd: repo,
+      paths: ["lib/new-area/index.ts"],
+      dryRun: true,
+    });
+
+    expect(report.impactWarnings).toContainEqual(
+      expect.objectContaining({
+        id: "impact.source-fallback-route",
+        severity: "guarded",
+        kind: "validation-route-drift",
+      }),
+    );
+  });
+
   it("writes evidence with selected commands and skipped validation notes", () => {
     const repo = createVerifyRepo();
     writeValidationConfig(repo, "node -e \"process.exit(0)\"");

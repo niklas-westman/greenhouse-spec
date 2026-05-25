@@ -204,6 +204,42 @@ describe("failure signatures", () => {
       existsSync(join(repo, ".greenhouse", "grown", "failure-signatures.yaml")),
     ).toBe(true);
   });
+
+  it("evidence records impact warnings", () => {
+    const repo = createRepoWithEvidence(0);
+    mkdirSync(join(repo, ".greenhouse", "grown"), { recursive: true });
+
+    const result = writeEvidence({
+      cwd: repo,
+      route: {
+        mode: "patch",
+        changedFiles: ["package.json"],
+        risks: [],
+        commands: [],
+        manualChecks: [],
+        skippedValidation: "No commands were selected.",
+        explanations: [],
+      },
+      commandResults: [],
+      impactWarnings: [
+        {
+          id: "impact.package-scripts-docs",
+          severity: "warning",
+          kind: "documentation-drift",
+          changedFiles: ["package.json"],
+          affected: ["README.md"],
+          reason:
+            "package.json changed; setup docs and Greenhouse validation roots may describe stale scripts.",
+        },
+      ],
+      noPrune: true,
+    });
+
+    const evidence = readFileSync(result.path, "utf8");
+
+    expect(evidence).toContain("## Impact warnings");
+    expect(evidence).toContain("| warning | documentation-drift | package.json");
+  });
 });
 
 describe("evidence index", () => {

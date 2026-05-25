@@ -106,6 +106,7 @@ describe("lifecycle commands", () => {
       "pass",
       "pass",
       "pass",
+      "pass",
     ]);
     expect(output).toContain("Greenhouse Status");
     expect(output).toContain("State: pass");
@@ -125,6 +126,7 @@ describe("lifecycle commands", () => {
     expect(output).toContain("## Install Health");
     expect(output).toContain("## Self-tending");
     expect(output).toContain("## Changed Validation");
+    expect(output).toContain("## Impact Warnings");
     expect(output).toContain("## Repeated Failures");
   });
 
@@ -145,6 +147,43 @@ describe("lifecycle commands", () => {
     );
     expect(formatStatusReport(report)).toContain("State: degraded");
     expect(formatStatusReport(report)).toContain("Next: greenhouse-spec tend");
+  });
+
+  it("status reports impact warnings for package script changes", () => {
+    const repo = createHealthyRepo();
+    writePackageJson(repo, {
+      test: "node -e \"process.exit(0)\"",
+      typecheck: "node -e \"process.exit(0)\"",
+      greenhouse: greenhouseCommandForRepo(repo),
+      "check:greenhouse": greenhouseCommandForRepo(repo, "doctor"),
+      "check:changed": greenhouseCommandForRepo(repo, "verify --changed"),
+      "check:changed:evidence": greenhouseCommandForRepo(
+        repo,
+        "verify --changed --write-evidence",
+      ),
+      "validate:scope": greenhouseCommandForRepo(repo, "verify --paths"),
+      tend: greenhouseCommandForRepo(repo, "tend"),
+      "check:tend": greenhouseCommandForRepo(repo, "tend --check"),
+      prepush: "pnpm check:tend && pnpm check:changed:evidence",
+      "new-script": "node -e \"process.exit(0)\"",
+    });
+
+    const report = runStatus({ cwd: repo });
+    const json = JSON.parse(formatStatusJsonReport(report));
+
+    expect(report.verify.impactWarnings).toContainEqual(
+      expect.objectContaining({
+        id: "impact.package-scripts-docs",
+        severity: "warning",
+      }),
+    );
+    expect(formatStatusReport(report)).toContain("Impact: 1 warning");
+    expect(formatStatusVerboseReport(report)).toContain("## Impact Warnings");
+    expect(json.impactWarnings).toContainEqual(
+      expect.objectContaining({
+        id: "impact.package-scripts-docs",
+      }),
+    );
   });
 
   it("status passes when latest evidence covers the current changed route", () => {

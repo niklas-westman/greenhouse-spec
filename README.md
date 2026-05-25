@@ -126,6 +126,13 @@ When only generated `.greenhouse/grown/**`, `.greenhouse/evidence/**`, or
 `.greenhouse/reports/**` files are dirty, `status` reports that as
 `generated-only dirty`; those files do not affect validation routing.
 
+Greenhouse also reports change-impact warnings. These are quiet signals that a
+change may stale a repo assumption beyond tests: package scripts may stale setup
+docs or validation roots, CLI source may stale CLI docs, API specs may require
+generated client review, workspace/CI changes may stale route expectations, and
+source changes that fall back to broad validation may need a scoped route. These
+warnings are visible in `status`, `tend`, `verify --dry-run`, and evidence.
+
 ## The `.greenhouse` Folder
 
 ```text

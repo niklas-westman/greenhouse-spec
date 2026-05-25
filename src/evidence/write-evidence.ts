@@ -8,6 +8,7 @@ import {
   writeFailureSignatures,
 } from "./failure-signatures.js";
 import { pruneGeneratedRecords } from "./prune.js";
+import type { ImpactWarning } from "../impact/detect-change-impact.js";
 import type { CommandExecutionResult } from "../validation/run-command.js";
 import type { ValidationRoute } from "../validation/route-validation.js";
 
@@ -20,6 +21,7 @@ export function writeEvidence(options: {
   route: ValidationRoute;
   commandResults: CommandExecutionResult[];
   failureAnnotations?: FailureAnnotation[];
+  impactWarnings?: ImpactWarning[];
   noPrune?: boolean;
 }): EvidenceWriteResult {
   const evidenceDirectory = join(options.cwd, ".greenhouse", "evidence");
@@ -42,6 +44,7 @@ function formatEvidence(options: {
   route: ValidationRoute;
   commandResults: CommandExecutionResult[];
   failureAnnotations?: FailureAnnotation[];
+  impactWarnings?: ImpactWarning[];
 }): string {
   const lines = [
     `# Verification: verify-${new Date().toISOString().slice(0, 10)}`,
@@ -98,6 +101,24 @@ function formatEvidence(options: {
 
   lines.push(
     "",
+    "## Impact warnings",
+    "",
+    "| Severity | Kind | Changed files | Affected | Reason |",
+    "|---|---|---|---|---|",
+  );
+
+  for (const warning of options.impactWarnings ?? []) {
+    lines.push(
+      `| ${warning.severity} | ${warning.kind} | ${warning.changedFiles.join(", ") || "none"} | ${warning.affected.join(", ") || "none"} | ${sanitizeCell(warning.reason)} |`,
+    );
+  }
+
+  if ((options.impactWarnings ?? []).length === 0) {
+    lines.push("| none | none | none | none | No impact warnings detected. |");
+  }
+
+  lines.push(
+    "",
     "## Blocked or skipped validation",
     "",
     options.route.skippedValidation ?? "No validation was skipped.",
@@ -120,4 +141,8 @@ function formatEvidence(options: {
 
 function summarize(output: string): string {
   return output.replace(/\s+/g, " ").slice(0, 180).replace(/\|/g, "\\|");
+}
+
+function sanitizeCell(value: string): string {
+  return value.replace(/\s+/g, " ").replace(/\|/g, "\\|");
 }

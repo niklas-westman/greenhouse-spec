@@ -15,6 +15,10 @@ import {
   repeatedFailureSummaries,
 } from "../evidence/failure-signatures.js";
 import { pruneGeneratedRecords } from "../evidence/prune.js";
+import {
+  detectChangeImpact,
+  type ImpactWarning,
+} from "../impact/detect-change-impact.js";
 import { buildValidationProposals } from "../proposals/build-proposals.js";
 import type { ValidationProposal } from "../schemas/validation-proposals.js";
 import { getChangedFiles } from "../validation/changed-files.js";
@@ -53,6 +57,7 @@ export type TendReport = {
   latestEvidencePath: string | null;
   proposals: TendProposal[];
   repeatedFailures: ReturnType<typeof repeatedFailureSummaries>;
+  impactWarnings: ImpactWarning[];
   doctor?: DoctorReport;
   verify?: VerifyReport;
   validation: TendValidationSummary;
@@ -76,10 +81,12 @@ export type TendReport = {
 export function runTend(options: { cwd: string; check?: boolean; noPrune?: boolean }): TendReport {
   const changedFiles = safeChangedFiles(options.cwd);
   const latestEvidencePath = findLatestEvidence(options.cwd);
+  const repoShape = discoverRepoShape(options.cwd);
   const latestEvidence = latestEvidencePath
     ? readFileSync(latestEvidencePath, "utf8")
     : "";
   const proposals = buildProposals(changedFiles, latestEvidence);
+  const impactWarnings = detectChangeImpact({ changedFiles, repoShape });
   let repeatedFailures = repeatedFailureSummaries(
     readFailureSignatures(options.cwd),
   );
@@ -93,6 +100,7 @@ export function runTend(options: { cwd: string; check?: boolean; noPrune?: boole
     latestEvidencePath,
     proposals,
     repeatedFailures,
+    impactWarnings,
     validation: {
       executed: false,
       evidenceWritten: false,
@@ -136,6 +144,7 @@ export function runTend(options: { cwd: string; check?: boolean; noPrune?: boole
   }
 
   const dryRun = runVerify({ cwd: options.cwd, changed: true, dryRun: true });
+  report.impactWarnings = dryRun.impactWarnings;
   if (dryRun.route.commands.length === 0) {
     report.verify = dryRun;
     report.validation.reason =
@@ -148,6 +157,7 @@ export function runTend(options: { cwd: string; check?: boolean; noPrune?: boole
       noPrune: options.noPrune,
     });
     report.verify = verify;
+    report.impactWarnings = verify.impactWarnings;
     report.ok = verify.ok;
     report.validation = {
       executed: true,
@@ -175,6 +185,7 @@ function finalTendState(report: TendReport): TendState {
   }
   if (
     report.proposals.length > 0 ||
+    report.impactWarnings.length > 0 ||
     report.repeatedFailures.length > 0 ||
     (report.verify?.route.manualChecks.length ?? 0) > 0
   ) {
@@ -241,6 +252,17 @@ export function formatTendReport(report: TendReport): string {
   lines.push(
     `- evidence written: ${report.validation.evidenceWritten ? report.writes.evidencePath ?? "yes" : "no"}`,
   );
+
+  lines.push("", "## Impact warnings", "");
+  if (report.impactWarnings.length === 0) {
+    lines.push("- none");
+  } else {
+    for (const warning of report.impactWarnings) {
+      lines.push(`- ${warning.severity}: ${warning.reason}`);
+      lines.push(`  - changed: ${warning.changedFiles.join(", ")}`);
+      lines.push(`  - affected: ${warning.affected.join(", ")}`);
+    }
+  }
 
   lines.push("", "## Proposals", "");
 

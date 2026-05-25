@@ -1,8 +1,8 @@
 # Implementation Guide: Lightweight Greenhouse Tending
 
 Created: 2026-05-25
-Status: draft
-Branch: experiment/evidence-coverage-status
+Status: in progress
+Branch: main
 
 ---
 
@@ -19,7 +19,7 @@ This guide MUST be updated during implementation:
 - [ ] Update test coverage map as tests are written
 
 Last updated: 2026-05-25
-Current phase: Phase 5
+Current phase: Phase 6
 
 ---
 
@@ -104,7 +104,7 @@ Preserve the existing command modules and build `greenhouse-spec tend` as a comp
 - [ ] `greenhouse-spec tend` must not silently mutate authored roots, package scripts, or human-owned decisions.
 - [ ] Failed validation commands remain failed; repeated/known failures are explained, never made green.
 - [ ] A changed source file must not appear clean just because no route matched it.
-- [ ] Change-impact documentation warnings are severity-based, not always blocking.
+- [x] Change-impact documentation warnings are severity-based, not always blocking.
 - [ ] Existing commands remain available for compatibility.
 - [ ] Generated `.greenhouse/grown/**` remains disposable.
 - [ ] Evidence must not capture sensitive full logs by default.
@@ -432,7 +432,7 @@ Status: Complete - 2026-05-25
 
 Goal: Add quiet impact warnings that surface stale assumptions without adding ceremony or silently editing docs.
 Depends on: Phase 3 and Phase 4
-Status: Not started
+Status: Complete - 2026-05-25
 
 #### Inputs
 
@@ -466,55 +466,61 @@ Status: Not started
 | Status | `src/status/run-status.ts` | Edit |
 | Tend | `src/tend/run-tend.ts` | Edit |
 | Verify | `src/verify/run-verify.ts` | Edit |
-| Evidence schemas | `src/schemas/evidence.ts` | Edit |
 | Evidence writer | `src/evidence/write-evidence.ts` | Edit |
 | Tests | `tests/impact.test.ts`, `tests/lifecycle.test.ts`, `tests/tend.test.ts`, `tests/evidence.test.ts` | Create/Edit |
 
 #### Tasks
 
-- [ ] Create `ImpactWarning` type and severity model.
+- [x] Create `ImpactWarning` type and severity model.
   - Tool: edit
   - Verify: `pnpm typecheck`
 
-- [ ] Implement pure `detectChangeImpact` from changed files and repo shape.
+- [x] Implement pure `detectChangeImpact` from changed files and repo shape.
   - Tool: edit
   - Verify: `pnpm test:impact`
 
-- [ ] Add impact warnings to status output and JSON.
+- [x] Add impact warnings to status output and JSON.
   - Tool: edit
   - Verify: `pnpm test:lifecycle`
 
-- [ ] Add impact warnings to tend output and final state.
+- [x] Add impact warnings to tend output and final state.
   - Tool: edit
   - Verify: `pnpm test:tend`
 
-- [ ] Add impact warnings to verify dry-run output.
+- [x] Add impact warnings to verify dry-run output.
   - Tool: edit
   - Verify: `pnpm test:validation`
 
-- [ ] Add impact warnings to evidence schema and writer.
+- [x] Add impact warnings to evidence writer.
   - Tool: edit
   - Verify: `pnpm test:evidence`
+
+#### Phase Notes
+
+- Added `ImpactWarning` with severities `advisory`, `warning`, `guarded`, and `blocking`.
+- Added conservative first-pass impact detection for package scripts, CLI source, API specs, env/config schema, generated output, workspace config, CI workflows, Tauri/Rust paths, and fallback source routing.
+- Surfaced impact warnings in `status`, `status --json`, `tend`, `verify --dry-run`, and evidence records.
+- Kept impact warnings advisory/degraded by default; Greenhouse does not mutate docs or authored roots.
 
 #### Tests for This Phase
 
 | Test Type | What to Test | Exists? | Path / Command |
 |---|---|---|---|
-| Unit | Impact warning detection | No - create | `pnpm test:impact` or `pnpm test tests/impact.test.ts` |
-| Unit | Severity mapping | No - create | `pnpm test:impact` |
-| Integration | Status includes impacts | Existing - extend | `pnpm test:lifecycle` |
-| Integration | Tend includes impacts | Existing - extend | `pnpm test:tend` |
-| Integration | Evidence stores impacts | Existing - extend | `pnpm test:evidence` |
+| Unit | Impact warning detection | Yes | `pnpm test:impact` |
+| Unit | Severity mapping | Yes | `pnpm test:impact` |
+| Integration | Status includes impacts | Yes - extended | `pnpm test:lifecycle` |
+| Integration | Tend includes impacts | Yes - extended | `pnpm test:tend` |
+| Integration | Evidence stores impacts | Yes - extended | `pnpm test:evidence` |
 | Type safety | Impact schema integration | Auto | `pnpm typecheck` |
 
 #### Phase Exit Criteria
 
-- [ ] `pnpm test:impact` or equivalent passes.
-- [ ] `pnpm test:lifecycle` passes.
-- [ ] `pnpm test:tend` passes.
-- [ ] `pnpm test:evidence` passes.
-- [ ] `pnpm test:validation` passes.
-- [ ] `pnpm typecheck` passes.
+- [x] `pnpm test:impact` or equivalent passes.
+- [x] `pnpm test:lifecycle` passes.
+- [x] `pnpm test:tend` passes.
+- [x] `pnpm test:evidence` passes.
+- [x] `pnpm test:validation` passes.
+- [x] `pnpm typecheck` passes.
 
 ---
 

@@ -23,6 +23,7 @@
     "test:cli": "vitest run tests/cli.test.ts",
     "test:discovery": "vitest run tests/discovery.test.ts",
     "test:doctor": "vitest run tests/doctor.test.ts",
+    "test:impact": "vitest run tests/impact.test.ts",
     "test:inspect": "vitest run tests/inspect.test.ts",
     "test:native-scripts": "vitest run tests/native-scripts.test.ts",
     "test:plant": "vitest run tests/plant.test.ts",

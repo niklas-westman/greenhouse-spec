@@ -174,7 +174,14 @@ them unless `--dry-run` is used.
 Dry-run output is the validation routing explanation surface. It starts with an
 agent takeaway and validation plan, then shows changed files, changed-file
 groups, routed files, risks, route explanations, selected commands with
-source/reason metadata, manual checks, and skipped/generated validation notes.
+source/reason metadata, impact warnings, manual checks, and skipped/generated
+validation notes.
+
+Impact warnings are stale-assumption signals, not automatic edits. They call out
+cases such as package scripts affecting setup docs, CLI source affecting CLI
+docs, API specs affecting generated clients, generated-output edits, workspace
+config changes, CI workflow changes, and source changes that fell back to broad
+validation instead of a scoped route.
 
 Important options:
 

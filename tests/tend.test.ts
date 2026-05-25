@@ -74,6 +74,45 @@ describe("tend", () => {
     expect(existsSync(report.writes.evidencePath ?? "")).toBe(true);
   });
 
+  it("surfaces impact warnings in the finish gate without mutating roots", () => {
+    const repo = createReadyRepo();
+    const packagePath = join(repo, "package.json");
+    const packageJson = JSON.parse(readFileSync(packagePath, "utf8")) as {
+      scripts: Record<string, string>;
+    };
+    initGitRepo(repo);
+    writeFileSync(
+      packagePath,
+      JSON.stringify(
+        {
+          name: "tend-fixture",
+          scripts: {
+            ...packageJson.scripts,
+            "new-script": "node -e \"process.exit(0)\"",
+          },
+        },
+        null,
+        2,
+      ),
+      "utf8",
+    );
+
+    const report = runTend({ cwd: repo });
+    const output = formatTendReport(report);
+
+    expect(report.state).toBe("warning");
+    expect(report.impactWarnings).toContainEqual(
+      expect.objectContaining({
+        id: "impact.package-scripts-docs",
+        severity: "warning",
+      }),
+    );
+    expect(output).toContain("## Impact warnings");
+    expect(output).toContain("package.json changed; setup docs");
+    expect(report.writes.authoredRootsMutated).toBe(false);
+    expect(report.writes.packageScriptsMutated).toBe(false);
+  });
+
   it("fails when selected validation fails and still writes evidence", () => {
     const repo = createReadyRepo({
       test: "node -e \"process.exit(1)\"",

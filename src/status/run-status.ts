@@ -18,6 +18,7 @@ export type HealthCategory = {
     | "install"
     | "self-tending"
     | "changed-validation"
+    | "impact"
     | "repeated-failures"
     | "evidence";
   label: string;
@@ -103,6 +104,9 @@ export function formatStatusReport(report: StatusReport): string {
   const repeatedFailures = report.repeatedFailures.length === 0
     ? "none."
     : `${report.repeatedFailures.length} repeated failure signature(s).`;
+  const impactWarnings = report.verify.impactWarnings.length === 0
+    ? "none."
+    : impactSummary(report.verify.impactWarnings);
   const evidence = report.latestEvidencePath
     ? report.latestEvidencePath
     : "none.";
@@ -116,6 +120,7 @@ export function formatStatusReport(report: StatusReport): string {
     `Generated-only dirty: ${report.generatedOnlyDirty ? "yes" : "no"}`,
     `Validation: ${validation}`,
     `Drift: ${drift}`,
+    `Impact: ${impactWarnings}`,
     `Repeated failures: ${repeatedFailures}`,
     `Evidence: ${evidence}`,
     `Next: ${recommendedNextCommand(report) ?? "no action needed"}`,
@@ -183,6 +188,17 @@ export function formatStatusVerboseReport(report: StatusReport): string {
   }
   lines.push(`- evidence coverage: ${report.evidenceCoverage.reason}`);
 
+  lines.push("", "## Impact Warnings", "");
+  if (report.verify.impactWarnings.length === 0) {
+    lines.push("- none");
+  } else {
+    for (const warning of report.verify.impactWarnings) {
+      lines.push(`- ${warning.severity}: ${warning.reason}`);
+      lines.push(`  - changed: ${warning.changedFiles.join(", ")}`);
+      lines.push(`  - affected: ${warning.affected.join(", ")}`);
+    }
+  }
+
   lines.push("", "## Repeated Failures", "");
   if (report.repeatedFailures.length === 0) {
     lines.push("- none");
@@ -221,6 +237,7 @@ export function formatStatusJsonReport(report: StatusReport): string {
         skippedValidation: report.verify.route.skippedValidation,
         evidenceCoverage: report.evidenceCoverage,
       },
+      impactWarnings: report.verify.impactWarnings,
       repeatedFailures: report.repeatedFailures,
       latestEvidencePath: report.latestEvidencePath,
       nextCommand: recommendedNextCommand(report),
@@ -284,6 +301,7 @@ function buildHealthCategories(options: {
     installHealth(options.doctor),
     selfTendingHealth(options.tend),
     changedValidationHealth(options.verify, options.evidenceCoverage),
+    impactHealth(options.verify),
     repeatedFailuresHealth(options.repeatedFailures),
     evidenceHealth(options.repeatedFailures, options.latestEvidencePath),
   ];
@@ -397,6 +415,52 @@ function repeatedFailuresHealth(
     state: "pass",
     summary: "no repeated failure signatures observed.",
   };
+}
+
+function impactHealth(verify: VerifyReport): HealthCategory {
+  const warnings = verify.impactWarnings;
+  if (warnings.some((warning) => warning.severity === "blocking")) {
+    return {
+      id: "impact",
+      label: "Impact warnings",
+      state: "fail",
+      summary: impactSummary(warnings),
+      nextCommand: "review blocking impact warnings before finishing work",
+    };
+  }
+
+  if (warnings.some((warning) => warning.severity === "guarded")) {
+    return {
+      id: "impact",
+      label: "Impact warnings",
+      state: "degraded",
+      summary: impactSummary(warnings),
+      nextCommand: "review guarded impact warnings before finishing work",
+    };
+  }
+
+  return {
+    id: "impact",
+    label: "Impact warnings",
+    state: "pass",
+    summary: warnings.length === 0 ? "none detected." : impactSummary(warnings),
+  };
+}
+
+function impactSummary(warnings: VerifyReport["impactWarnings"]): string {
+  if (warnings.length === 0) {
+    return "none.";
+  }
+
+  const counts = warnings.reduce<Record<string, number>>((countsBySeverity, warning) => {
+    countsBySeverity[warning.severity] =
+      (countsBySeverity[warning.severity] ?? 0) + 1;
+    return countsBySeverity;
+  }, {});
+
+  return Object.entries(counts)
+    .map(([severity, count]) => `${count} ${severity}`)
+    .join(", ");
 }
 
 function evidenceHealth(

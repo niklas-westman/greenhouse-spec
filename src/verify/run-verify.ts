@@ -8,6 +8,11 @@ import {
   type FailureAnnotation,
 } from "../evidence/failure-signatures.js";
 import { writeEvidence } from "../evidence/write-evidence.js";
+import { discoverRepoShape } from "../discovery/repo-shape.js";
+import {
+  detectChangeImpact,
+  type ImpactWarning,
+} from "../impact/detect-change-impact.js";
 import { parseYamlWithSchema } from "../schemas/common.js";
 import { validationSchema } from "../schemas/validation.js";
 import { commandIndexSchema } from "../schemas/command-index.js";
@@ -43,6 +48,7 @@ export type VerifyReport = {
   route: ValidationRoute;
   commandResults: CommandExecutionResult[];
   failureAnnotations: FailureAnnotation[];
+  impactWarnings: ImpactWarning[];
   evidencePath?: string;
   classification: ChangedFileClassification;
 };
@@ -79,6 +85,27 @@ export function runVerify(options: VerifyOptions): VerifyReport {
     cwd: options.cwd,
     commandResults,
   });
+  const impactWarnings = detectChangeImpact({
+    changedFiles: classification.all,
+    repoShape: discoverRepoShape(options.cwd),
+  });
+  const fallbackSourceFiles = classification.groups["product-source"].filter(
+    isSourceRouteDriftCandidate,
+  );
+  if (
+    route.explanations.some((explanation) => explanation.kind === "fallback-default") &&
+    fallbackSourceFiles.length > 0
+  ) {
+    impactWarnings.push({
+      id: "impact.source-fallback-route",
+      severity: "guarded",
+      kind: "validation-route-drift",
+      changedFiles: fallbackSourceFiles,
+      affected: [".greenhouse/roots/validation.yaml"],
+      reason:
+        "source files used fallback validation; if this is a new repo area, add a scoped validation route.",
+    });
+  }
   const report: VerifyReport = {
     cwd: options.cwd,
     ok,
@@ -86,6 +113,7 @@ export function runVerify(options: VerifyOptions): VerifyReport {
     route,
     commandResults,
     failureAnnotations,
+    impactWarnings,
     classification,
   };
 
@@ -95,6 +123,7 @@ export function runVerify(options: VerifyOptions): VerifyReport {
       route,
       commandResults,
       failureAnnotations,
+      impactWarnings,
       noPrune: options.noPrune,
     }).path;
   }
@@ -133,6 +162,7 @@ export function formatVerifyReport(report: VerifyReport): string {
     `- Coverage: ${report.route.changedFiles.length}/${consideredFiles.length} file(s) routed for validation.`,
     `- Validation: ${commandCount === 0 ? "no commands selected" : `${commandCount} ${pluralize("command", commandCount)} ${validationAction}`}.`,
     `- Manual checks: ${manualCheckCount === 0 ? "none" : `${manualCheckCount} pending`}.`,
+    `- Impact warnings: ${formatImpactSummary(report.impactWarnings)}.`,
     `- Next: ${formatVerifyNextStep(report)}`,
     "",
     "## Validation plan",
@@ -239,6 +269,17 @@ export function formatVerifyReport(report: VerifyReport): string {
     }
   }
 
+  lines.push("", "## Impact warnings", "");
+  if (report.impactWarnings.length === 0) {
+    lines.push("- none");
+  } else {
+    for (const warning of report.impactWarnings) {
+      lines.push(`- ${warning.severity}: ${warning.reason}`);
+      lines.push(`  - changed: ${warning.changedFiles.join(", ")}`);
+      lines.push(`  - affected: ${warning.affected.join(", ")}`);
+    }
+  }
+
   lines.push("", "## Skipped validation", "");
   lines.push(report.route.skippedValidation ?? "No validation was skipped.");
 
@@ -248,6 +289,26 @@ export function formatVerifyReport(report: VerifyReport): string {
 
   lines.push("");
   return lines.join("\n");
+}
+
+function formatImpactSummary(warnings: ImpactWarning[]): string {
+  if (warnings.length === 0) {
+    return "none";
+  }
+  const counts = warnings
+    .map((warning) => warning.severity)
+    .reduce<Record<string, number>>((countsBySeverity, severity) => {
+      countsBySeverity[severity] = (countsBySeverity[severity] ?? 0) + 1;
+      return countsBySeverity;
+    }, {});
+
+  return Object.entries(counts)
+    .map(([severity, count]) => `${count} ${severity}`)
+    .join(", ");
+}
+
+function isSourceRouteDriftCandidate(file: string): boolean {
+  return /\.(cjs|css|go|java|js|jsx|mjs|rs|scss|ts|tsx|vue)$/i.test(file);
 }
 
 function formatVerifyNextStep(report: VerifyReport): string {

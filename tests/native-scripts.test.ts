@@ -40,6 +40,11 @@ describe("native scripts", () => {
     expect(proposals).toEqual([
       {
         name: "greenhouse",
+        command: expect.stringMatching(/greenhouse-spec\/dist\/cli\.js$/),
+        status: "add",
+      },
+      {
+        name: "greenhouse:status",
         command: expect.stringContaining("greenhouse-spec/dist/cli.js status"),
         status: "add",
       },
@@ -90,12 +95,6 @@ describe("native scripts", () => {
     });
 
     expect(proposePackageScripts(repo)).toEqual([
-      {
-        name: "greenhouse",
-        command: expect.stringContaining("greenhouse-spec/dist/cli.js status"),
-        status: "update",
-        existingCommand: "node ../greenhouse/code/greenhouse-spec/dist/cli.js status",
-      },
       {
         name: "greenhouse:tend",
         command: expect.stringContaining("greenhouse-spec/dist/cli.js tend"),
@@ -175,6 +174,12 @@ describe("native scripts", () => {
       isAcceptedGreenhouseAlias(
         "pnpm greenhouse verify --changed --write-evidence",
         "greenhouse-spec verify --changed --write-evidence",
+      ),
+    ).toBe(true);
+    expect(
+      isAcceptedGreenhouseAlias(
+        "node ../greenhouse/code/greenhouse-spec/dist/cli.js status",
+        "greenhouse-spec",
       ),
     ).toBe(true);
   });

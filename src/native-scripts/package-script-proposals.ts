@@ -13,6 +13,10 @@ export type PackageScriptProposal = {
 const installedAliases: Array<{ name: string; args: string }> = [
   {
     name: "greenhouse",
+    args: "",
+  },
+  {
+    name: "greenhouse:status",
     args: "status",
   },
   {
@@ -95,6 +99,13 @@ export function proposePackageScripts(cwd: string): PackageScriptProposal[] {
     const existingCommand = scripts[alias.name];
 
     if (!existingCommand) {
+      if (
+        alias.name === "greenhouse:status" &&
+        scripts.greenhouse &&
+        isAcceptedGreenhouseAlias(scripts.greenhouse, "greenhouse-spec status")
+      ) {
+        continue;
+      }
       proposals.push({
         name: alias.name,
         command: alias.command,
@@ -108,6 +119,13 @@ export function proposePackageScripts(cwd: string): PackageScriptProposal[] {
     }
 
     if (alias.name === "prepush" && isAcceptedPrepushAlias(existingCommand)) {
+      continue;
+    }
+
+    if (
+      alias.name === "greenhouse" &&
+      isAcceptedGreenhouseAlias(existingCommand, "greenhouse-spec status")
+    ) {
       continue;
     }
 
@@ -176,7 +194,7 @@ export function isAcceptedGreenhouseAlias(
 
   const selfHostedMatch = actualCommand.match(/^pnpm greenhouse(?:\s+(.*))?$/);
   if (selfHostedMatch) {
-    return (selfHostedMatch[1]?.trim() ?? "") === expectedArgs;
+    return isCompatibleGreenhouseArgs(selfHostedMatch[1]?.trim() ?? "", expectedArgs);
   }
 
   const localCliMatch = actualCommand.match(
@@ -188,7 +206,11 @@ export function isAcceptedGreenhouseAlias(
   }
 
   const actualArgs = localCliMatch[4]?.trim() ?? "";
-  return actualArgs === expectedArgs;
+  return isCompatibleGreenhouseArgs(actualArgs, expectedArgs);
+}
+
+function isCompatibleGreenhouseArgs(actualArgs: string, expectedArgs: string): boolean {
+  return actualArgs === expectedArgs || (expectedArgs === "" && actualArgs === "status");
 }
 
 function shellQuotePath(path: string): string {

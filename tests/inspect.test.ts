@@ -87,6 +87,13 @@ describe("inspect", () => {
       expect.objectContaining({
         kind: "package-script",
         name: "greenhouse",
+        command: expect.stringMatching(/greenhouse-spec\/dist\/cli\.js$/),
+      }),
+    );
+    expect(report.proposals).toContainEqual(
+      expect.objectContaining({
+        kind: "package-script",
+        name: "greenhouse:status",
         command: expect.stringContaining("greenhouse-spec/dist/cli.js status"),
       }),
     );

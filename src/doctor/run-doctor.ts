@@ -91,7 +91,8 @@ const schemaFiles: Array<{ path: string; schema: ZodType<unknown> }> = [
 ];
 
 const expectedPackageAliases = new Map([
-  ["greenhouse", "greenhouse-spec status"],
+  ["greenhouse", "greenhouse-spec"],
+  ["greenhouse:status", "greenhouse-spec status"],
   ["greenhouse:tend", "greenhouse-spec tend"],
   ["greenhouse:tend:check", "greenhouse-spec tend --check"],
   ["greenhouse:verify:dry", "greenhouse-spec verify --changed --dry-run"],
@@ -392,7 +393,7 @@ function isAcceptedGreenhouseAlias(
 
   const selfHostedMatch = actualCommand.match(/^pnpm greenhouse(?:\s+(.*))?$/);
   if (selfHostedMatch) {
-    return (selfHostedMatch[1]?.trim() ?? "") === expectedArgs;
+    return isCompatibleGreenhouseArgs(selfHostedMatch[1]?.trim() ?? "", expectedArgs);
   }
 
   const localCliMatch = actualCommand.match(
@@ -404,7 +405,11 @@ function isAcceptedGreenhouseAlias(
   }
 
   const actualArgs = localCliMatch[4]?.trim() ?? "";
-  return actualArgs === expectedArgs;
+  return isCompatibleGreenhouseArgs(actualArgs, expectedArgs);
+}
+
+function isCompatibleGreenhouseArgs(actualArgs: string, expectedArgs: string): boolean {
+  return actualArgs === expectedArgs || (expectedArgs === "" && actualArgs === "status");
 }
 
 function writeDoctorReport(report: DoctorReport): string {

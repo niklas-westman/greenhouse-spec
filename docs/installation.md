@@ -94,7 +94,9 @@ Greenhouse should normally propose these scripts for package-based repos:
 
 ```json
 {
-  "greenhouse": "node ../greenhouse/code/greenhouse-spec/dist/cli.js status",
+  "greenhouse": "node ../greenhouse/code/greenhouse-spec/dist/cli.js",
+  "greenhouse:status": "pnpm greenhouse status",
+  "check:greenhouse": "pnpm greenhouse doctor",
   "greenhouse:tend": "node ../greenhouse/code/greenhouse-spec/dist/cli.js tend",
   "greenhouse:tend:check": "node ../greenhouse/code/greenhouse-spec/dist/cli.js tend --check",
   "greenhouse:verify:dry": "node ../greenhouse/code/greenhouse-spec/dist/cli.js verify --changed --dry-run",

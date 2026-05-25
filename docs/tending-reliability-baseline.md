@@ -358,3 +358,29 @@ Product improvement:
 - Conflict output includes the human-owned collision explanation.
 - Dismissed/skipped proposals point to
   `.greenhouse/roots/proposal-decisions.yaml`.
+
+## Phase 6 After Snapshot: Portable Fixture Alignment
+
+After Phase 6, Greenhouse has a CI-safe alignment suite:
+
+```bash
+pnpm alignment:fixtures
+```
+
+The suite creates temporary repos and proves the agentic behavior that used to
+require local target repos:
+
+- Package script changes surface documentation and validation-root impact.
+- Docs-only changes stay scoped to docs validation.
+- New source areas surface guarded fallback-route impact.
+- Dead validation commands make status fail instead of appearing clean.
+- Generated output edits and API spec changes produce guarded impact warnings.
+- Repeated failures degrade status while `verify` still fails the command.
+- Generated `.greenhouse/**` evidence dirt is excluded from product routing.
+
+Product improvement:
+
+- Greenhouse can now test the repo-tending loop in CI without Declarion,
+  Sourcer, or Ensember being available.
+- Real repo alignment remains valuable, but portable fixture alignment catches
+  regressions before local path-specific validation runs.

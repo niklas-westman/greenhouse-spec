@@ -287,6 +287,17 @@ Default contracts:
 - Sourcer: React workspace frontend plus Java/Maven backend routing.
 - Ensember: React/Vite + Tauri/Rust/Cargo routing, including `src-tauri/**`.
 
+Greenhouse development also has a package script for portable, CI-safe fixture
+scenarios:
+
+```bash
+pnpm alignment:fixtures
+```
+
+That script is test-only. It creates temporary repos for package-script drift,
+docs-only routing, source fallback, dead validation commands, generated
+boundaries, API spec impact, repeated failures, and generated Greenhouse dirt.
+
 ## `evidence prune`
 
 ```bash

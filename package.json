@@ -14,6 +14,7 @@
     "check:changed": "pnpm greenhouse verify --changed",
     "check:changed:evidence": "pnpm greenhouse verify --changed --write-evidence",
     "alignment:check": "pnpm greenhouse alignment",
+    "alignment:fixtures": "vitest run tests/alignment.fixtures.test.ts",
     "validate:scope": "pnpm greenhouse verify --paths",
     "greenhouse:tend": "pnpm greenhouse tend",
     "greenhouse:tend:check": "pnpm greenhouse tend --check",

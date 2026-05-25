@@ -143,6 +143,13 @@ Run the repo's normal checks first:
 pnpm check
 ```
 
+Then run the portable fixture alignment suite. It creates temporary repos and
+checks agentic scenarios that should be stable in CI:
+
+```bash
+pnpm alignment:fixtures
+```
+
 Then run the local alignment suite before trusting the change across repo
 styles:
 

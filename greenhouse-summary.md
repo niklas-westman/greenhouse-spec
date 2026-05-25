@@ -392,10 +392,23 @@ It verifies real repo behavior without mutating target repos:
 - Validation routing for representative paths.
 - Impact warnings.
 
+Greenhouse also has a CI-safe fixture alignment suite:
+
+```bash
+pnpm alignment:fixtures
+```
+
+It creates temporary repos and verifies the agentic scenarios that should not
+depend on Niklas's local project paths: package script drift, docs-only scoped
+validation, new source fallback, dead validation commands, generated output
+edits, API spec impact, repeated failures that stay failing, and generated
+Greenhouse dirt that does not affect routing.
+
 For Greenhouse development, the standard quality gate is:
 
 ```bash
 pnpm check
+pnpm alignment:fixtures
 pnpm alignment:check
 ```
 
@@ -418,6 +431,7 @@ Greenhouse now has:
 - Structured proposals with stable IDs, idempotency keys, preconditions,
   collision handling, dismissals, safe apply, and adoption.
 - Generated Greenhouse artifacts excluded from product validation routing.
+- Portable fixture alignment for CI-safe agentic repo scenarios.
 - Real repo alignment against Declarion, Sourcer, and Ensember.
 - Documentation for installation, command usage, architecture, proposal flow,
   validation routing, and day-to-day operation.
@@ -431,8 +445,8 @@ The next improvements should stay inside the lightweight tending model:
 2. Add better impact rules only where real repo usage proves value.
 3. Make proposal dismissals and decisions easier to review.
 4. Improve evidence summarization and pruning before evidence grows noisy.
-5. Add portable fixture alignment scenarios so CI can test agentic repo
-   situations without local paths.
+5. Add the real repo proof document that shows the agent-facing benefit in
+   Declarion, Sourcer, and Ensember.
 
 Avoid for now:
 

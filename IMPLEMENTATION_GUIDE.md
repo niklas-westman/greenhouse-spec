@@ -630,7 +630,7 @@ Status: Complete - 2026-05-25
 
 Goal: Add CI-safe alignment scenarios that prove the agentic loop without local repo paths.
 Depends on: Phases 1-5
-Status: Not started
+Status: Complete
 
 #### Inputs
 
@@ -649,36 +649,37 @@ Status: Not started
 
 | What | Path | Action |
 |---|---|---|
-| Alignment runner | `src/alignment/run-alignment.ts` | Edit/Create adjacent fixture runner |
-| Alignment command | `src/commands/alignment.ts` | Edit if fixture mode is exposed |
+| Alignment runner | `src/alignment/run-alignment.ts` | No change |
+| Alignment command | `src/commands/alignment.ts` | No change |
 | Package scripts | `package.json` | Edit |
-| Alignment tests | `tests/alignment.test.ts` | Edit |
-| Fixtures | `tests/fixtures/**` or generated temp repos | Create/Edit |
+| Alignment tests | `tests/alignment.fixtures.test.ts` | Create |
+| Fixtures | Generated temp repos | Create in test |
 | Docs | `docs/operating-playbook.md`, `greenhouse-summary.md` | Edit |
 
 #### Tasks
 
-- [ ] Decide whether fixture alignment is a CLI mode or test-only script.
+- [x] Decide whether fixture alignment is a CLI mode or test-only script.
   - Tool: read/edit
   - Verify: guide note and package script added.
+  - Note: fixture alignment is test-only via `pnpm alignment:fixtures`; the public `alignment` command remains focused on local real repos.
 
-- [ ] Add fixture scenarios for package script drift and docs-only scoped validation.
+- [x] Add fixture scenarios for package script drift and docs-only scoped validation.
   - Tool: edit
   - Verify: `pnpm test:alignment`
 
-- [ ] Add fixture scenarios for missing route/new source folder and dead validation command.
+- [x] Add fixture scenarios for missing route/new source folder and dead validation command.
   - Tool: edit
   - Verify: `pnpm test:alignment`
 
-- [ ] Add fixture scenarios for generated output edits and API spec impact.
+- [x] Add fixture scenarios for generated output edits and API spec impact.
   - Tool: edit
   - Verify: `pnpm test:alignment`
 
-- [ ] Add fixture scenario for repeated failure degradation without greenwashing.
+- [x] Add fixture scenario for repeated failure degradation without greenwashing.
   - Tool: edit
   - Verify: `pnpm test:alignment`
 
-- [ ] Add `alignment:fixtures` to `package.json`.
+- [x] Add `alignment:fixtures` to `package.json`.
   - Tool: edit
   - Verify: `pnpm alignment:fixtures`
 
@@ -686,17 +687,17 @@ Status: Not started
 
 | Test Type | What to Test | Exists? | Path / Command |
 |---|---|---|---|
-| Fixture alignment | Agentic repo scenarios | No - create | `pnpm alignment:fixtures` |
+| Fixture alignment | Agentic repo scenarios | Yes | `pnpm alignment:fixtures` |
 | Unit | Existing alignment runner remains stable | Yes - extend | `pnpm test:alignment` |
 | Full package | All behavior still passes | Yes | `pnpm check` |
 
 #### Phase Exit Criteria
 
-- [ ] `pnpm alignment:fixtures` passes.
-- [ ] `pnpm test:alignment` passes.
-- [ ] `pnpm check` passes.
-- [ ] `pnpm alignment:check` passes.
-- [ ] Guide updated with fixture scenario list and status.
+- [x] `pnpm alignment:fixtures` passes.
+- [x] `pnpm test:alignment` passes.
+- [x] `pnpm check` passes.
+- [x] `pnpm alignment:check` passes.
+- [x] Guide updated with fixture scenario list and status.
 
 ---
 
@@ -887,7 +888,7 @@ pnpm alignment:check
 | 3 | Impact Severity Discipline | Complete | pass | pass | 2026-05-25 |
 | 4 | Evidence Summary And Prune Reliability | Complete | pass | pass | 2026-05-25 |
 | 5 | Proposal Review UX Reliability | Complete | pass | pass | 2026-05-25 |
-| 6 | Portable Fixture Alignment | Not started | pending | pending | - |
+| 6 | Portable Fixture Alignment | Complete | pass | pass | 2026-05-25 |
 | 7 | Real Repo Agent-Readiness Proof | Not started | pending | pending | - |
 
 ---

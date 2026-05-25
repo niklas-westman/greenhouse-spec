@@ -19,7 +19,7 @@ This guide MUST be updated during implementation:
 - [ ] Update test coverage map as tests are written
 
 Last updated: 2026-05-25
-Current phase: Phase 7
+Current phase: Phase 8
 
 ---
 
@@ -598,7 +598,7 @@ Status: Complete - 2026-05-25
 
 Goal: Make proposals durable enough to reduce repeated noise without allowing hidden mutation.
 Depends on: Phase 5
-Status: Not started
+Status: Complete - 2026-05-25
 
 #### Inputs
 
@@ -626,36 +626,44 @@ Status: Not started
 
 #### Tasks
 
-- [ ] Audit current proposal schema for ID, status, confidence, target, patch, and managed ownership fields.
+- [x] Audit current proposal schema for ID, status, confidence, target, patch, and managed ownership fields.
   - Tool: read/edit
   - Verify: `pnpm test:proposals`
 
-- [ ] Add idempotency keys and preconditions where V1 proposal kinds need them.
+- [x] Add idempotency keys and preconditions where V1 proposal kinds need them.
   - Tool: edit
   - Verify: `pnpm test:proposals`
 
-- [ ] Add dismissal design to roots without implementing broad UX if too large.
+- [x] Add dismissal design to roots without implementing broad UX if too large.
   - Tool: edit
   - Verify: `pnpm test:proposals`
 
-- [ ] Ensure human-owned collisions remain skipped/conflict.
+- [x] Ensure human-owned collisions remain skipped/conflict.
   - Tool: edit
   - Verify: `pnpm test:proposals`
+
+#### Phase Notes
+
+- Proposal schema now includes `idempotency_key`, `preconditions`, and optional collision metadata.
+- Proposal reports print idempotency and precondition detail for agent readability.
+- Added `.greenhouse/roots/proposal-decisions.yaml` as the authored dismissal ledger.
+- Added `greenhouse-spec proposals dismiss --id <proposal-id> --reason "..."`.
+- Dismissed proposal idempotency keys are marked `skipped` on the next inspect without mutating validation roots or package scripts.
 
 #### Tests for This Phase
 
 | Test Type | What to Test | Exists? | Path / Command |
 |---|---|---|---|
-| Unit | Stable proposal identity | Existing - extend | `pnpm test:proposals` |
-| Unit | Safe apply idempotency | Existing - extend | `pnpm test:proposals` |
-| Unit | Human-owned collisions protected | Existing - extend | `pnpm test:proposals` |
+| Unit | Stable proposal identity | Yes - extended | `pnpm test:proposals` |
+| Unit | Safe apply idempotency | Yes - extended | `pnpm test:proposals` |
+| Unit | Human-owned collisions protected | Yes - extended | `pnpm test:proposals` |
 | Type safety | Proposal schema | Auto | `pnpm typecheck` |
 
 #### Phase Exit Criteria
 
-- [ ] `pnpm test:proposals` passes.
-- [ ] `pnpm typecheck` passes.
-- [ ] `pnpm build` passes.
+- [x] `pnpm test:proposals` passes.
+- [x] `pnpm typecheck` passes.
+- [x] `pnpm build` passes.
 
 ---
 

@@ -18,10 +18,16 @@ const proposalStatusSchema = z.enum([
 
 const proposalBaseSchema = z.object({
   id: z.string().min(1),
+  idempotency_key: z.string().min(1).default("legacy"),
   status: proposalStatusSchema,
   confidence: confidenceSchema,
   reason: z.string().min(1),
   safe: z.boolean(),
+  preconditions: z.array(z.string().min(1)).default([]),
+  collision: z.object({
+    human_owned: z.boolean(),
+    explanation: z.string().min(1).optional(),
+  }).optional(),
 });
 
 export const validationProposalSchema = z.discriminatedUnion("kind", [

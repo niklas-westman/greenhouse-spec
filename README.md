@@ -99,6 +99,9 @@ inspect
 proposals
   Show pending/adoptable/conflict/applied maintenance work.
 
+proposals dismiss
+  Record an authored decision when a proposal should stop reappearing.
+
 apply-proposals --safe
   Apply safe missing package scripts and Greenhouse-managed validation routes.
 

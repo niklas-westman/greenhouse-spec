@@ -105,10 +105,17 @@ Side effects:
 
 ```bash
 greenhouse-spec proposals
+greenhouse-spec proposals dismiss --id <proposal-id> --reason "..."
 ```
 
 Reads `.greenhouse/grown/validation-proposals.yaml` and prints proposal state.
 Run `inspect` first when the repo shape may have changed.
+
+Dismissal writes an authored decision to
+`.greenhouse/roots/proposal-decisions.yaml`. On the next `inspect`, proposals
+with the same idempotency key are marked skipped so intentional non-actions do
+not keep reappearing as drift. Dismissal is for explicit human/agent decisions;
+it does not modify validation routes or package scripts.
 
 ## `apply-proposals`
 

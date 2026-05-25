@@ -7,10 +7,13 @@ export type ProposalsReport = {
   counts: Record<"adoptable" | "applied" | "conflict" | "pending" | "skipped", number>;
   proposals: Array<{
     id: string;
+    idempotencyKey: string;
     kind: string;
     status: string;
     target: string;
     reason: string;
+    preconditions: string[];
+    collision?: string;
   }>;
 };
 
@@ -35,10 +38,13 @@ export function runProposals(options: { cwd: string }): ProposalsReport {
     counts,
     proposals: index.proposals.map((proposal) => ({
       id: proposal.id,
+      idempotencyKey: proposal.idempotency_key,
       kind: proposal.kind,
       status: proposal.status,
       target: proposal.target.path,
       reason: proposal.reason,
+      preconditions: proposal.preconditions,
+      collision: proposal.collision?.explanation,
     })),
   };
 }
@@ -67,6 +73,13 @@ export function formatProposalsReport(report: ProposalsReport): string {
       lines.push(
         `- ${proposal.status}: ${proposal.id} (${proposal.kind}, ${proposal.target}) - ${proposal.reason}`,
       );
+      lines.push(`  - idempotency: ${proposal.idempotencyKey}`);
+      if (proposal.preconditions.length > 0) {
+        lines.push(`  - preconditions: ${proposal.preconditions.join("; ")}`);
+      }
+      if (proposal.collision) {
+        lines.push(`  - collision: ${proposal.collision}`);
+      }
     }
   }
 

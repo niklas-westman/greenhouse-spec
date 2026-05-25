@@ -14,7 +14,9 @@ import { afterEach, describe, expect, it } from "vitest";
 
 import { adoptProposals } from "../src/proposals/adopt-proposals.js";
 import { applyProposals } from "../src/proposals/apply-proposals.js";
+import { dismissProposals } from "../src/proposals/dismiss-proposals.js";
 import { readValidationProposals } from "../src/proposals/read-proposals.js";
+import { formatProposalsReport, runProposals } from "../src/proposals/run-proposals.js";
 import { runInspect } from "../src/inspect/run-inspect.js";
 import { runPlant } from "../src/plant/run-plant.js";
 
@@ -35,6 +37,36 @@ describe("structured proposals", () => {
 
     expect(report.ok).toBe(true);
     expect(existsSync(join(repo, ".greenhouse", "grown", "validation-proposals.yaml"))).toBe(true);
+  });
+
+  it("proposals include idempotency keys and preconditions", () => {
+    const repo = createSourcerLikeRepo();
+    runPlant({ cwd: repo });
+    runInspect({ cwd: repo });
+
+    const proposals = readValidationProposals(repo).proposals;
+    const packageScript = proposals.find(
+      (proposal) => proposal.id === "package-script:check:greenhouse",
+    );
+    const route = proposals.find(
+      (proposal) => proposal.id === "validation-route:frontend-react-src",
+    );
+
+    expect(packageScript).toMatchObject({
+      idempotency_key: "package-script:check:greenhouse",
+      preconditions: expect.arrayContaining([
+        expect.stringContaining("package.json"),
+      ]),
+    });
+    expect(route).toMatchObject({
+      idempotency_key: "validation-route:frontend-react/src/**",
+      preconditions: expect.arrayContaining([
+        expect.stringContaining("frontend-react/src/**"),
+      ]),
+    });
+    expect(formatProposalsReport(runProposals({ cwd: repo }))).toContain(
+      "idempotency: validation-route:frontend-react/src/**",
+    );
   });
 
   it("does not generate validation route proposals for Declarion-like single-package repos", () => {
@@ -201,9 +233,81 @@ describe("structured proposals", () => {
         status: "conflict",
       }),
     );
+    expect(readValidationProposals(repo).proposals).toContainEqual(
+      expect.objectContaining({
+        id: "validation-route:frontend-react-src",
+        collision: expect.objectContaining({
+          human_owned: true,
+          explanation: expect.stringContaining("differs from this proposal"),
+        }),
+      }),
+    );
     expect(updatedValidation.paths["frontend-react/src/**"].required).toEqual([
       { id: "custom", command: "pnpm custom" },
     ]);
+  });
+
+  it("dismisses proposals through an authored decision ledger", () => {
+    const repo = createSourcerLikeRepo();
+    runPlant({ cwd: repo });
+    runInspect({ cwd: repo });
+
+    const report = dismissProposals({
+      cwd: repo,
+      ids: ["validation-route:infra-aws"],
+      reason: "Infra package is reviewed manually in this repo.",
+    });
+    runInspect({ cwd: repo });
+    const decisions = readGreenhouseYaml(repo, "roots/proposal-decisions.yaml");
+    const proposals = readValidationProposals(repo).proposals;
+
+    expect(report.ok).toBe(true);
+    expect(report.results).toContainEqual(
+      expect.objectContaining({
+        id: "validation-route:infra-aws",
+        status: "dismissed",
+      }),
+    );
+    expect(decisions.dismissed).toContainEqual(
+      expect.objectContaining({
+        id: "validation-route:infra-aws",
+        idempotency_key: "validation-route:infra-aws/**",
+        reason: "Infra package is reviewed manually in this repo.",
+      }),
+    );
+    expect(proposals).toContainEqual(
+      expect.objectContaining({
+        id: "validation-route:infra-aws",
+        status: "skipped",
+        reason:
+          "Proposal was dismissed in .greenhouse/roots/proposal-decisions.yaml.",
+      }),
+    );
+  });
+
+  it("dismiss dry-run reports intended decision without writing roots", () => {
+    const repo = createSourcerLikeRepo();
+    runPlant({ cwd: repo });
+    runInspect({ cwd: repo });
+
+    const report = dismissProposals({
+      cwd: repo,
+      ids: ["validation-route:infra-aws"],
+      reason: "Infra package is reviewed manually in this repo.",
+      dryRun: true,
+    });
+
+    expect(report.ok).toBe(true);
+    expect(report.results).toContainEqual(
+      expect.objectContaining({
+        id: "validation-route:infra-aws",
+        status: "dry-run",
+        message: "Would dismiss proposal validation-route:infra-aws.",
+      }),
+    );
+    expect(existsSync(join(repo, ".greenhouse", "roots", "proposal-decisions.yaml"))).toBe(
+      false,
+    );
   });
 
   it("marks equivalent human-owned routes as adoptable", () => {

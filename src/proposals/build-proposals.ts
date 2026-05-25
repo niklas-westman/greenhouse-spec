@@ -13,6 +13,11 @@ import type {
 } from "../schemas/validation-proposals.js";
 import type { RepoShape } from "../schemas/repo-shape.js";
 
+import {
+  isDismissed,
+  readProposalDecisions,
+} from "./proposal-decisions.js";
+
 type RouteRule = Extract<ValidationProposal, { kind: "validation-route" }>;
 type ValidationRule = NonNullable<ValidationConfig["paths"]>[string];
 
@@ -21,10 +26,20 @@ export function buildValidationProposals(options: {
   repoShape: RepoShape;
 }): ValidationProposals {
   const validation = readValidation(options.cwd);
+  const decisions = readProposalDecisions(options.cwd);
   const proposals: ValidationProposal[] = [
     ...buildPackageScriptProposals(options.cwd),
     ...buildRouteProposals(options.cwd, options.repoShape, validation),
-  ];
+  ].map((proposal) =>
+    isDismissed(decisions, proposal.idempotency_key)
+      ? {
+          ...proposal,
+          status: "skipped" as const,
+          reason:
+            "Proposal was dismissed in .greenhouse/roots/proposal-decisions.yaml.",
+        }
+      : proposal,
+  );
 
   return {
     schema_version: 1,
@@ -37,6 +52,7 @@ export function buildValidationProposals(options: {
 function buildPackageScriptProposals(cwd: string): ValidationProposal[] {
   return proposePackageScripts(cwd).map((proposal) => ({
     id: `package-script:${proposal.name}`,
+    idempotency_key: `package-script:${proposal.name}`,
     kind: "package-script",
     status: proposal.status === "collision" ? "conflict" : "pending",
     confidence: "high",
@@ -47,6 +63,17 @@ function buildPackageScriptProposals(cwd: string): ValidationProposal[] {
           ? `Package script "${proposal.name}" uses an accepted Greenhouse alias and can be normalized to the local CLI path.`
           : `Package script "${proposal.name}" is missing.`,
     safe: proposal.status !== "collision",
+    preconditions: [
+      "package.json exists or can be created",
+      `script ${proposal.name} is missing or still matches the generated proposal`,
+    ],
+    collision:
+      proposal.status === "collision"
+        ? {
+            human_owned: true,
+            explanation: `Existing package script "${proposal.name}" is not a Greenhouse-managed alias.`,
+          }
+        : undefined,
     target: {
       path: "package.json",
     },
@@ -529,6 +556,7 @@ function routeProposal(
   },
 ): RouteRule {
   const id = `validation-route:${slug(options.pattern)}`;
+  const idempotencyKey = `validation-route:${options.pattern}`;
   const existingRule = validation?.paths?.[options.pattern];
   const proposedRule = {
     managed_by: "greenhouse-spec" as const,
@@ -544,6 +572,7 @@ function routeProposal(
 
   return {
     id,
+    idempotency_key: idempotencyKey,
     kind: "validation-route",
     status,
     confidence: options.confidence,
@@ -554,6 +583,17 @@ function routeProposal(
           ? `Path rule "${options.pattern}" already exists and matches this proposal; it can be adopted by Greenhouse.`
         : options.reason,
     safe: status !== "conflict",
+    preconditions: [
+      `${options.pattern} is still part of the discovered repo shape`,
+      `path rule ${options.pattern} is missing or managed by greenhouse-spec`,
+    ],
+    collision:
+      status === "conflict"
+        ? {
+            human_owned: true,
+            explanation: `Path rule "${options.pattern}" exists without Greenhouse ownership and differs from this proposal.`,
+          }
+        : undefined,
     target: {
       path: ".greenhouse/roots/validation.yaml",
     },

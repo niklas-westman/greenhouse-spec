@@ -1,10 +1,26 @@
 schema_version: 1
 managed_by: greenhouse-spec
-generated_at: 2026-05-25T15:39:01.329Z
+generated_at: 2026-05-26T09:52:32.034Z
 policy:
   agent_reading: Do not bulk-read evidence. Read specific evidence only when continuing a change, debugging validation, or following a tend/report pointer.
   retention: Keep recent evidence indexed here; archive or prune old records when they no longer help future validation decisions.
+summary:
+  latest_failures_by_command: []
 recent:
+  - path: evidence/2026-05-26T09-52-32-031Z-verify.md
+    modified_at: 2026-05-26T09:52:32.032Z
+    summary: "Verification: verify-2026-05-26; mode patch; files README.md, assets/logo-icon.png"
+    status: pass
+    mode: patch
+    changed_files:
+      - README.md
+      - assets/logo-icon.png
+    commands:
+      - pnpm test:templates
+      - pnpm typecheck
+    manual_checks: []
+    impact_warnings: []
+    failed_commands: []
   - path: evidence/2026-05-25T15-39-01-328Z-verify.md
     modified_at: 2026-05-25T15:39:01.328Z
     summary: "Verification: verify-2026-05-25; mode patch; files none"
@@ -14,6 +30,7 @@ recent:
     commands: []
     manual_checks: []
     impact_warnings: []
+    failed_commands: []
   - path: evidence/2026-05-24T17-01-28-083Z-verify.md
     modified_at: 2026-05-24T20:52:15.428Z
     summary: "Verification: verify-2026-05-24; mode guarded; files README.md, docs/README.md, docs/commands.md, docs/installation.md, docs/operating-playbook.md, src/cli.ts, src/commands/doctor.ts, src/commands/tend.ts, src/commands/verify.ts, src/doctor"
@@ -75,6 +92,7 @@ recent:
       - Review Greenhouse authored config changes before relying on validation routing.
       - Human must review guarded risk notes before merge.
     impact_warnings: []
+    failed_commands: []
   - path: evidence/2026-05-24T16-32-33-409Z-verify.md
     modified_at: 2026-05-24T20:52:15.428Z
     summary: "Verification: verify-2026-05-24; mode guarded; files README.md, docs/README.md, docs/commands.md, docs/installation.md, docs/operating-playbook.md, src/cli.ts, src/commands/doctor.ts, src/commands/tend.ts, src/commands/verify.ts, src/doctor"
@@ -135,6 +153,7 @@ recent:
       - Review Greenhouse authored config changes before relying on validation routing.
       - Human must review guarded risk notes before merge.
     impact_warnings: []
+    failed_commands: []
   - path: evidence/2026-05-24T15-28-21-384Z-verify.md
     modified_at: 2026-05-24T15:28:21.385Z
     summary: "Verification: verify-2026-05-24; mode guarded; files src/doctor/run-doctor.ts, src/native-scripts/package-script-proposals.ts, src/proposals/build-proposals.ts, src/tend/run-tend.ts, tests/doctor.test.ts, tests/native-scripts.test.ts, tests"
@@ -164,6 +183,7 @@ recent:
       - Review Greenhouse self-bootstrap and package validation changes.
       - Human must review guarded risk notes before merge.
     impact_warnings: []
+    failed_commands: []
   - path: evidence/2026-05-24T15-26-54-798Z-verify.md
     modified_at: 2026-05-24T15:26:54.799Z
     summary: "Verification: verify-2026-05-24; mode guarded; files src/doctor/run-doctor.ts, src/native-scripts/package-script-proposals.ts, src/proposals/build-proposals.ts, tests/doctor.test.ts, tests/native-scripts.test.ts, tests/proposals.test.ts, pa"
@@ -190,3 +210,4 @@ recent:
       - Review Greenhouse self-bootstrap and package validation changes.
       - Human must review guarded risk notes before merge.
     impact_warnings: []
+    failed_commands: []

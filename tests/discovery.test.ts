@@ -107,6 +107,10 @@ describe("discovery", () => {
     mkdirSync(join(repo, "src", "engine", "sources"), { recursive: true });
     mkdirSync(join(repo, "src", "engine", "sru"), { recursive: true });
     mkdirSync(join(repo, "src", "engine", "tax"), { recursive: true });
+    mkdirSync(join(repo, "src", "engine", "annual-report"), { recursive: true });
+    mkdirSync(join(repo, "src", "engine", "closeout"), { recursive: true });
+    mkdirSync(join(repo, "src", "engine", "validation"), { recursive: true });
+    mkdirSync(join(repo, "src", "shared", "schemas"), { recursive: true });
 
     expect(discoverRiskIndex(repo).risks).toEqual([
       expect.objectContaining({
@@ -120,6 +124,22 @@ describe("discovery", () => {
       expect.objectContaining({
         id: "financial-calculation",
         paths: ["src/engine/tax/**"],
+      }),
+      expect.objectContaining({
+        id: "financial-reporting-output",
+        paths: ["src/engine/annual-report/**"],
+      }),
+      expect.objectContaining({
+        id: "closeout-output-contract",
+        paths: ["src/engine/closeout/**"],
+      }),
+      expect.objectContaining({
+        id: "readiness-gate-contract",
+        paths: ["src/engine/validation/**"],
+      }),
+      expect.objectContaining({
+        id: "shared-schema-contract",
+        paths: ["src/shared/schemas/**"],
       }),
     ]);
   });

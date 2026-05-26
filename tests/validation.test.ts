@@ -34,6 +34,22 @@ describe("validation routing and evidence", () => {
     expect(getChangedFiles(repo)).toContain("src/cli/new-command.ts");
   });
 
+  it("expands untracked changed directories to file-level paths", () => {
+    const repo = createVerifyRepo();
+    initGitRepo(repo);
+    mkdirSync(join(repo, "src", "engine", "closeout"), { recursive: true });
+    writeFileSync(join(repo, "src", "engine", "closeout", "index.ts"), "export {}\n");
+    writeFileSync(join(repo, "src", "engine", "closeout", "contract.ts"), "export {}\n");
+
+    expect(getChangedFiles(repo)).toEqual(
+      expect.arrayContaining([
+        "src/engine/closeout/index.ts",
+        "src/engine/closeout/contract.ts",
+      ]),
+    );
+    expect(getChangedFiles(repo)).not.toContain("src/engine/closeout/");
+  });
+
   it("selects commands from path rules and risk rules", () => {
     const route = routeValidation({
       changedFiles: ["src/engine/sru/export.ts"],

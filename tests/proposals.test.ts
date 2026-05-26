@@ -90,7 +90,7 @@ describe("structured proposals", () => {
     expect(output).toContain("package-script:greenhouse:tend");
   });
 
-  it("does not generate validation route proposals for Declarion-like single-package repos", () => {
+  it("does not generate validation route proposals for plain single-package repos", () => {
     const repo = createDeclarionLikeRepo();
     runPlant({ cwd: repo });
     runInspect({ cwd: repo });
@@ -98,6 +98,89 @@ describe("structured proposals", () => {
     const proposals = readValidationProposals(repo).proposals;
 
     expect(proposals.filter((proposal) => proposal.kind === "validation-route")).toEqual([]);
+  });
+
+  it("generates targeted route proposals for domain-heavy single-package repos", () => {
+    const repo = createDeclarionDomainRepo();
+    runPlant({ cwd: repo });
+    runInspect({ cwd: repo });
+
+    const routeProposals = readValidationProposals(repo).proposals.filter(
+      (proposal) => proposal.kind === "validation-route",
+    );
+    const routePatterns = routeProposals.map(
+      (proposal) => proposal.validation_route.pattern,
+    );
+
+    expect(routePatterns).toEqual(
+      expect.arrayContaining([
+        "src/engine/annual-report/**",
+        "src/engine/closeout/**",
+        "tests/fixtures/closeout/**",
+        "src/engine/validation/**",
+        "src/shared/schemas/**",
+        "src/data/**",
+      ]),
+    );
+    expect(routeProposals).toContainEqual(
+      expect.objectContaining({
+        id: "validation-route:src-engine-annual-report",
+        validation_route: expect.objectContaining({
+          rule: expect.objectContaining({
+            mode: "guarded",
+            manual: expect.arrayContaining([
+              expect.objectContaining({ id: "financial-reporting-review" }),
+            ]),
+          }),
+        }),
+      }),
+    );
+    expect(routeProposals).toContainEqual(
+      expect.objectContaining({
+        id: "validation-route:src-data",
+        validation_route: expect.objectContaining({
+          rule: expect.objectContaining({
+            mode: "patch",
+            manual: expect.arrayContaining([
+              expect.objectContaining({ id: "declaration-review-surface" }),
+            ]),
+          }),
+        }),
+      }),
+    );
+  });
+
+  it("uses fallback evidence as route proposal context for recognized domain paths", () => {
+    const repo = createDeclarionDomainRepo();
+    mkdirSync(join(repo, ".greenhouse", "evidence"), { recursive: true });
+    writeFileSync(
+      join(repo, ".greenhouse", "evidence", "fallback.md"),
+      [
+        "# Verification",
+        "",
+        "## Summary",
+        "",
+        "- Change mode: patch",
+        "- Changed files: src/engine/annual-report/render.ts",
+        "",
+        "## Impact warnings",
+        "",
+        "| Severity | Kind | Changed files | Affected | Reason | Resolution |",
+        "|---|---|---|---|---|---|",
+        "| guarded | validation-route-drift | src/engine/annual-report/render.ts | .greenhouse/roots/validation.yaml | source files used fallback validation; if this is a new repo area, add a scoped validation route. | Add a scoped validation route. |",
+        "",
+      ].join("\n"),
+      "utf8",
+    );
+    runPlant({ cwd: repo });
+    runInspect({ cwd: repo });
+
+    expect(readValidationProposals(repo).proposals).toContainEqual(
+      expect.objectContaining({
+        id: "validation-route:src-engine-annual-report",
+        reason: expect.stringContaining("Recent evidence showed matching source files using fallback validation."),
+      }),
+    );
   });
 
   it("generates route proposals for Sourcer-like polyglot repos", () => {
@@ -162,6 +245,7 @@ describe("structured proposals", () => {
         "src-tauri/Cargo.lock",
       ]),
     );
+    expect(routePatterns).not.toContain("src/data/**");
     expect(routeProposals).toContainEqual(
       expect.objectContaining({
         id: "validation-route:src-tauri-src",
@@ -555,6 +639,28 @@ function createDeclarionLikeRepo(): string {
   return repo;
 }
 
+function createDeclarionDomainRepo(): string {
+  const repo = createDeclarionLikeRepo();
+  for (const directory of [
+    "src/engine/annual-report",
+    "src/engine/closeout",
+    "src/engine/validation",
+    "src/shared/schemas",
+    "src/data",
+    "tests/fixtures/closeout",
+  ]) {
+    mkdirSync(join(repo, directory), { recursive: true });
+    writeFileSync(join(repo, directory, "example.ts"), "export {}\n");
+  }
+  const packageJson = JSON.parse(readFileSync(join(repo, "package.json"), "utf8")) as {
+    scripts: Record<string, string>;
+  };
+  packageJson.scripts["format:check"] = "prettier --check .";
+  packageJson.scripts["test:cli"] = "vitest run src/cli";
+  writePackageJson(repo, packageJson);
+  return repo;
+}
+
 function createSourcerLikeRepo(): string {
   const repo = createTempRepo("sourcer");
   writeFileSync(join(repo, "pnpm-lock.yaml"), "lockfileVersion: '9.0'\n");
@@ -667,8 +773,10 @@ function createMilibryLikeRepo(): string {
 function createEnsemberLikeRepo(): string {
   const repo = createTempRepo("ensember");
   mkdirSync(join(repo, "src"), { recursive: true });
+  mkdirSync(join(repo, "src", "data"), { recursive: true });
   mkdirSync(join(repo, "src-tauri", "src"), { recursive: true });
   writeFileSync(join(repo, "pnpm-lock.yaml"), "lockfileVersion: '9.0'\n");
+  writeFileSync(join(repo, "src", "data", "settings.ts"), "export {}\n");
   writeFileSync(
     join(repo, "src-tauri", "Cargo.toml"),
     ["[package]", 'name = "ensember"', 'version = "0.1.0"', ""].join("\n"),

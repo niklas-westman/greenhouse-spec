@@ -43,6 +43,42 @@ export function discoverRiskIndex(cwd: string): RiskIndex {
     });
   }
 
+  if (existsSync(join(cwd, "src/engine/annual-report"))) {
+    risks.push({
+      id: "financial-reporting-output",
+      paths: ["src/engine/annual-report/**"],
+      reason: "Annual report code can affect financial reporting output.",
+      confidence: "medium",
+    });
+  }
+
+  if (existsSync(join(cwd, "src/engine/closeout"))) {
+    risks.push({
+      id: "closeout-output-contract",
+      paths: ["src/engine/closeout/**"],
+      reason: "Closeout code can affect generated review or declaration output contracts.",
+      confidence: "medium",
+    });
+  }
+
+  if (existsSync(join(cwd, "src/engine/validation"))) {
+    risks.push({
+      id: "readiness-gate-contract",
+      paths: ["src/engine/validation/**"],
+      reason: "Readiness gate code can affect whether declarations are safe to produce.",
+      confidence: "medium",
+    });
+  }
+
+  if (existsSync(join(cwd, "src/shared/schemas"))) {
+    risks.push({
+      id: "shared-schema-contract",
+      paths: ["src/shared/schemas/**"],
+      reason: "Shared schemas can affect validation and output compatibility across repo areas.",
+      confidence: "medium",
+    });
+  }
+
   return {
     schema_version: 1,
     managed_by: "greenhouse-spec",

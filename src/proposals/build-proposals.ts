@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 
 import { parse as parseYaml } from "yaml";
@@ -297,6 +297,8 @@ function buildRouteProposals(
 
   proposals.push(...buildGreenhouseSpecSeedProposals(cwd, validation, rootScripts));
   proposals.push(...buildSinglePackageSeedProposals(cwd, validation, rootScripts));
+  proposals.push(...buildFallbackEvidenceSeedProposals(cwd, validation, rootScripts));
+  proposals.push(...buildDomainSeedProposals(cwd, validation, rootScripts));
   proposals.push(...buildRustSeedProposals(validation, repoShape));
 
   return proposals.filter(
@@ -304,6 +306,214 @@ function buildRouteProposals(
       proposal.kind === "validation-route" &&
       proposal.validation_route.rule.required.length > 0,
   );
+}
+
+function buildDomainSeedProposals(
+  cwd: string,
+  validation: ValidationConfig | null,
+  scripts: Record<string, string>,
+): ValidationProposal[] {
+  const proposals: ValidationProposal[] = [];
+  const style = styleCommand(scripts);
+  const typecheck = scriptCommand(scripts, "typecheck");
+  const test = scriptCommand(scripts, "test");
+  const hasDeclarationDomain =
+    existsSync(join(cwd, "src", "engine", "annual-report")) ||
+    existsSync(join(cwd, "src", "engine", "closeout")) ||
+    existsSync(join(cwd, "src", "engine", "validation")) ||
+    existsSync(join(cwd, "src", "shared", "schemas"));
+
+  if (existsSync(join(cwd, "src", "engine", "annual-report")) && test) {
+    proposals.push(
+      routeProposal(validation, {
+        pattern: "src/engine/annual-report/**",
+        mode: "guarded",
+        required: compactCommands([
+          style,
+          command("typecheck", typecheck),
+          command("test", test),
+        ]),
+        manual: [
+          {
+            id: "financial-reporting-review",
+            prompt: "Review annual report output correctness and reporting compatibility.",
+          },
+        ],
+        reason: "Annual report output code detected at src/engine/annual-report/.",
+        confidence: "medium",
+      }),
+    );
+  }
+
+  if (existsSync(join(cwd, "src", "engine", "closeout")) && test) {
+    proposals.push(
+      routeProposal(validation, {
+        pattern: "src/engine/closeout/**",
+        mode: "guarded",
+        required: compactCommands([
+          style,
+          command("typecheck", typecheck),
+          command("test", test),
+        ]),
+        manual: [
+          {
+            id: "closeout-output-review",
+            prompt: "Review closeout output contracts and generated review bundle compatibility.",
+          },
+        ],
+        reason: "Closeout output code detected at src/engine/closeout/.",
+        confidence: "medium",
+      }),
+    );
+  }
+
+  if (existsSync(join(cwd, "tests", "fixtures", "closeout")) && test) {
+    proposals.push(
+      routeProposal(validation, {
+        pattern: "tests/fixtures/closeout/**",
+        mode: "patch",
+        required: compactCommands([command("test", test)]),
+        manual: [
+          {
+            id: "closeout-fixture-review",
+            prompt: "Confirm closeout fixtures still represent the intended output cases.",
+          },
+        ],
+        reason: "Closeout fixtures detected at tests/fixtures/closeout/.",
+        confidence: "medium",
+      }),
+    );
+  }
+
+  if (existsSync(join(cwd, "src", "engine", "validation")) && test) {
+    proposals.push(
+      routeProposal(validation, {
+        pattern: "src/engine/validation/**",
+        mode: "guarded",
+        required: compactCommands([
+          style,
+          command("typecheck", typecheck),
+          command("test", test),
+        ]),
+        manual: [
+          {
+            id: "readiness-gate-review",
+            prompt: "Review readiness gate behavior and declaration safety impact.",
+          },
+        ],
+        reason: "Readiness or validation gate code detected at src/engine/validation/.",
+        confidence: "medium",
+      }),
+    );
+  }
+
+  if (existsSync(join(cwd, "src", "shared", "schemas")) && test) {
+    proposals.push(
+      routeProposal(validation, {
+        pattern: "src/shared/schemas/**",
+        mode: "guarded",
+        required: compactCommands([
+          style,
+          command("typecheck", typecheck),
+          command("test", test),
+        ]),
+        manual: [
+          {
+            id: "shared-schema-review",
+            prompt: "Review schema compatibility across validation, reporting, and UI consumers.",
+          },
+        ],
+        reason: "Shared schema contracts detected at src/shared/schemas/.",
+        confidence: "medium",
+      }),
+    );
+  }
+
+  if (hasDeclarationDomain && existsSync(join(cwd, "src", "data")) && test) {
+    proposals.push(
+      routeProposal(validation, {
+        pattern: "src/data/**",
+        mode: "patch",
+        required: compactCommands([
+          style,
+          command("typecheck", typecheck),
+          command("test", test),
+        ]),
+        manual: [
+          {
+            id: "declaration-review-surface",
+            prompt: "Review declaration or dashboard data changes for user-facing review behavior.",
+          },
+        ],
+        reason: "Declaration or dashboard data surface detected at src/data/.",
+        confidence: "low",
+      }),
+    );
+  }
+
+  return proposals;
+}
+
+function buildFallbackEvidenceSeedProposals(
+  cwd: string,
+  validation: ValidationConfig | null,
+  scripts: Record<string, string>,
+): ValidationProposal[] {
+  const files = fallbackEvidenceChangedFiles(cwd);
+  if (files.length === 0) {
+    return [];
+  }
+
+  const domainProposals = buildDomainSeedProposals(cwd, validation, scripts);
+  return domainProposals
+    .filter(
+      (proposal) =>
+        proposal.kind === "validation-route" &&
+        files.some((file) => matchesProposalPattern(proposal.validation_route.pattern, file)),
+    )
+    .map((proposal) => ({
+      ...proposal,
+      reason:
+        proposal.status === "conflict" || proposal.status === "adoptable"
+          ? proposal.reason
+          : `${proposal.reason} Recent evidence showed matching source files using fallback validation.`,
+    }));
+}
+
+function fallbackEvidenceChangedFiles(cwd: string): string[] {
+  const evidencePath = join(cwd, ".greenhouse", "evidence");
+  if (!existsSync(evidencePath)) {
+    return [];
+  }
+
+  return readdirSync(evidencePath)
+    .filter((file) => file.endsWith(".md"))
+    .map((file) => join(evidencePath, file))
+    .sort((left, right) => statSync(right).mtimeMs - statSync(left).mtimeMs)
+    .slice(0, 10)
+    .flatMap((file) => {
+      const content = readFileSync(file, "utf8");
+      if (!content.includes("source files used fallback validation")) {
+        return [];
+      }
+      return parseChangedFiles(content);
+    });
+}
+
+function parseChangedFiles(content: string): string[] {
+  const changedFiles = content.match(/Changed files:\s*([^\n]+)/i)?.[1]?.trim();
+  if (!changedFiles || changedFiles === "none") {
+    return [];
+  }
+  return changedFiles
+    .split(",")
+    .map((file) => file.trim())
+    .filter(Boolean);
+}
+
+function matchesProposalPattern(pattern: string, file: string): boolean {
+  const prefix = pattern.endsWith("/**") ? pattern.slice(0, -3) : pattern;
+  return file === prefix || file.startsWith(`${prefix}/`);
 }
 
 function buildRustSeedProposals(
@@ -676,6 +886,15 @@ function command(id: string, commandValue: string | null | undefined): CommandCh
 
 function scriptCommand(scripts: Record<string, string>, name: string): string | null {
   return scripts[name] ? `pnpm ${name}` : null;
+}
+
+function styleCommand(scripts: Record<string, string>): CommandCheck | null {
+  const formatCheck = scriptCommand(scripts, "format:check");
+  if (formatCheck) {
+    return { id: "format:check", command: formatCheck };
+  }
+  const lint = scriptCommand(scripts, "lint");
+  return lint ? { id: "lint", command: lint } : null;
 }
 
 function preferredScript(

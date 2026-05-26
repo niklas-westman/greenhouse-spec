@@ -1,12 +1,50 @@
 schema_version: 1
 managed_by: greenhouse-spec
-generated_at: 2026-05-26T09:52:32.034Z
+generated_at: 2026-05-26T11:13:56.641Z
 policy:
   agent_reading: Do not bulk-read evidence. Read specific evidence only when continuing a change, debugging validation, or following a tend/report pointer.
   retention: Keep recent evidence indexed here; archive or prune old records when they no longer help future validation decisions.
 summary:
   latest_failures_by_command: []
 recent:
+  - path: evidence/2026-05-26T11-13-56-637Z-verify.md
+    modified_at: 2026-05-26T11:13:56.638Z
+    summary: "Verification: verify-2026-05-26; mode guarded; files IMPLEMENTATION_GUIDE.md, README.md, docs/installation.md, greenhouse-summary.md, src/cli.ts, src/doctor/run-doctor.ts, src/native-scripts/package-script-proposals.ts, src/schemas/project."
+    status: pass
+    mode: guarded
+    changed_files:
+      - IMPLEMENTATION_GUIDE.md
+      - README.md
+      - docs/installation.md
+      - greenhouse-summary.md
+      - src/cli.ts
+      - src/doctor/run-doctor.ts
+      - src/native-scripts/package-script-proposals.ts
+      - src/schemas/project.ts
+      - src/version.ts
+      - templates/installed/project.yaml
+      - tests/inspect.test.ts
+      - tests/lifecycle.test.ts
+      - tests/native-scripts.test.ts
+      - tests/proposals.test.ts
+      - LICENSE
+      - package.json
+    commands:
+      - pnpm test:templates
+      - pnpm typecheck
+      - pnpm test:cli
+      - pnpm test:schemas
+      - pnpm test:doctor
+      - pnpm test:native-scripts
+      - pnpm check
+      - pnpm test
+      - pnpm build
+    manual_checks:
+      - Review Greenhouse self-bootstrap and package validation changes.
+      - Human must review guarded risk notes before merge.
+    impact_warnings:
+      - warning:documentation-drift:package.json changed; setup docs and Greenhouse validation roots may describe stale scripts.
+    failed_commands: []
   - path: evidence/2026-05-26T09-52-32-031Z-verify.md
     modified_at: 2026-05-26T09:52:32.032Z
     summary: "Verification: verify-2026-05-26; mode patch; files README.md, assets/logo-icon.png"

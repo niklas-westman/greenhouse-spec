@@ -1,6 +1,3 @@
-import { relative } from "node:path";
-
-import { findPackageRoot } from "../filesystem/package-root.js";
 import { readPackageJson } from "../discovery/package-json.js";
 
 export type PackageScriptProposal = {
@@ -74,7 +71,7 @@ export function proposePackageScripts(cwd: string): PackageScriptProposal[] {
     name: alias.name,
     command: selfHosted
       ? selfHostedGreenhouseCommand(alias.args)
-      : localGreenhouseCommand(cwd, alias.args),
+      : publishedGreenhouseCommand(alias.args),
     bareCommand: alias.args ? `greenhouse-spec ${alias.args}` : "greenhouse-spec",
   }));
   const proposals: PackageScriptProposal[] = [];
@@ -164,13 +161,11 @@ export function greenhouseCommandForRepo(cwd: string, args = ""): string {
   const packageJson = readPackageJson(cwd);
   return packageJson?.name === "greenhouse-spec"
     ? selfHostedGreenhouseCommand(args)
-    : localGreenhouseCommand(cwd, args);
+    : publishedGreenhouseCommand(args);
 }
 
-function localGreenhouseCommand(cwd: string, args: string): string {
-  const packageRoot = findPackageRoot(import.meta.url);
-  const cliPath = relative(cwd, `${packageRoot}/dist/cli.js`).replace(/\\/g, "/");
-  const command = `node ${shellQuotePath(cliPath)}`;
+function publishedGreenhouseCommand(args: string): string {
+  const command = "greenhouse-spec";
   return args ? `${command} ${args}` : command;
 }
 
@@ -187,6 +182,11 @@ export function isAcceptedGreenhouseAlias(
   }
 
   const expectedArgs = expectedCommand.replace(/^greenhouse-spec\s*/, "").trim();
+
+  const publishedMatch = actualCommand.match(/^greenhouse-spec(?:\s+(.*))?$/);
+  if (publishedMatch) {
+    return isCompatibleGreenhouseArgs(publishedMatch[1]?.trim() ?? "", expectedArgs);
+  }
 
   if (expectedArgs === "" && actualCommand === "pnpm build && node dist/cli.js") {
     return true;
@@ -211,14 +211,6 @@ export function isAcceptedGreenhouseAlias(
 
 function isCompatibleGreenhouseArgs(actualArgs: string, expectedArgs: string): boolean {
   return actualArgs === expectedArgs || (expectedArgs === "" && actualArgs === "status");
-}
-
-function shellQuotePath(path: string): string {
-  if (!/[\s"'`$\\]/.test(path)) {
-    return path;
-  }
-
-  return JSON.stringify(path);
 }
 
 function isAcceptedPrepushAlias(actualCommand: string): boolean {

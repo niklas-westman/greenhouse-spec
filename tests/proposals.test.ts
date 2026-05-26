@@ -327,9 +327,9 @@ describe("structured proposals", () => {
     const validation = readGreenhouseYaml(repo, "roots/validation.yaml");
 
     expect(report.ok).toBe(true);
-    expect(packageJson.scripts["greenhouse"]).toMatch(/greenhouse-spec\/dist\/cli\.js$/);
-    expect(packageJson.scripts["greenhouse:status"]).toContain("greenhouse-spec/dist/cli.js status");
-    expect(packageJson.scripts["greenhouse:tend"]).toContain("greenhouse-spec/dist/cli.js tend");
+    expect(packageJson.scripts["greenhouse"]).toBe("greenhouse-spec");
+    expect(packageJson.scripts["greenhouse:status"]).toBe("greenhouse-spec status");
+    expect(packageJson.scripts["greenhouse:tend"]).toBe("greenhouse-spec tend");
     expect(validation.paths["frontend-react/src/**"].managed_by).toBe("greenhouse-spec");
     expect(validation.paths["api-spec/src/main/resources/api.yaml"].origin).toBe("repo-shape");
   });

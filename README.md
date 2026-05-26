@@ -237,25 +237,37 @@ not treated as success.
 
 ## Installing Into Another Repo
 
-Current proof-of-concept installs use a local checkout:
+From the repository you want Greenhouse to tend:
 
 ```bash
-cd /path/to/greenhouse-spec
-pnpm install
-pnpm build
+pnpm add -D greenhouse-spec
+pnpm exec greenhouse-spec init
+pnpm exec greenhouse-spec apply-proposals --safe
+pnpm greenhouse status
+pnpm greenhouse tend
+```
 
-cd /path/to/target-repo
-node /path/to/greenhouse-spec/dist/cli.js init
-node /path/to/greenhouse-spec/dist/cli.js inspect
-node /path/to/greenhouse-spec/dist/cli.js proposals
-node /path/to/greenhouse-spec/dist/cli.js apply-proposals --safe --dry-run
+The npm equivalent is:
+
+```bash
+npm install -D greenhouse-spec
+npx greenhouse-spec init
+npx greenhouse-spec apply-proposals --safe
+npm run greenhouse -- status
+```
+
+For a zero-install preview:
+
+```bash
+pnpm dlx greenhouse-spec init --dry-run
 ```
 
 Greenhouse can propose package scripts for the target repo, for example:
 
 ```json
 {
-  "greenhouse": "greenhouse-spec status",
+  "greenhouse": "greenhouse-spec",
+  "greenhouse:status": "greenhouse-spec status",
   "greenhouse:tend": "greenhouse-spec tend",
   "greenhouse:tend:check": "greenhouse-spec tend --check",
   "greenhouse:verify:dry": "greenhouse-spec verify --changed --dry-run",
@@ -333,6 +345,17 @@ node dist/cli.js --help
 ```
 
 `pnpm check` runs typecheck, tests, and build.
+
+For local checkout testing before a package is published:
+
+```bash
+pnpm install
+pnpm build
+
+cd /path/to/target-repo
+node /path/to/greenhouse-spec/dist/cli.js init
+node /path/to/greenhouse-spec/dist/cli.js status
+```
 
 ## Documentation
 

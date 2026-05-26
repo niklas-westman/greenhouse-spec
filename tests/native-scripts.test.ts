@@ -40,32 +40,32 @@ describe("native scripts", () => {
     expect(proposals).toEqual([
       {
         name: "greenhouse",
-        command: expect.stringMatching(/greenhouse-spec\/dist\/cli\.js$/),
+        command: "greenhouse-spec",
         status: "add",
       },
       {
         name: "greenhouse:status",
-        command: expect.stringContaining("greenhouse-spec/dist/cli.js status"),
+        command: "greenhouse-spec status",
         status: "add",
       },
       {
         name: "greenhouse:tend",
-        command: expect.stringContaining("greenhouse-spec/dist/cli.js tend"),
+        command: "greenhouse-spec tend",
         status: "add",
       },
       {
         name: "greenhouse:tend:check",
-        command: expect.stringContaining("greenhouse-spec/dist/cli.js tend --check"),
+        command: "greenhouse-spec tend --check",
         status: "add",
       },
       {
         name: "greenhouse:verify:dry",
-        command: expect.stringContaining("greenhouse-spec/dist/cli.js verify --changed --dry-run"),
+        command: "greenhouse-spec verify --changed --dry-run",
         status: "add",
       },
       {
         name: "greenhouse:proposals",
-        command: expect.stringContaining("greenhouse-spec/dist/cli.js proposals"),
+        command: "greenhouse-spec proposals",
         status: "add",
       },
       {
@@ -97,28 +97,26 @@ describe("native scripts", () => {
     expect(proposePackageScripts(repo)).toEqual([
       {
         name: "greenhouse:tend",
-        command: expect.stringContaining("greenhouse-spec/dist/cli.js tend"),
+        command: "greenhouse-spec tend",
         status: "update",
         existingCommand: "node ../greenhouse/code/greenhouse-spec/dist/cli.js tend",
       },
       {
         name: "greenhouse:tend:check",
-        command: expect.stringContaining("greenhouse-spec/dist/cli.js tend --check"),
+        command: "greenhouse-spec tend --check",
         status: "update",
         existingCommand: "node ../greenhouse/code/greenhouse-spec/dist/cli.js tend --check",
       },
       {
         name: "greenhouse:verify:dry",
-        command: expect.stringContaining(
-          "greenhouse-spec/dist/cli.js verify --changed --dry-run",
-        ),
+        command: "greenhouse-spec verify --changed --dry-run",
         status: "update",
         existingCommand:
           "node ../greenhouse/code/greenhouse-spec/dist/cli.js verify --changed --dry-run",
       },
       {
         name: "greenhouse:proposals",
-        command: expect.stringContaining("greenhouse-spec/dist/cli.js proposals"),
+        command: "greenhouse-spec proposals",
         status: "update",
         existingCommand: "node ../greenhouse/code/greenhouse-spec/dist/cli.js proposals",
       },
@@ -193,7 +191,7 @@ describe("native scripts", () => {
 
     expect(proposePackageScripts(repo)).toContainEqual({
       name: "greenhouse:tend",
-      command: expect.stringContaining("greenhouse-spec/dist/cli.js tend"),
+      command: "greenhouse-spec tend",
       status: "collision",
       existingCommand: "pnpm custom:tend",
     });

@@ -387,6 +387,11 @@ function isAcceptedGreenhouseAlias(
 
   const expectedArgs = expectedCommand.replace(/^greenhouse-spec\s*/, "").trim();
 
+  const publishedMatch = actualCommand.match(/^greenhouse-spec(?:\s+(.*))?$/);
+  if (publishedMatch) {
+    return isCompatibleGreenhouseArgs(publishedMatch[1]?.trim() ?? "", expectedArgs);
+  }
+
   if (expectedArgs === "" && actualCommand === "pnpm build && node dist/cli.js") {
     return true;
   }

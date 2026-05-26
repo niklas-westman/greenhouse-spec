@@ -73,8 +73,8 @@ describe("lifecycle commands", () => {
     expect(readFileSync(scriptPath, "utf8")).not.toBe("// stale\n");
     expect(project.greenhouse.installed_version).toBe("0.1.0");
     expect(project.greenhouse.template_version).toBe(1);
-    expect(project.greenhouse.install_mode).toBe("local-checkout");
-    expect(project.greenhouse.cli_command).toContain("greenhouse-spec/dist/cli.js");
+    expect(project.greenhouse.install_mode).toBe("npm-package");
+    expect(project.greenhouse.cli_command).toBe("greenhouse-spec");
   });
 
   it("status is read-only", () => {

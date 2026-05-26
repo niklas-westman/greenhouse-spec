@@ -1,11 +1,27 @@
 {
   "name": "greenhouse-spec",
   "version": "0.1.0",
-  "private": true,
+  "description": "Repo-local tending infrastructure for safer agentic engineering.",
+  "license": "MIT",
   "type": "module",
   "bin": {
     "greenhouse-spec": "./dist/cli.js"
   },
+  "files": [
+    "assets",
+    "dist",
+    "docs",
+    "templates",
+    "README.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "ai",
+    "agents",
+    "validation",
+    "repository",
+    "developer-tools"
+  ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "check": "pnpm typecheck && pnpm test && pnpm build",
@@ -39,7 +55,12 @@
     "test:validation": "vitest run tests/validation.test.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test:evidence": "vitest run tests/evidence.test.ts",
-    "test:lifecycle": "vitest run tests/lifecycle.test.ts"
+    "test:lifecycle": "vitest run tests/lifecycle.test.ts",
+    "prepack": "pnpm build",
+    "pack:dry": "pnpm build && npm pack --dry-run",
+    "release:patch": "pnpm check && pnpm pack:dry && npm version patch",
+    "release:minor": "pnpm check && pnpm pack:dry && npm version minor",
+    "release:major": "pnpm check && pnpm pack:dry && npm version major"
   },
   "dependencies": {
     "commander": "^14.0.3",
@@ -53,7 +74,10 @@
     "vitest": "^2.1.4"
   },
   "engines": {
-    "node": ">=24 <26"
+    "node": ">=22"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "packageManager": "pnpm@10.12.1"
 }

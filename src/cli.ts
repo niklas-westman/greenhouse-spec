@@ -14,6 +14,7 @@ import { registerProposalsCommand } from "./commands/proposals.js";
 import { registerTendCommand } from "./commands/tend.js";
 import { registerUpdateCommand } from "./commands/update.js";
 import { registerVerifyCommand } from "./commands/verify.js";
+import { GREENHOUSE_SPEC_VERSION } from "./version.js";
 
 export function createProgram(): Command {
   const program = new Command();
@@ -21,7 +22,7 @@ export function createProgram(): Command {
   program
     .name("greenhouse-spec")
     .description("Install and maintain repo-local AI agent context.")
-    .version("0.1.0");
+    .version(GREENHOUSE_SPEC_VERSION);
 
   registerInitCommand(program);
   registerAlignmentCommand(program);

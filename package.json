@@ -7,6 +7,14 @@
   "bin": {
     "greenhouse-spec": "./dist/cli.js"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/niklas-westman/greenhouse-spec.git"
+  },
+  "bugs": {
+    "url": "https://github.com/niklas-westman/greenhouse-spec/issues"
+  },
+  "homepage": "https://github.com/niklas-westman/greenhouse-spec#readme",
   "files": [
     "assets",
     "dist",

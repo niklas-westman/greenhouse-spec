@@ -1,4 +1,7 @@
 #!/usr/bin/env node
+import { realpathSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+
 import { Command } from "commander";
 
 import { registerAlignmentCommand } from "./commands/alignment.js";
@@ -46,6 +49,21 @@ export async function main(argv: string[] = process.argv): Promise<void> {
   await program.parseAsync(argv);
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+export function isDirectCliExecution(
+  moduleUrl: string = import.meta.url,
+  argvPath: string | undefined = process.argv[1],
+): boolean {
+  if (!argvPath) {
+    return false;
+  }
+
+  try {
+    return realpathSync(fileURLToPath(moduleUrl)) === realpathSync(argvPath);
+  } catch {
+    return false;
+  }
+}
+
+if (isDirectCliExecution()) {
   await main();
 }

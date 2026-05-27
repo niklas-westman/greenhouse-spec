@@ -71,7 +71,7 @@ describe("lifecycle commands", () => {
 
     expect(report.ok).toBe(true);
     expect(readFileSync(scriptPath, "utf8")).not.toBe("// stale\n");
-    expect(project.greenhouse.installed_version).toBe("0.1.0");
+    expect(project.greenhouse.installed_version).toBe("0.1.1");
     expect(project.greenhouse.template_version).toBe(1);
     expect(project.greenhouse.install_mode).toBe("npm-package");
     expect(project.greenhouse.cli_command).toBe("greenhouse-spec");

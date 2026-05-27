@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { createProgram } from "../src/cli.js";
+import { createProgram, isDirectCliExecution } from "../src/cli.js";
 
 describe("greenhouse-spec CLI", () => {
   it("registers the MVP command surface", () => {
@@ -60,5 +60,14 @@ describe("greenhouse-spec CLI", () => {
 
     expect(statusCommand?.options.map((option) => option.long)).toContain("--json");
     expect(statusCommand?.options.map((option) => option.long)).toContain("--verbose");
+  });
+
+  it("detects direct execution through symlinked package bin wrappers", () => {
+    expect(
+      isDirectCliExecution(
+        new URL("../src/cli.ts", import.meta.url).href,
+        new URL("../src/cli.ts", import.meta.url).pathname,
+      ),
+    ).toBe(true);
   });
 });

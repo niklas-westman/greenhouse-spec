@@ -20,7 +20,7 @@ greenhouse:
   created_at: 1970-01-01
   last_inspected_at: null
   mode_default: growth
-  installed_version: 0.1.0
+  installed_version: 0.1.1
   template_version: 1
   install_mode: npm-package
   cli_command: greenhouse-spec

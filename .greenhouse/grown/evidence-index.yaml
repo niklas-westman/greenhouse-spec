@@ -1,12 +1,34 @@
 schema_version: 1
 managed_by: greenhouse-spec
-generated_at: 2026-05-27T05:17:04.661Z
+generated_at: 2026-05-27T12:02:05.089Z
 policy:
   agent_reading: Do not bulk-read evidence. Read specific evidence only when continuing a change, debugging validation, or following a tend/report pointer.
   retention: Keep recent evidence indexed here; archive or prune old records when they no longer help future validation decisions.
 summary:
+  latest_tending_state: pass
+  latest_tending_evidence: evidence/2026-05-27T12-02-05-087Z-verify.md
   latest_failures_by_command: []
 recent:
+  - path: evidence/2026-05-27T12-02-05-087Z-verify.md
+    modified_at: 2026-05-27T12:02:05.088Z
+    summary: "Verification: verify-2026-05-27; mode patch; files src/doctor/run-doctor.ts, src/lifecycle/run-init.ts, src/schemas/docs-root.ts, tests/doctor.test.ts, tests/lifecycle.test.ts"
+    status: pass
+    mode: patch
+    changed_files:
+      - src/doctor/run-doctor.ts
+      - src/lifecycle/run-init.ts
+      - src/schemas/docs-root.ts
+      - tests/doctor.test.ts
+      - tests/lifecycle.test.ts
+    commands:
+      - pnpm test:schemas
+      - pnpm typecheck
+      - pnpm test:doctor
+      - pnpm test:lifecycle
+    manual_checks: []
+    impact_warnings: []
+    failed_commands: []
+    tending_state: pass
   - path: evidence/2026-05-27T05-17-04-657Z-verify.md
     modified_at: 2026-05-27T05:17:04.658Z
     summary: "Verification: verify-2026-05-27; mode guarded; files src/cli.ts, src/version.ts, templates/installed/project.yaml, tests/cli.test.ts, tests/lifecycle.test.ts, package.json"

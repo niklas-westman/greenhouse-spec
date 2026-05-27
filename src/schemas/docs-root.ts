@@ -2,7 +2,7 @@ import { z } from "zod";
 
 import { schemaVersionSchema } from "./common.js";
 
-export const docsOwnershipSchema = z.enum([
+export const docsOwnershipValues = [
   "setup",
   "package-scripts",
   "validation",
@@ -14,7 +14,9 @@ export const docsOwnershipSchema = z.enum([
   "workspace",
   "ci",
   "generated",
-]);
+] as const;
+
+export const docsOwnershipSchema = z.enum(docsOwnershipValues);
 
 export const trackedDocSchema = z.object({
   path: z.string().min(1),

@@ -76,6 +76,31 @@ describe("doctor", () => {
     );
   });
 
+  it("explains allowed docs ownership labels when docs root is invalid", () => {
+    const repo = createFixtureRepo();
+    writeFileSync(
+      join(repo, ".greenhouse", "roots", "docs.yaml"),
+      [
+        "schema_version: 1",
+        "tracked_docs:",
+        "  - path: README.md",
+        "    owns:",
+        "      - setup commands",
+        "",
+      ].join("\n"),
+      "utf8",
+    );
+
+    const report = runDoctor({ cwd: repo });
+
+    expect(report.ok).toBe(false);
+    const message = report.findings.map((finding) => finding.message).join("\n");
+    expect(message).toContain("Invalid roots/docs.yaml");
+    expect(message).toContain("Allowed docs ownership labels");
+    expect(message).toContain("package-scripts");
+    expect(message).toContain("generated");
+  });
+
   it("fails when context manifest entries point to missing files", () => {
     const repo = createFixtureRepo();
     writeFileSync(

@@ -15,7 +15,7 @@ import { afterEach, describe, expect, it } from "vitest";
 
 import { createProgram } from "../src/cli.js";
 import { writeEvidence } from "../src/evidence/write-evidence.js";
-import { runInit } from "../src/lifecycle/run-init.js";
+import { formatInitReport, runInit } from "../src/lifecycle/run-init.js";
 import { runUpdate } from "../src/lifecycle/run-update.js";
 import { greenhouseCommandForRepo } from "../src/native-scripts/package-script-proposals.js";
 import {
@@ -43,6 +43,18 @@ describe("lifecycle commands", () => {
     expect(report.ok).toBe(true);
     expect(report.plant.writes.every((write) => write.status === "dry-run")).toBe(true);
     expect(existsSync(join(repo, ".greenhouse"))).toBe(false);
+  });
+
+  it("init output explains first-install tailoring steps", () => {
+    const repo = createRepo();
+
+    const output = formatInitReport(runInit({ cwd: repo, dryRun: true }));
+
+    expect(output).toContain("## First Install Workflow");
+    expect(output).toContain("greenhouse-spec apply-proposals --safe --dry-run");
+    expect(output).toContain("## Repo Tailoring Checklist");
+    expect(output).toContain(".greenhouse/roots/validation.yaml");
+    expect(output).toContain(".greenhouse/roots/docs.yaml");
   });
 
   it("update dry-run reports managed changes without mutating installed files", () => {

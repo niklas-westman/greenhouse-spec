@@ -12,7 +12,11 @@ import {
 import { parseYamlWithSchema } from "../schemas/common.js";
 import { evidenceIndexSchema } from "../schemas/evidence-index.js";
 import { failureSignaturesSchema } from "../schemas/failure-signatures.js";
-import { docsRootSchema, type DocsRoot } from "../schemas/docs-root.js";
+import {
+  docsOwnershipValues,
+  docsRootSchema,
+  type DocsRoot,
+} from "../schemas/docs-root.js";
 import { projectSchema, type ProjectConfig } from "../schemas/project.js";
 import { repoMapSchema, type RepoMap } from "../schemas/repo-map.js";
 import { repoShapeSchema } from "../schemas/repo-shape.js";
@@ -244,7 +248,7 @@ function validateSchemaFiles(
       findings.push({
         severity: "error",
         check: "schema",
-        message: `Invalid ${schemaFile.path}: ${formatError(error)}`,
+        message: `Invalid ${schemaFile.path}: ${formatError(error)}${schemaHint(schemaFile.path)}`,
         path: formatPath(cwd, path),
       });
     }
@@ -426,6 +430,14 @@ function writeDoctorReport(report: DoctorReport): string {
   writeFileSync(reportPath, formatDoctorReport(report), "utf8");
 
   return reportPath;
+}
+
+function schemaHint(path: string): string {
+  if (path === "roots/docs.yaml") {
+    return " Allowed docs ownership labels: " + docsOwnershipValues.join(", ") + ".";
+  }
+
+  return "";
 }
 
 function readYaml<T>(path: string, schema: ZodType<T>): T {

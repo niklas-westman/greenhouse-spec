@@ -1,14 +1,41 @@
 schema_version: 1
 managed_by: greenhouse-spec
-generated_at: 2026-05-29T11:04:23.406Z
+generated_at: 2026-05-29T19:23:30.512Z
 policy:
   agent_reading: Do not bulk-read evidence. Read specific evidence only when continuing a change, debugging validation, or following a tend/report pointer.
   retention: Keep recent evidence indexed here; archive or prune old records when they no longer help future validation decisions.
 summary:
-  latest_tending_state: pass
-  latest_tending_evidence: evidence/2026-05-29T11-04-23-403Z-verify.md
+  latest_tending_state: warning
+  latest_tending_evidence: evidence/2026-05-29T19-23-30-507Z-verify.md
   latest_failures_by_command: []
 recent:
+  - path: evidence/2026-05-29T19-23-30-507Z-verify.md
+    modified_at: 2026-05-29T19:23:30.507Z
+    summary: "Verification: verify-2026-05-29; mode patch; files docs/installation.md, src/doctor/run-doctor.ts, src/lifecycle/package-script-onboarding.ts, src/lifecycle/run-update.ts, src/native-scripts/package-script-proposals.ts, src/proposals/build-"
+    status: pass
+    mode: patch
+    changed_files:
+      - docs/installation.md
+      - src/doctor/run-doctor.ts
+      - src/lifecycle/package-script-onboarding.ts
+      - src/lifecycle/run-update.ts
+      - src/native-scripts/package-script-proposals.ts
+      - src/proposals/build-proposals.ts
+      - tests/doctor.test.ts
+      - tests/lifecycle.test.ts
+      - tests/native-scripts.test.ts
+      - tests/tend.test.ts
+    commands:
+      - pnpm test:templates
+      - pnpm typecheck
+      - pnpm test:proposals
+      - pnpm test:doctor
+      - pnpm test:native-scripts
+      - pnpm test:lifecycle
+    manual_checks: []
+    impact_warnings: []
+    failed_commands: []
+    tending_state: warning
   - path: evidence/2026-05-29T11-04-23-403Z-verify.md
     modified_at: 2026-05-29T11:04:23.404Z
     summary: "Verification: verify-2026-05-29; mode patch; files src/lifecycle/run-update.ts, tests/lifecycle.test.ts"

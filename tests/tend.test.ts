@@ -83,9 +83,10 @@ describe("tend", () => {
   it("surfaces impact warnings in the finish gate without mutating roots", () => {
     const repo = createReadyRepo();
     const packagePath = join(repo, "package.json");
-    const packageJson = JSON.parse(readFileSync(packagePath, "utf8")) as {
-      scripts: Record<string, string>;
-    };
+  const packageJson = JSON.parse(readFileSync(packagePath, "utf8")) as {
+    scripts: Record<string, string>;
+    devDependencies?: Record<string, string>;
+  };
     initGitRepo(repo);
     writeFileSync(
       packagePath,
@@ -96,6 +97,7 @@ describe("tend", () => {
             ...packageJson.scripts,
             "new-script": "node -e \"process.exit(0)\"",
           },
+          devDependencies: packageJson.devDependencies,
         },
         null,
         2,
@@ -125,9 +127,10 @@ describe("tend", () => {
   it("fails before validation when impact warnings are blocking", () => {
     const repo = createReadyRepo();
     const packagePath = join(repo, "package.json");
-    const packageJson = JSON.parse(readFileSync(packagePath, "utf8")) as {
-      scripts: Record<string, string>;
-    };
+  const packageJson = JSON.parse(readFileSync(packagePath, "utf8")) as {
+    scripts: Record<string, string>;
+    devDependencies?: Record<string, string>;
+  };
     mkdirSync(join(repo, "src"), { recursive: true });
     writeFileSync(join(repo, "src", "app.ts"), "export const app = 1;\n");
     initGitRepo(repo);
@@ -138,6 +141,7 @@ describe("tend", () => {
         {
           name: "tend-fixture",
           scripts: packageJson.scripts,
+          devDependencies: packageJson.devDependencies,
         },
         null,
         2,
@@ -561,6 +565,7 @@ function createReadyRepo(scriptOverrides: Record<string, string> = {}): string {
   const repo = createRepo();
   const packageJson = JSON.parse(readFileSync(join(repo, "package.json"), "utf8")) as {
     scripts: Record<string, string>;
+    devDependencies?: Record<string, string>;
   };
   writeFileSync(
     join(repo, "package.json"),
@@ -570,6 +575,9 @@ function createReadyRepo(scriptOverrides: Record<string, string> = {}): string {
         scripts: {
           ...packageJson.scripts,
           ...scriptOverrides,
+        },
+        devDependencies: {
+          ...(packageJson.devDependencies ?? {}),
         },
       },
       null,

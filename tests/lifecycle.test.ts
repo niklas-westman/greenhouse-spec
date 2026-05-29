@@ -89,25 +89,28 @@ describe("lifecycle commands", () => {
     expect(project.greenhouse.cli_command).toBe("greenhouse-spec");
   });
 
-  it("update preserves local-checkout project metadata when the repo script uses a local CLI", () => {
+  it("update migrates local-checkout package scripts to portable package wiring", () => {
     const repo = createRepo();
     runPlant({ cwd: repo });
     writePackageJson(repo, {
       test: "node -e \"process.exit(0)\"",
       typecheck: "node -e \"process.exit(0)\"",
       greenhouse: "node ../greenhouse/code/greenhouse-spec/dist/cli.js",
+      "greenhouse:tend": "node ../greenhouse/code/greenhouse-spec/dist/cli.js tend",
     });
 
     const report = runUpdate({ cwd: repo });
     const project = parseYaml(
       readFileSync(join(repo, ".greenhouse", "project.yaml"), "utf8"),
     ) as any;
+    const packageJson = JSON.parse(readFileSync(join(repo, "package.json"), "utf8")) as any;
 
     expect(report.ok).toBe(true);
-    expect(project.greenhouse.install_mode).toBe("local-checkout");
-    expect(project.greenhouse.cli_command).toBe(
-      "node ../greenhouse/code/greenhouse-spec/dist/cli.js",
-    );
+    expect(project.greenhouse.install_mode).toBe("npm-package");
+    expect(project.greenhouse.cli_command).toBe("greenhouse-spec");
+    expect(packageJson.scripts.greenhouse).toBe("greenhouse-spec");
+    expect(packageJson.scripts["greenhouse:tend"]).toBe("greenhouse-spec tend");
+    expect(packageJson.devDependencies["greenhouse-spec"]).toBe("^0.1.1");
   });
 
   it("update adds missing installed purpose docs without overwriting authored roots", () => {
@@ -617,7 +620,8 @@ function createHealthyRepo(): string {
   writePackageJson(repo, {
     test: "node -e \"process.exit(0)\"",
     typecheck: "node -e \"process.exit(0)\"",
-    greenhouse: greenhouseCommandForRepo(repo, "status"),
+    greenhouse: greenhouseCommandForRepo(repo),
+    "greenhouse:status": greenhouseCommandForRepo(repo, "status"),
     "greenhouse:tend": greenhouseCommandForRepo(repo, "tend"),
     "greenhouse:tend:check": greenhouseCommandForRepo(repo, "tend --check"),
     "greenhouse:verify:dry": greenhouseCommandForRepo(
@@ -638,6 +642,9 @@ function writePackageJson(repo: string, scripts: Record<string, string>): void {
       {
         name: "lifecycle-fixture",
         scripts,
+        devDependencies: {
+          "greenhouse-spec": "^0.1.1",
+        },
       },
       null,
       2,

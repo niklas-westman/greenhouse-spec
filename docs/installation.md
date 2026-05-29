@@ -94,9 +94,12 @@ include the Greenhouse gate inside it. Greenhouse reports conflicting `prepush`
 scripts instead of overwriting them.
 
 Existing local-checkout aliases such as
-`node ../greenhouse/code/greenhouse-spec/dist/cli.js tend` and older split
-aliases such as `check:tend` plus `check:changed:evidence` remain compatible,
-but new installs should prefer the public `greenhouse-spec` command.
+`node ../greenhouse/code/greenhouse-spec/dist/cli.js tend` are not portable and
+should not be committed in shared repos. `greenhouse-spec update` migrates
+accepted local-checkout aliases to the public `greenhouse-spec` command.
+
+Older split aliases such as `check:tend` plus `check:changed:evidence` remain
+compatible, but new installs should prefer the public `greenhouse-spec` command.
 
 The public `greenhouse-spec` command is resolved from `node_modules/.bin` when
 these scripts run, so target repos should keep `greenhouse-spec` as a dev

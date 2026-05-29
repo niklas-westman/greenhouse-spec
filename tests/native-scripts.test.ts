@@ -96,6 +96,12 @@ describe("native scripts", () => {
 
     expect(proposePackageScripts(repo)).toEqual([
       {
+        name: "greenhouse",
+        command: "greenhouse-spec",
+        status: "update",
+        existingCommand: "node ../greenhouse/code/greenhouse-spec/dist/cli.js status",
+      },
+      {
         name: "greenhouse:tend",
         command: "greenhouse-spec tend",
         status: "update",

@@ -119,13 +119,6 @@ export function proposePackageScripts(cwd: string): PackageScriptProposal[] {
       continue;
     }
 
-    if (
-      alias.name === "greenhouse" &&
-      isAcceptedGreenhouseAlias(existingCommand, "greenhouse-spec status")
-    ) {
-      continue;
-    }
-
     if (isAcceptedGreenhouseAlias(existingCommand, alias.bareCommand)) {
       proposals.push({
         name: alias.name,

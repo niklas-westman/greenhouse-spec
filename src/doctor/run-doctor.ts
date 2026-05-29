@@ -360,9 +360,18 @@ function validatePackageAliases(cwd: string, findings: DoctorFinding[]): void {
   const packageJson = JSON.parse(readFileSync(packageJsonPath, "utf8")) as {
     name?: string;
     scripts?: Record<string, string>;
+    dependencies?: Record<string, string>;
+    devDependencies?: Record<string, string>;
   };
   const scripts = packageJson.scripts ?? {};
   const selfHosted = packageJson.name === "greenhouse-spec";
+  const hasGreenhouseScripts = Object.values(scripts).some((command) =>
+    command.includes("greenhouse-spec"),
+  );
+  const hasGreenhouseDependency = Boolean(
+    packageJson.dependencies?.["greenhouse-spec"] ??
+      packageJson.devDependencies?.["greenhouse-spec"],
+  );
 
   for (const [scriptName, expectedCommand] of expectedPackageAliases) {
     const actualCommand = scripts[scriptName];
@@ -378,7 +387,29 @@ function validatePackageAliases(cwd: string, findings: DoctorFinding[]): void {
         path: formatPath(cwd, packageJsonPath),
       });
     }
+    if (!selfHosted && actualCommand && isLocalCheckoutCommand(actualCommand)) {
+      findings.push({
+        severity: "error",
+        check: "package-script-portability",
+        message: `Package script "${scriptName}" points to a local greenhouse-spec checkout. Use the package binary so cloned repos can run Greenhouse after install.`,
+        path: formatPath(cwd, packageJsonPath),
+      });
+    }
   }
+
+  if (!selfHosted && hasGreenhouseScripts && !hasGreenhouseDependency) {
+    findings.push({
+      severity: "error",
+      check: "greenhouse-dependency",
+      message:
+        "package.json uses greenhouse-spec scripts but does not declare greenhouse-spec as a dependency. Add it to devDependencies so cloned repos can run Greenhouse.",
+      path: formatPath(cwd, packageJsonPath),
+    });
+  }
+}
+
+function isLocalCheckoutCommand(command: string): boolean {
+  return /greenhouse-spec\/dist\/cli\.js/.test(command);
 }
 
 function isAcceptedGreenhouseAlias(

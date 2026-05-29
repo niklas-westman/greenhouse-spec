@@ -60,7 +60,7 @@ function buildPackageScriptProposals(cwd: string): ValidationProposal[] {
       proposal.status === "collision"
         ? `Existing package script "${proposal.name}" conflicts with the Greenhouse alias.`
         : proposal.status === "update"
-          ? `Package script "${proposal.name}" uses an accepted Greenhouse alias and can be normalized to the local CLI path.`
+          ? `Package script "${proposal.name}" uses an accepted Greenhouse alias and can be normalized to the package CLI.`
           : `Package script "${proposal.name}" is missing.`,
     safe: proposal.status !== "collision",
     preconditions: [

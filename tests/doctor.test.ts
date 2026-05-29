@@ -246,7 +246,7 @@ describe("doctor", () => {
     expect(report.findings).toEqual([]);
   });
 
-  it("accepts local node CLI package script aliases", () => {
+  it("flags local node CLI package script aliases as non-portable", () => {
     const repo = createFixtureRepo();
     writeFileSync(
       join(repo, "package.json"),
@@ -271,8 +271,41 @@ describe("doctor", () => {
 
     const report = runDoctor({ cwd: repo });
 
-    expect(report.ok).toBe(true);
-    expect(report.findings).toEqual([]);
+    expect(report.ok).toBe(false);
+    expect(report.findings).toContainEqual(
+      expect.objectContaining({
+        severity: "error",
+        check: "package-script-portability",
+      }),
+    );
+  });
+
+  it("flags greenhouse package scripts without a package dependency", () => {
+    const repo = createFixtureRepo();
+    writeFileSync(
+      join(repo, "package.json"),
+      JSON.stringify(
+        {
+          scripts: {
+            greenhouse: "greenhouse-spec",
+            "greenhouse:tend": "greenhouse-spec tend",
+          },
+        },
+        null,
+        2,
+      ),
+      "utf8",
+    );
+
+    const report = runDoctor({ cwd: repo });
+
+    expect(report.ok).toBe(false);
+    expect(report.findings).toContainEqual(
+      expect.objectContaining({
+        severity: "error",
+        check: "greenhouse-dependency",
+      }),
+    );
   });
 
   it("accepts self-hosted greenhouse package script aliases", () => {

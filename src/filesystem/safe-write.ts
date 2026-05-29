@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 
-export type PlannedWriteKind = "authored" | "generated";
+export type PlannedWriteKind = "authored" | "generated" | "managed";
 
 export type PlannedWrite = {
   relativePath: string;

@@ -42,6 +42,7 @@ export function classifyChangedFile(file: string): ChangedFileCategory {
   if (
     file === "AGENTS.md" ||
     file === "CLAUDE.md" ||
+    file === ".github/copilot-instructions.md" ||
     file.startsWith(".cursor/rules/")
   ) {
     return "agent-instructions";
@@ -62,6 +63,7 @@ export function classifyChangedFile(file: string): ChangedFileCategory {
   if (
     file === ".greenhouse/project.yaml" ||
     file.startsWith(".greenhouse/roots/") ||
+    file.startsWith(".greenhouse/why-greenhouse-spec/") ||
     file === ".greenhouse/context/manifest.yaml" ||
     file.startsWith(".greenhouse/scripts/") ||
     file.startsWith(".greenhouse/templates/")

@@ -51,19 +51,13 @@ describe("structured proposals", () => {
     runInspect({ cwd: repo });
 
     const proposals = readValidationProposals(repo).proposals;
-    const packageScript = proposals.find(
-      (proposal) => proposal.id === "package-script:greenhouse:tend",
-    );
     const route = proposals.find(
       (proposal) => proposal.id === "validation-route:frontend-react-src",
     );
 
-    expect(packageScript).toMatchObject({
-      idempotency_key: "package-script:greenhouse:tend",
-      preconditions: expect.arrayContaining([
-        expect.stringContaining("package.json"),
-      ]),
-    });
+    expect(proposals.map((proposal) => proposal.id)).not.toContain(
+      "package-script:greenhouse:tend",
+    );
     expect(route).toMatchObject({
       idempotency_key: "validation-route:frontend-react/src/**",
       preconditions: expect.arrayContaining([
@@ -87,7 +81,51 @@ describe("structured proposals", () => {
     expect(output).toContain("## Conflicts");
     expect(output).toContain("## Applied");
     expect(output).toContain("## Skipped");
-    expect(output).toContain("package-script:greenhouse:tend");
+    expect(output).toContain("validation-route:frontend-react-src");
+  });
+
+  it("refreshes stale proposal indexes before listing proposals", () => {
+    const repo = createTinyRepo();
+    runPlant({ cwd: repo });
+    removeGreenhousePackageScripts(repo);
+    writeGreenhouseYaml(repo, "grown/validation-proposals.yaml", {
+      schema_version: 1,
+      managed_by: "greenhouse-spec",
+      generated_at: "2026-05-01T00:00:00.000Z",
+      proposals: [],
+    });
+
+    const report = runProposals({ cwd: repo });
+
+    expect(report.counts.pending).toBeGreaterThan(0);
+    expect(report.proposals.map((proposal) => proposal.id)).toContain(
+      "package-script:greenhouse:tend",
+    );
+    expect(readValidationProposals(repo).proposals.map((proposal) => proposal.id)).toContain(
+      "package-script:greenhouse:tend",
+    );
+  });
+
+  it("refreshes stale proposal indexes before applying proposals", () => {
+    const repo = createTinyRepo();
+    runPlant({ cwd: repo });
+    removeGreenhousePackageScripts(repo);
+    writeGreenhouseYaml(repo, "grown/validation-proposals.yaml", {
+      schema_version: 1,
+      managed_by: "greenhouse-spec",
+      generated_at: "2026-05-01T00:00:00.000Z",
+      proposals: [],
+    });
+
+    const report = applyProposals({ cwd: repo, safe: true });
+    const packageJson = JSON.parse(readFileSync(join(repo, "package.json"), "utf8")) as {
+      scripts: Record<string, string>;
+    };
+
+    expect(report.results.map((result) => result.id)).toContain(
+      "package-script:greenhouse:tend",
+    );
+    expect(packageJson.scripts["greenhouse:tend"]).toBe("greenhouse-spec tend");
   });
 
   it("does not generate validation route proposals for plain single-package repos", () => {
@@ -312,12 +350,13 @@ describe("structured proposals", () => {
     expect(output).toContain("- changed:");
     expect(output).toContain("- skipped:");
     expect(output).toContain("- conflicts:");
-    expect(output).toContain("Would set package script");
+    expect(output).toContain("Would add managed path rule");
   });
 
   it("safe apply adds missing package scripts and managed validation routes", () => {
     const repo = createSourcerLikeRepo();
     runPlant({ cwd: repo });
+    removeGreenhousePackageScripts(repo);
     runInspect({ cwd: repo });
 
     const report = applyProposals({ cwd: repo, safe: true });
@@ -610,6 +649,21 @@ function createTinyRepo(): string {
     },
   });
   return repo;
+}
+
+function removeGreenhousePackageScripts(repo: string): void {
+  const packageJson = JSON.parse(readFileSync(join(repo, "package.json"), "utf8")) as {
+    scripts?: Record<string, string>;
+    [key: string]: unknown;
+  };
+  const scripts = { ...(packageJson.scripts ?? {}) };
+  for (const name of Object.keys(scripts)) {
+    if (name === "prepush" || name === "validate:cli" || name.startsWith("greenhouse")) {
+      delete scripts[name];
+    }
+  }
+  packageJson.scripts = scripts;
+  writePackageJson(repo, packageJson);
 }
 
 function createDeclarionLikeRepo(): string {

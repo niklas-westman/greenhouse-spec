@@ -572,6 +572,7 @@ function isAgentInstructionPath(file: string): boolean {
   return (
     file === "AGENTS.md" ||
     file === "CLAUDE.md" ||
+    file === ".github/copilot-instructions.md" ||
     file.startsWith(".cursor/rules/")
   );
 }
@@ -580,6 +581,7 @@ function isGreenhouseAuthoredPath(file: string): boolean {
   return (
     file === ".greenhouse/project.yaml" ||
     file.startsWith(".greenhouse/roots/") ||
+    file.startsWith(".greenhouse/why-greenhouse-spec/") ||
     file === ".greenhouse/context/manifest.yaml" ||
     file.startsWith(".greenhouse/scripts/") ||
     file.startsWith(".greenhouse/templates/")

@@ -42,14 +42,84 @@ describe("plant", () => {
 
     const plantReport = runPlant({ cwd: repo });
     const doctorReport = runDoctor({ cwd: repo });
+    const packageJson = JSON.parse(readFileSync(join(repo, "package.json"), "utf8")) as {
+      scripts: Record<string, string>;
+    };
 
     expect(plantReport.ok).toBe(true);
     expect(doctorReport.ok).toBe(true);
+    expect(packageJson.scripts["greenhouse:tend"]).toBe("greenhouse-spec tend");
+    expect(packageJson.scripts.prepush).toBe("pnpm greenhouse:tend");
     expect(existsSync(join(repo, ".greenhouse", "evidence"))).toBe(true);
     expect(
       existsSync(join(repo, ".greenhouse", "grown", "evidence-index.yaml")),
     ).toBe(true);
     expect(existsSync(join(repo, ".greenhouse", "reports", "doctor"))).toBe(true);
+  });
+
+  it("adds a managed Greenhouse validation block to existing agent instructions", () => {
+    const repo = createDeclarionLiteRepo();
+
+    const report = runPlant({ cwd: repo });
+    const agents = readFileSync(join(repo, "AGENTS.md"), "utf8");
+
+    expect(report.ok).toBe(true);
+    expect(report.writes).toContainEqual(
+      expect.objectContaining({
+        relativePath: "AGENTS.md",
+        status: "updated",
+      }),
+    );
+    expect(agents).toContain("# Instructions");
+    expect(agents).toContain("<!-- greenhouse-spec:start -->");
+    expect(agents).toContain("greenhouse-spec tend");
+    expect(agents).toContain("<!-- greenhouse-spec:end -->");
+  });
+
+  it("creates AGENTS.md with Greenhouse guidance when no agent instructions exist", () => {
+    const repo = createDeclarionLiteRepo();
+    rmSync(join(repo, "AGENTS.md"));
+
+    const report = runPlant({ cwd: repo });
+    const agents = readFileSync(join(repo, "AGENTS.md"), "utf8");
+    const agentIndex = readGreenhouseYaml(repo, "grown/agent-index.yaml");
+
+    expect(report.ok).toBe(true);
+    expect(report.writes).toContainEqual(
+      expect.objectContaining({
+        relativePath: "AGENTS.md",
+        status: "created",
+      }),
+    );
+    expect(agents).toContain("# Agent Instructions");
+    expect(agents).toContain("Greenhouse Validation");
+    expect(agentIndex.agent_files).toContainEqual({
+      path: "AGENTS.md",
+      present: true,
+    });
+  });
+
+  it("updates detected Copilot instruction files with Greenhouse guidance", () => {
+    const repo = createDeclarionLiteRepo();
+    mkdirSync(join(repo, ".github"), { recursive: true });
+    writeFileSync(
+      join(repo, ".github", "copilot-instructions.md"),
+      "# Copilot Instructions\n",
+      "utf8",
+    );
+
+    const report = runPlant({ cwd: repo });
+
+    expect(report.ok).toBe(true);
+    expect(report.writes).toContainEqual(
+      expect.objectContaining({
+        relativePath: ".github/copilot-instructions.md",
+        status: "updated",
+      }),
+    );
+    expect(
+      readFileSync(join(repo, ".github", "copilot-instructions.md"), "utf8"),
+    ).toContain("greenhouse-spec tend");
   });
 
   it("writes discovered project, command, and repo map data", () => {
@@ -67,7 +137,18 @@ describe("plant", () => {
     expect(project.stack.package_manager).toBe("pnpm");
     expect(project.stack.frameworks).toEqual(["react", "vite"]);
     expect(commandIndex.commands.map((command: { id: string }) => command.id)).toEqual(
-      ["build", "check", "cli:build", "test", "test:cli", "typecheck"],
+      expect.arrayContaining([
+        "build",
+        "check",
+        "cli:build",
+        "test",
+        "test:cli",
+        "typecheck",
+        "greenhouse:tend",
+        "greenhouse:tend:check",
+        "greenhouse:proposals",
+        "prepush",
+      ]),
     );
     expect(repoMap.docs.map((entry: { path: string }) => entry.path)).toEqual([
       "README.md",

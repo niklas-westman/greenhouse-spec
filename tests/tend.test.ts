@@ -404,6 +404,7 @@ describe("tend", () => {
 
   it("check fails on pending package script proposals", () => {
     const repo = createRepo();
+    removeGreenhousePackageScripts(repo);
 
     const report = runTend({ cwd: repo, check: true });
 
@@ -490,6 +491,7 @@ describe("tend", () => {
 
   it("check report prints resolution commands for structural drift", () => {
     const repo = createRepo();
+    removeGreenhousePackageScripts(repo);
 
     const output = formatTendReport(runTend({ cwd: repo, check: true }));
 
@@ -497,7 +499,8 @@ describe("tend", () => {
     expect(output).toContain("State: fail");
     expect(output).toContain("Blocking: structural drift blocks tending.");
     expect(output).toContain("not run: tend --check is structural-only");
-    expect(output).toContain("greenhouse-spec inspect");
+    expect(output).not.toContain("greenhouse-spec inspect");
+    expect(output).toContain("greenhouse-spec proposals");
     expect(output).toContain("greenhouse-spec apply-proposals --safe --dry-run");
     expect(output).toContain("greenhouse-spec adopt-proposals --id <proposal-id>");
   });
@@ -577,6 +580,21 @@ function createReadyRepo(scriptOverrides: Record<string, string> = {}): string {
   runInspect({ cwd: repo });
   applyProposals({ cwd: repo, safe: true });
   return repo;
+}
+
+function removeGreenhousePackageScripts(repo: string): void {
+  const packageJson = JSON.parse(readFileSync(join(repo, "package.json"), "utf8")) as {
+    scripts?: Record<string, string>;
+    [key: string]: unknown;
+  };
+  const scripts = { ...(packageJson.scripts ?? {}) };
+  for (const name of Object.keys(scripts)) {
+    if (name === "prepush" || name === "validate:cli" || name.startsWith("greenhouse")) {
+      delete scripts[name];
+    }
+  }
+  packageJson.scripts = scripts;
+  writeFileSync(join(repo, "package.json"), `${JSON.stringify(packageJson, null, 2)}\n`, "utf8");
 }
 
 function createMilibryLikeRepo(): string {

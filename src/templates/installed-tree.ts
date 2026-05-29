@@ -5,6 +5,9 @@ export const mvpInstalledTreePaths = [
   "roots/validation.yaml",
   "roots/authority.md",
   "roots/docs.yaml",
+  "why-greenhouse-spec/README.md",
+  "why-greenhouse-spec/tree-structure.md",
+  "why-greenhouse-spec/agent-workflow.md",
   "grown/repo-map.yaml",
   "grown/command-index.yaml",
   "grown/docs-index.yaml",
@@ -25,6 +28,7 @@ export type MvpInstalledTreePath = (typeof mvpInstalledTreePaths)[number];
 
 export const mvpInstalledDirectories = [
   "roots",
+  "why-greenhouse-spec",
   "grown",
   "context",
   "scripts",

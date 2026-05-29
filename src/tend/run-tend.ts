@@ -374,7 +374,6 @@ function nextActions(report: TendReport): string[] {
 
   if (report.selfTending && report.selfTending.blocking.length > 0) {
     return [
-      "greenhouse-spec inspect",
       "greenhouse-spec proposals",
       "greenhouse-spec apply-proposals --safe --dry-run",
       "greenhouse-spec apply-proposals --safe",

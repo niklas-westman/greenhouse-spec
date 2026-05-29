@@ -1,6 +1,6 @@
 schema_version: 1
 managed_by: greenhouse-spec
-generated_at: 2026-05-24T20:09:47.269Z
+generated_at: 2026-05-28T07:59:25.681Z
 confidence: high
 shape:
   - single-package
@@ -21,6 +21,7 @@ packages:
       typecheck: pnpm typecheck
     confidence: high
 java_modules: []
+rust_modules: []
 generated:
   - path: .greenhouse/grown/
     reason: Greenhouse generated index output

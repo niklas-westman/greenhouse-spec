@@ -1,13 +1,17 @@
 schema_version: 1
 managed_by: greenhouse-spec
-generated_at: 2026-05-24T20:09:47.284Z
+generated_at: 2026-05-28T07:59:25.697Z
 proposals:
   - id: validation-route:readme-md
+    idempotency_key: validation-route:README.md
     kind: validation-route
     status: applied
     confidence: high
     reason: Greenhouse docs entrypoint detected.
     safe: true
+    preconditions:
+      - README.md is still part of the discovered repo shape
+      - path rule README.md is missing or managed by greenhouse-spec
     target:
       path: .greenhouse/roots/validation.yaml
     validation_route:
@@ -26,11 +30,15 @@ proposals:
         recommended: []
         manual: []
   - id: validation-route:docs
+    idempotency_key: validation-route:docs/**
     kind: validation-route
     status: applied
     confidence: high
     reason: Greenhouse docs folder detected.
     safe: true
+    preconditions:
+      - docs/** is still part of the discovered repo shape
+      - path rule docs/** is missing or managed by greenhouse-spec
     target:
       path: .greenhouse/roots/validation.yaml
     validation_route:
@@ -49,11 +57,15 @@ proposals:
         recommended: []
         manual: []
   - id: validation-route:src-cli-ts
+    idempotency_key: validation-route:src/cli.ts
     kind: validation-route
     status: applied
     confidence: high
     reason: Greenhouse CLI entrypoint detected.
     safe: true
+    preconditions:
+      - src/cli.ts is still part of the discovered repo shape
+      - path rule src/cli.ts is missing or managed by greenhouse-spec
     target:
       path: .greenhouse/roots/validation.yaml
     validation_route:
@@ -72,11 +84,15 @@ proposals:
         recommended: []
         manual: []
   - id: validation-route:src-commands
+    idempotency_key: validation-route:src/commands/**
     kind: validation-route
     status: applied
     confidence: high
     reason: Greenhouse command adapters detected.
     safe: true
+    preconditions:
+      - src/commands/** is still part of the discovered repo shape
+      - path rule src/commands/** is missing or managed by greenhouse-spec
     target:
       path: .greenhouse/roots/validation.yaml
     validation_route:
@@ -95,11 +111,15 @@ proposals:
         recommended: []
         manual: []
   - id: validation-route:src-schemas
+    idempotency_key: validation-route:src/schemas/**
     kind: validation-route
     status: applied
     confidence: high
     reason: Greenhouse schemas detected.
     safe: true
+    preconditions:
+      - src/schemas/** is still part of the discovered repo shape
+      - path rule src/schemas/** is missing or managed by greenhouse-spec
     target:
       path: .greenhouse/roots/validation.yaml
     validation_route:
@@ -118,11 +138,15 @@ proposals:
         recommended: []
         manual: []
   - id: validation-route:src-proposals
+    idempotency_key: validation-route:src/proposals/**
     kind: validation-route
     status: applied
     confidence: high
     reason: Greenhouse proposal engine detected.
     safe: true
+    preconditions:
+      - src/proposals/** is still part of the discovered repo shape
+      - path rule src/proposals/** is missing or managed by greenhouse-spec
     target:
       path: .greenhouse/roots/validation.yaml
     validation_route:
@@ -141,11 +165,15 @@ proposals:
         recommended: []
         manual: []
   - id: validation-route:src-validation
+    idempotency_key: validation-route:src/validation/**
     kind: validation-route
     status: applied
     confidence: high
     reason: Greenhouse validation router detected.
     safe: true
+    preconditions:
+      - src/validation/** is still part of the discovered repo shape
+      - path rule src/validation/** is missing or managed by greenhouse-spec
     target:
       path: .greenhouse/roots/validation.yaml
     validation_route:
@@ -164,11 +192,15 @@ proposals:
         recommended: []
         manual: []
   - id: validation-route:src-verify
+    idempotency_key: validation-route:src/verify/**
     kind: validation-route
     status: applied
     confidence: high
     reason: Greenhouse verify runner detected.
     safe: true
+    preconditions:
+      - src/verify/** is still part of the discovered repo shape
+      - path rule src/verify/** is missing or managed by greenhouse-spec
     target:
       path: .greenhouse/roots/validation.yaml
     validation_route:
@@ -187,11 +219,15 @@ proposals:
         recommended: []
         manual: []
   - id: validation-route:src-plant
+    idempotency_key: validation-route:src/plant/**
     kind: validation-route
     status: applied
     confidence: high
     reason: Greenhouse plant runner detected.
     safe: true
+    preconditions:
+      - src/plant/** is still part of the discovered repo shape
+      - path rule src/plant/** is missing or managed by greenhouse-spec
     target:
       path: .greenhouse/roots/validation.yaml
     validation_route:
@@ -210,11 +246,15 @@ proposals:
         recommended: []
         manual: []
   - id: validation-route:templates
+    idempotency_key: validation-route:templates/**
     kind: validation-route
     status: applied
     confidence: high
     reason: Greenhouse installed templates detected.
     safe: true
+    preconditions:
+      - templates/** is still part of the discovered repo shape
+      - path rule templates/** is missing or managed by greenhouse-spec
     target:
       path: .greenhouse/roots/validation.yaml
     validation_route:
@@ -233,11 +273,15 @@ proposals:
         recommended: []
         manual: []
   - id: validation-route:src-templates
+    idempotency_key: validation-route:src/templates/**
     kind: validation-route
     status: applied
     confidence: high
     reason: Greenhouse template registry detected.
     safe: true
+    preconditions:
+      - src/templates/** is still part of the discovered repo shape
+      - path rule src/templates/** is missing or managed by greenhouse-spec
     target:
       path: .greenhouse/roots/validation.yaml
     validation_route:
@@ -256,11 +300,15 @@ proposals:
         recommended: []
         manual: []
   - id: validation-route:src-tend
+    idempotency_key: validation-route:src/tend/**
     kind: validation-route
     status: applied
     confidence: high
     reason: Greenhouse tend gate detected.
     safe: true
+    preconditions:
+      - src/tend/** is still part of the discovered repo shape
+      - path rule src/tend/** is missing or managed by greenhouse-spec
     target:
       path: .greenhouse/roots/validation.yaml
     validation_route:
@@ -279,11 +327,15 @@ proposals:
         recommended: []
         manual: []
   - id: validation-route:src-doctor
+    idempotency_key: validation-route:src/doctor/**
     kind: validation-route
     status: applied
     confidence: high
     reason: Greenhouse doctor detected.
     safe: true
+    preconditions:
+      - src/doctor/** is still part of the discovered repo shape
+      - path rule src/doctor/** is missing or managed by greenhouse-spec
     target:
       path: .greenhouse/roots/validation.yaml
     validation_route:
@@ -302,11 +354,15 @@ proposals:
         recommended: []
         manual: []
   - id: validation-route:src-discovery
+    idempotency_key: validation-route:src/discovery/**
     kind: validation-route
     status: applied
     confidence: high
     reason: Greenhouse discovery layer detected.
     safe: true
+    preconditions:
+      - src/discovery/** is still part of the discovered repo shape
+      - path rule src/discovery/** is missing or managed by greenhouse-spec
     target:
       path: .greenhouse/roots/validation.yaml
     validation_route:
@@ -325,11 +381,15 @@ proposals:
         recommended: []
         manual: []
   - id: validation-route:src-inspect
+    idempotency_key: validation-route:src/inspect/**
     kind: validation-route
     status: applied
     confidence: high
     reason: Greenhouse inspect runner detected.
     safe: true
+    preconditions:
+      - src/inspect/** is still part of the discovered repo shape
+      - path rule src/inspect/** is missing or managed by greenhouse-spec
     target:
       path: .greenhouse/roots/validation.yaml
     validation_route:
@@ -348,11 +408,15 @@ proposals:
         recommended: []
         manual: []
   - id: validation-route:src-lifecycle
+    idempotency_key: validation-route:src/lifecycle/**
     kind: validation-route
     status: applied
     confidence: high
     reason: Greenhouse lifecycle commands detected.
     safe: true
+    preconditions:
+      - src/lifecycle/** is still part of the discovered repo shape
+      - path rule src/lifecycle/** is missing or managed by greenhouse-spec
     target:
       path: .greenhouse/roots/validation.yaml
     validation_route:
@@ -371,11 +435,15 @@ proposals:
         recommended: []
         manual: []
   - id: validation-route:src-status
+    idempotency_key: validation-route:src/status/**
     kind: validation-route
     status: applied
     confidence: high
     reason: Greenhouse status runner detected.
     safe: true
+    preconditions:
+      - src/status/** is still part of the discovered repo shape
+      - path rule src/status/** is missing or managed by greenhouse-spec
     target:
       path: .greenhouse/roots/validation.yaml
     validation_route:
@@ -394,11 +462,15 @@ proposals:
         recommended: []
         manual: []
   - id: validation-route:src-evidence
+    idempotency_key: validation-route:src/evidence/**
     kind: validation-route
     status: applied
     confidence: high
     reason: Greenhouse evidence maintenance detected.
     safe: true
+    preconditions:
+      - src/evidence/** is still part of the discovered repo shape
+      - path rule src/evidence/** is missing or managed by greenhouse-spec
     target:
       path: .greenhouse/roots/validation.yaml
     validation_route:
@@ -417,11 +489,15 @@ proposals:
         recommended: []
         manual: []
   - id: validation-route:src-native-scripts
+    idempotency_key: validation-route:src/native-scripts/**
     kind: validation-route
     status: applied
     confidence: high
     reason: Greenhouse package script proposals detected.
     safe: true
+    preconditions:
+      - src/native-scripts/** is still part of the discovered repo shape
+      - path rule src/native-scripts/** is missing or managed by greenhouse-spec
     target:
       path: .greenhouse/roots/validation.yaml
     validation_route:
@@ -440,11 +516,15 @@ proposals:
         recommended: []
         manual: []
   - id: validation-route:package-json
+    idempotency_key: validation-route:package.json
     kind: validation-route
     status: applied
     confidence: high
     reason: Greenhouse package config detected at package.json.
     safe: true
+    preconditions:
+      - package.json is still part of the discovered repo shape
+      - path rule package.json is missing or managed by greenhouse-spec
     target:
       path: .greenhouse/roots/validation.yaml
     validation_route:
@@ -463,11 +543,15 @@ proposals:
           - id: greenhouse-self-config-review
             prompt: Review Greenhouse self-bootstrap and package validation changes.
   - id: validation-route:pnpm-lock-yaml
+    idempotency_key: validation-route:pnpm-lock.yaml
     kind: validation-route
     status: applied
     confidence: high
     reason: Greenhouse package config detected at pnpm-lock.yaml.
     safe: true
+    preconditions:
+      - pnpm-lock.yaml is still part of the discovered repo shape
+      - path rule pnpm-lock.yaml is missing or managed by greenhouse-spec
     target:
       path: .greenhouse/roots/validation.yaml
     validation_route:
@@ -486,11 +570,15 @@ proposals:
           - id: greenhouse-self-config-review
             prompt: Review Greenhouse self-bootstrap and package validation changes.
   - id: validation-route:tsconfig-json
+    idempotency_key: validation-route:tsconfig.json
     kind: validation-route
     status: applied
     confidence: high
     reason: Greenhouse package config detected at tsconfig.json.
     safe: true
+    preconditions:
+      - tsconfig.json is still part of the discovered repo shape
+      - path rule tsconfig.json is missing or managed by greenhouse-spec
     target:
       path: .greenhouse/roots/validation.yaml
     validation_route:

@@ -77,8 +77,13 @@ describe("discovery", () => {
     mkdirSync(join(repo, "outputs"), { recursive: true });
     mkdirSync(join(repo, "dist"), { recursive: true });
     mkdirSync(join(repo, "dist-cli"), { recursive: true });
+    mkdirSync(join(repo, ".github"), { recursive: true });
     writeFileSync(join(repo, "README.md"), "# Fixture\n");
     writeFileSync(join(repo, "AGENTS.md"), "# Instructions\n");
+    writeFileSync(
+      join(repo, ".github", "copilot-instructions.md"),
+      "# Copilot\n",
+    );
     writeFileSync(join(repo, "src", "app.test.ts"), "test('ok', () => {})\n");
 
     const repoMap = discoverRepoMap(repo);
@@ -98,6 +103,10 @@ describe("discovery", () => {
     ]);
     expect(discoverAgentFiles(repo)).toContainEqual({
       path: "AGENTS.md",
+      present: true,
+    });
+    expect(discoverAgentFiles(repo)).toContainEqual({
+      path: ".github/copilot-instructions.md",
       present: true,
     });
   });

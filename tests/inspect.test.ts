@@ -75,7 +75,7 @@ describe("inspect", () => {
     );
   });
 
-  it("prints package script and validation-root proposals without applying them", () => {
+  it("prints validation-root proposals without reapplying init-managed package scripts", () => {
     const repo = createDeclarionLiteRepo();
     mkdirSync(join(repo, "src", "engine", "sru"), { recursive: true });
     runPlant({ cwd: repo });
@@ -83,26 +83,7 @@ describe("inspect", () => {
 
     const report = runInspect({ cwd: repo });
 
-    expect(report.proposals).toContainEqual(
-      expect.objectContaining({
-        kind: "package-script",
-        name: "greenhouse",
-        command: "greenhouse-spec",
-      }),
-    );
-    expect(report.proposals).toContainEqual(
-      expect.objectContaining({
-        kind: "package-script",
-        name: "greenhouse:status",
-        command: "greenhouse-spec status",
-      }),
-    );
-    expect(report.proposals).toContainEqual(
-      expect.objectContaining({
-        kind: "package-script",
-        name: "validate:cli",
-      }),
-    );
+    expect(report.proposals.filter((proposal) => proposal.kind === "package-script")).toEqual([]);
     expect(report.proposals).toContainEqual(
       expect.objectContaining({
         kind: "validation-root",

@@ -4,6 +4,7 @@ import { join } from "node:path";
 import { stringify as stringifyYaml } from "yaml";
 
 import { discoverAgentFiles } from "../discovery/agent-files.js";
+import type { AgentFileEntry } from "../discovery/agent-files.js";
 import { discoverCommandIndex } from "../discovery/scripts.js";
 import { detectPackageManager } from "../discovery/package-manager.js";
 import { hasDependency, readPackageJson } from "../discovery/package-json.js";
@@ -15,6 +16,9 @@ import { buildValidationProposals } from "../proposals/build-proposals.js";
 import { buildEvidenceIndex } from "../evidence/evidence-index.js";
 import { buildFailureSignatures } from "../evidence/failure-signatures.js";
 import { findPackageRoot } from "../filesystem/package-root.js";
+import { runInspect } from "../inspect/run-inspect.js";
+import { buildAgentOnboardingWrites } from "../lifecycle/agent-onboarding.js";
+import { buildPackageScriptOnboardingWrites } from "../lifecycle/package-script-onboarding.js";
 import {
   applySafeWrites,
   type PlannedWrite,
@@ -48,7 +52,13 @@ export function runPlant(options: PlantOptions): PlantReport {
   const directories = mvpInstalledDirectories.map(
     (directory) => `.greenhouse/${directory}`,
   );
-  const writes = buildPlantWrites(options.cwd);
+  const packageScriptOnboardingWrites = buildPackageScriptOnboardingWrites(options.cwd);
+  const agentOnboardingWrites = buildAgentOnboardingWrites(options.cwd);
+  const writes = [
+    ...buildPlantWrites(options.cwd, agentOnboardingWrites),
+    ...packageScriptOnboardingWrites,
+    ...agentOnboardingWrites,
+  ];
   const results = applySafeWrites({
     cwd: options.cwd,
     dryRun: options.dryRun,
@@ -61,6 +71,7 @@ export function runPlant(options: PlantOptions): PlantReport {
     for (const directory of directories) {
       mkdirSync(join(options.cwd, directory), { recursive: true });
     }
+    runInspect({ cwd: options.cwd });
   }
 
   return {
@@ -99,8 +110,13 @@ export function formatPlantReport(report: PlantReport): string {
   return lines.join("\n");
 }
 
-function buildPlantWrites(cwd: string): PlannedWrite[] {
+function buildPlantWrites(
+  cwd: string,
+  agentOnboardingWrites: PlannedWrite[],
+): PlannedWrite[] {
   const repoMap = discoverRepoMap(cwd);
+  const agentFiles = plannedAgentFiles(cwd, agentOnboardingWrites);
+  repoMap.agent_files = agentFiles;
   const repoShape = discoverRepoShape(cwd);
   const commandIndex = discoverCommandIndex(cwd);
   const riskIndex = discoverRiskIndex(cwd);
@@ -114,6 +130,9 @@ function buildPlantWrites(cwd: string): PlannedWrite[] {
     authored("roots/validation.yaml", validationYaml(cwd)),
     authored("roots/authority.md", template("roots/authority.md")),
     authored("roots/docs.yaml", template("roots/docs.yaml")),
+    authored("why-greenhouse-spec/README.md", template("why-greenhouse-spec/README.md")),
+    authored("why-greenhouse-spec/tree-structure.md", template("why-greenhouse-spec/tree-structure.md")),
+    authored("why-greenhouse-spec/agent-workflow.md", template("why-greenhouse-spec/agent-workflow.md")),
     generated("grown/repo-map.yaml", yaml(repoMap)),
     generated("grown/repo-shape.yaml", yaml(repoShape)),
     generated("grown/command-index.yaml", yaml(commandIndex)),
@@ -129,7 +148,7 @@ function buildPlantWrites(cwd: string): PlannedWrite[] {
       schema_version: 1,
       managed_by: "greenhouse-spec",
       generated_at: now,
-      agent_files: discoverAgentFiles(cwd),
+      agent_files: agentFiles,
     })),
     generated("grown/evidence-index.yaml", yaml(buildEvidenceIndex(cwd))),
     generated("grown/failure-signatures.yaml", yaml(buildFailureSignatures(cwd))),
@@ -153,6 +172,19 @@ function buildPlantWrites(cwd: string): PlannedWrite[] {
     authored("templates/evidence.md", template("templates/evidence.md")),
     authored("templates/verification.md", template("templates/verification.md")),
   ];
+}
+
+function plannedAgentFiles(
+  cwd: string,
+  agentOnboardingWrites: PlannedWrite[],
+): AgentFileEntry[] {
+  const plannedPaths = new Set(
+    agentOnboardingWrites.map((write) => write.relativePath),
+  );
+  return discoverAgentFiles(cwd).map((entry) => ({
+    ...entry,
+    present: entry.present || plannedPaths.has(entry.path),
+  }));
 }
 
 function projectYaml(cwd: string): string {

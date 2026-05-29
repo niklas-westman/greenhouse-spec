@@ -89,9 +89,57 @@ describe("lifecycle commands", () => {
     expect(project.greenhouse.cli_command).toBe("greenhouse-spec");
   });
 
+  it("update preserves local-checkout project metadata when the repo script uses a local CLI", () => {
+    const repo = createRepo();
+    runPlant({ cwd: repo });
+    writePackageJson(repo, {
+      test: "node -e \"process.exit(0)\"",
+      typecheck: "node -e \"process.exit(0)\"",
+      greenhouse: "node ../greenhouse/code/greenhouse-spec/dist/cli.js",
+    });
+
+    const report = runUpdate({ cwd: repo });
+    const project = parseYaml(
+      readFileSync(join(repo, ".greenhouse", "project.yaml"), "utf8"),
+    ) as any;
+
+    expect(report.ok).toBe(true);
+    expect(project.greenhouse.install_mode).toBe("local-checkout");
+    expect(project.greenhouse.cli_command).toBe(
+      "node ../greenhouse/code/greenhouse-spec/dist/cli.js",
+    );
+  });
+
+  it("update adds missing installed purpose docs without overwriting authored roots", () => {
+    const repo = createRepo();
+    runPlant({ cwd: repo });
+    rmSync(join(repo, ".greenhouse", "why-greenhouse-spec"), {
+      recursive: true,
+      force: true,
+    });
+
+    const report = runUpdate({ cwd: repo });
+
+    expect(report.ok).toBe(true);
+    expect(report.writes).toContainEqual(
+      expect.objectContaining({
+        relativePath: ".greenhouse/why-greenhouse-spec/README.md",
+        status: "created",
+      }),
+    );
+    expect(
+      existsSync(join(repo, ".greenhouse", "why-greenhouse-spec", "tree-structure.md")),
+    ).toBe(true);
+  });
+
   it("status is read-only", () => {
     const repo = createRepo();
     runPlant({ cwd: repo });
+    writePackageJson(repo, {
+      test: "node -e \"process.exit(0)\"",
+      typecheck: "node -e \"process.exit(0)\"",
+      "greenhouse:tend": "node ./custom-tend.js",
+    });
     initGitRepo(repo);
     const proposalsPath = join(repo, ".greenhouse", "grown", "validation-proposals.yaml");
     const before = readFileSync(proposalsPath, "utf8");
@@ -382,6 +430,11 @@ describe("lifecycle commands", () => {
   it("status fails when self-tending finds structural drift", () => {
     const repo = createRepo();
     runPlant({ cwd: repo });
+    writePackageJson(repo, {
+      test: "node -e \"process.exit(0)\"",
+      typecheck: "node -e \"process.exit(0)\"",
+      "greenhouse:tend": "node ./custom-tend.js",
+    });
     initGitRepo(repo);
 
     const report = runStatus({ cwd: repo });
@@ -510,6 +563,11 @@ describe("lifecycle commands", () => {
   it("status CLI exits non-zero for failed health", async () => {
     const repo = createRepo();
     runPlant({ cwd: repo });
+    writePackageJson(repo, {
+      test: "node -e \"process.exit(0)\"",
+      typecheck: "node -e \"process.exit(0)\"",
+      "greenhouse:tend": "node ./custom-tend.js",
+    });
     initGitRepo(repo);
     const originalLog = console.log;
     const originalExitCode = process.exitCode;

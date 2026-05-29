@@ -9,7 +9,7 @@ import type {
   ValidationProposals,
 } from "../schemas/validation-proposals.js";
 
-import { readValidationProposals } from "./read-proposals.js";
+import { refreshValidationProposals } from "./read-proposals.js";
 
 export type ApplyProposalResult = {
   id: string;
@@ -46,7 +46,9 @@ export function applyProposals(options: {
     };
   }
 
-  const proposalIndex = readValidationProposals(options.cwd);
+  const proposalIndex = refreshValidationProposals(options.cwd, {
+    write: !options.dryRun,
+  });
   const packageJson = readPackageJson(options.cwd);
   const validation = readValidation(options.cwd);
   const results: ApplyProposalResult[] = [];

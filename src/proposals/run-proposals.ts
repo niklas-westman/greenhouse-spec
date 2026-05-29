@@ -1,4 +1,4 @@
-import { readValidationProposals } from "./read-proposals.js";
+import { refreshValidationProposals } from "./read-proposals.js";
 
 export type ProposalsReport = {
   cwd: string;
@@ -18,7 +18,7 @@ export type ProposalsReport = {
 };
 
 export function runProposals(options: { cwd: string }): ProposalsReport {
-  const index = readValidationProposals(options.cwd);
+  const index = refreshValidationProposals(options.cwd, { write: true });
   const counts = {
     adoptable: 0,
     applied: 0,

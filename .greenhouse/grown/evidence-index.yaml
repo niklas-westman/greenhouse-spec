@@ -1,14 +1,135 @@
 schema_version: 1
 managed_by: greenhouse-spec
-generated_at: 2026-05-27T12:02:05.089Z
+generated_at: 2026-05-29T11:04:23.406Z
 policy:
   agent_reading: Do not bulk-read evidence. Read specific evidence only when continuing a change, debugging validation, or following a tend/report pointer.
   retention: Keep recent evidence indexed here; archive or prune old records when they no longer help future validation decisions.
 summary:
   latest_tending_state: pass
-  latest_tending_evidence: evidence/2026-05-27T12-02-05-087Z-verify.md
+  latest_tending_evidence: evidence/2026-05-29T11-04-23-403Z-verify.md
   latest_failures_by_command: []
 recent:
+  - path: evidence/2026-05-29T11-04-23-403Z-verify.md
+    modified_at: 2026-05-29T11:04:23.404Z
+    summary: "Verification: verify-2026-05-29; mode patch; files src/lifecycle/run-update.ts, tests/lifecycle.test.ts"
+    status: pass
+    mode: patch
+    changed_files:
+      - src/lifecycle/run-update.ts
+      - tests/lifecycle.test.ts
+    commands:
+      - pnpm test:lifecycle
+      - pnpm typecheck
+    manual_checks: []
+    impact_warnings: []
+    failed_commands: []
+    tending_state: pass
+  - path: evidence/2026-05-29T10-20-56-438Z-verify.md
+    modified_at: 2026-05-29T10:20:56.439Z
+    summary: "Verification: verify-2026-05-29; mode patch; files src/discovery/agent-files.ts, src/filesystem/safe-write.ts, src/lifecycle/run-update.ts, src/plant/run-plant.ts, src/proposals/apply-proposals.ts, src/proposals/read-proposals.ts, src/propo"
+    status: pass
+    mode: patch
+    changed_files:
+      - src/discovery/agent-files.ts
+      - src/filesystem/safe-write.ts
+      - src/lifecycle/run-update.ts
+      - src/plant/run-plant.ts
+      - src/proposals/apply-proposals.ts
+      - src/proposals/read-proposals.ts
+      - src/proposals/run-proposals.ts
+      - src/templates/installed-tree.ts
+      - src/tend/run-tend.ts
+      - src/validation/classify-changed-files.ts
+      - src/validation/route-validation.ts
+      - tests/discovery.test.ts
+      - tests/inspect.test.ts
+      - tests/lifecycle.test.ts
+      - tests/plant.test.ts
+      - tests/proposals.test.ts
+      - tests/templates.test.ts
+      - tests/tend.test.ts
+      - tests/validation.test.ts
+      - src/lifecycle/agent-onboarding.ts
+      - src/lifecycle/package-script-onboarding.ts
+      - templates/installed/why-greenhouse-spec/README.md
+      - templates/installed/why-greenhouse-spec/agent-workflow.md
+      - templates/installed/why-greenhouse-spec/tree-structure.md
+      - .greenhouse/project.yaml
+      - .greenhouse/why-greenhouse-spec/
+    commands:
+      - pnpm test:proposals
+      - pnpm typecheck
+      - pnpm test:validation
+      - pnpm test:plant
+      - pnpm test:templates
+      - pnpm test:tend
+      - pnpm test:discovery
+      - pnpm test:lifecycle
+    manual_checks:
+      - Review Greenhouse authored config changes before relying on validation routing.
+    impact_warnings: []
+    failed_commands: []
+    tending_state: warning
+  - path: evidence/2026-05-28T15-12-42-981Z-verify.md
+    modified_at: 2026-05-28T15:12:42.982Z
+    summary: "Verification: verify-2026-05-28; mode patch; files src/lifecycle/run-update.ts, src/plant/run-plant.ts, src/proposals/apply-proposals.ts, src/proposals/read-proposals.ts, src/proposals/run-proposals.ts, src/templates/installed-tree.ts, src/"
+    status: pass
+    mode: patch
+    changed_files:
+      - src/lifecycle/run-update.ts
+      - src/plant/run-plant.ts
+      - src/proposals/apply-proposals.ts
+      - src/proposals/read-proposals.ts
+      - src/proposals/run-proposals.ts
+      - src/templates/installed-tree.ts
+      - src/tend/run-tend.ts
+      - tests/lifecycle.test.ts
+      - tests/proposals.test.ts
+      - tests/templates.test.ts
+      - tests/tend.test.ts
+      - .greenhouse/why-greenhouse-spec/
+      - templates/installed/why-greenhouse-spec/README.md
+      - templates/installed/why-greenhouse-spec/agent-workflow.md
+      - templates/installed/why-greenhouse-spec/tree-structure.md
+      - .greenhouse/project.yaml
+    commands:
+      - pnpm test:proposals
+      - pnpm typecheck
+      - pnpm test:plant
+      - pnpm test:templates
+      - pnpm test:tend
+      - pnpm test:lifecycle
+    manual_checks:
+      - Review Greenhouse authored config changes before relying on validation routing.
+    impact_warnings: []
+    failed_commands: []
+    tending_state: warning
+  - path: evidence/2026-05-28T08-01-57-716Z-verify.md
+    modified_at: 2026-05-28T08:01:57.717Z
+    summary: "Verification: verify-2026-05-28; mode patch; files src/lifecycle/run-update.ts, src/plant/run-plant.ts, src/templates/installed-tree.ts, tests/lifecycle.test.ts, tests/templates.test.ts, .greenhouse/why-greenhouse-spec/, templates/installed"
+    status: pass
+    mode: patch
+    changed_files:
+      - src/lifecycle/run-update.ts
+      - src/plant/run-plant.ts
+      - src/templates/installed-tree.ts
+      - tests/lifecycle.test.ts
+      - tests/templates.test.ts
+      - .greenhouse/why-greenhouse-spec/
+      - templates/installed/why-greenhouse-spec/README.md
+      - templates/installed/why-greenhouse-spec/agent-workflow.md
+      - templates/installed/why-greenhouse-spec/tree-structure.md
+      - .greenhouse/project.yaml
+    commands:
+      - pnpm test:plant
+      - pnpm typecheck
+      - pnpm test:templates
+      - pnpm test:lifecycle
+    manual_checks:
+      - Review Greenhouse authored config changes before relying on validation routing.
+    impact_warnings: []
+    failed_commands: []
+    tending_state: warning
   - path: evidence/2026-05-27T12-02-05-087Z-verify.md
     modified_at: 2026-05-27T12:02:05.088Z
     summary: "Verification: verify-2026-05-27; mode patch; files src/doctor/run-doctor.ts, src/lifecycle/run-init.ts, src/schemas/docs-root.ts, tests/doctor.test.ts, tests/lifecycle.test.ts"

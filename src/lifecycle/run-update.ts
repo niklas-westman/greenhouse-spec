@@ -4,6 +4,7 @@ import { join } from "node:path";
 import { parse as parseYaml, stringify as stringifyYaml } from "yaml";
 
 import { runInspect, type InspectReport } from "../inspect/run-inspect.js";
+import { readPackageJson } from "../discovery/package-json.js";
 import { greenhouseCommandForRepo } from "../native-scripts/package-script-proposals.js";
 import {
   applySafeWrites,
@@ -91,6 +92,18 @@ function buildUpdateWrites(cwd: string): PlannedWrite[] {
   }
 
   for (const path of mvpInstalledTreePaths) {
+    if (path.startsWith("why-greenhouse-spec/")) {
+      const installedPath = join(cwd, ".greenhouse", path);
+      if (!existsSync(installedPath)) {
+        writes.push({
+          relativePath: `.greenhouse/${path}`,
+          content: readFileSync(join(templateRoot, path), "utf8"),
+          kind: "authored",
+        });
+      }
+      continue;
+    }
+
     if (!path.startsWith("scripts/") && !path.startsWith("templates/")) {
       continue;
     }
@@ -113,12 +126,22 @@ function projectMetadataWrite(cwd: string): PlannedWrite | null {
   }
 
   const project = parseYaml(readFileSync(path, "utf8")) as Record<string, any>;
+  const packageJson = readPackageJson(cwd);
+  const existingGreenhouse = project.greenhouse ?? {};
+  const existingCliCommand =
+    typeof existingGreenhouse.cli_command === "string"
+      ? existingGreenhouse.cli_command
+      : null;
+  const packageScriptCommand = packageJson?.scripts?.greenhouse ?? null;
+  const localCheckoutCommand = [existingCliCommand, packageScriptCommand].find(
+    isLocalCheckoutCommand,
+  );
   project.greenhouse = {
-    ...(project.greenhouse ?? {}),
+    ...existingGreenhouse,
     installed_version: GREENHOUSE_SPEC_VERSION,
     template_version: GREENHOUSE_TEMPLATE_VERSION,
-    install_mode: GREENHOUSE_INSTALL_MODE,
-    cli_command: greenhouseCommandForRepo(cwd),
+    install_mode: localCheckoutCommand ? "local-checkout" : GREENHOUSE_INSTALL_MODE,
+    cli_command: localCheckoutCommand ?? greenhouseCommandForRepo(cwd),
     last_updated_at: new Date().toISOString(),
   };
 
@@ -127,4 +150,8 @@ function projectMetadataWrite(cwd: string): PlannedWrite | null {
     content: stringifyYaml(project, { lineWidth: 0 }),
     kind: "generated",
   };
+}
+
+function isLocalCheckoutCommand(command: string | null | undefined): command is string {
+  return Boolean(command?.includes("greenhouse-spec/dist/cli.js"));
 }

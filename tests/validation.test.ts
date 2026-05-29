@@ -467,8 +467,10 @@ describe("validation routing and evidence", () => {
       "package.json",
       "AGENTS.md",
       ".greenhouse/roots/rules.md",
+      ".greenhouse/why-greenhouse-spec/README.md",
       ".greenhouse/evidence/2026-05-23T00-00-00-000Z-verify.md",
       ".greenhouse/grown/repo-map.yaml",
+      ".github/copilot-instructions.md",
     ]);
 
     expect(classification.groups["product-source"]).toEqual([
@@ -476,9 +478,13 @@ describe("validation routing and evidence", () => {
       "src/cli/main.ts",
     ]);
     expect(classification.groups["repo-config"]).toEqual(["package.json"]);
-    expect(classification.groups["agent-instructions"]).toEqual(["AGENTS.md"]);
+    expect(classification.groups["agent-instructions"]).toEqual([
+      "AGENTS.md",
+      ".github/copilot-instructions.md",
+    ]);
     expect(classification.groups["greenhouse-authored"]).toEqual([
       ".greenhouse/roots/rules.md",
+      ".greenhouse/why-greenhouse-spec/README.md",
     ]);
     expect(classification.groups["greenhouse-generated"]).toEqual([
       ".greenhouse/evidence/2026-05-23T00-00-00-000Z-verify.md",

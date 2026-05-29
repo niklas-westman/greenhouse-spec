@@ -64,6 +64,7 @@ describe("installed templates", () => {
   it("declares the MVP directories plant must create", () => {
     expect(mvpInstalledDirectories).toEqual([
       "roots",
+      "why-greenhouse-spec",
       "grown",
       "context",
       "scripts",
@@ -114,6 +115,18 @@ describe("installed templates", () => {
     expect(readTemplate("templates/evidence.md")).toContain("# Verification:");
     expect(readTemplate("templates/verification.md")).toContain(
       "## Commands selected",
+    );
+  });
+
+  it("ships installed purpose and tree documentation", () => {
+    expect(readTemplate("why-greenhouse-spec/README.md")).toContain(
+      "Greenhouse Spec is a repo-local tending layer",
+    );
+    expect(readTemplate("why-greenhouse-spec/tree-structure.md")).toContain(
+      ".greenhouse/",
+    );
+    expect(readTemplate("why-greenhouse-spec/agent-workflow.md")).toContain(
+      "greenhouse-spec tend",
     );
   });
 });

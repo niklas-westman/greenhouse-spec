@@ -1,6 +1,6 @@
 {
   "name": "greenhouse-spec",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Repo-local tending infrastructure for safer agentic engineering.",
   "license": "MIT",
   "type": "module",

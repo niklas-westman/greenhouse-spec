@@ -15,8 +15,10 @@ describe("greenhouse-spec CLI", () => {
       "evidence",
       "init",
       "inspect",
+      "memory",
       "plant",
       "proposals",
+      "skills",
       "status",
       "tend",
       "update",
@@ -34,6 +36,8 @@ describe("greenhouse-spec CLI", () => {
     expect(help).toContain("doctor");
     expect(help).toContain("inspect");
     expect(help).toContain("context");
+    expect(help).toContain("memory");
+    expect(help).toContain("skills");
     expect(help).toContain("verify");
     expect(help).toContain("proposals");
     expect(help).toContain("adopt-proposals");

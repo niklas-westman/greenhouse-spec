@@ -26,13 +26,14 @@ import {
 
 export function buildMemoryIndex(cwd: string): MemoryIndex {
   const memories = fg
-    .sync(".greenhouse/memory/**/*.md", {
+    .sync([".greenhouse/memory/**/*.md", ".greenhouse/proposals/**/*.md"], {
       cwd,
       onlyFiles: true,
       ignore: [".greenhouse/memory/README.md"],
     })
     .sort()
-    .map((path) => memoryEntry(cwd, path));
+    .map((path) => memoryEntry(cwd, path))
+    .filter((entry): entry is MemoryIndexEntry => Boolean(entry));
 
   return {
     schema_version: 1,
@@ -102,8 +103,14 @@ export function readSkillIndex(cwd: string): SkillIndex {
   return parseYamlWithSchema(readFileSync(indexPath, "utf8"), skillIndexSchema);
 }
 
-function memoryEntry(cwd: string, path: string): MemoryIndexEntry {
+function memoryEntry(cwd: string, path: string): MemoryIndexEntry | null {
   const document = parseMarkdownDocument(readFileSync(join(cwd, path), "utf8"));
+  if (
+    path.startsWith(".greenhouse/proposals/") &&
+    stringMetadata(document.metadata, "proposal_type") !== "memory"
+  ) {
+    return null;
+  }
   const memoryType = memoryTypeForPath(path, document.metadata);
   const status = statusForPath(path, document.metadata);
   const title = stringMetadata(document.metadata, "title") ?? markdownTitle(document.body, path);
@@ -170,6 +177,9 @@ function memoryTypeForPath(
   }
   if (path.includes("/inbox/")) {
     return "inbox";
+  }
+  if (path.includes("/proposals/")) {
+    return "other";
   }
   return "other";
 }

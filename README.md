@@ -156,6 +156,7 @@ fail
 
   memory/                 repo-local Markdown memory
   skills/                 repo-local Markdown skills
+  proposals/              reviewable memory proposals
   evidence/               validation records
   reports/                generated reports
   scripts/                installed helper scripts
@@ -304,6 +305,12 @@ verify --changed --write-evidence
 context "task"
   Compile a task-specific agent context brief from rules, memory, skills,
   repo shape, evidence, and validation hints.
+
+memory propose/adopt
+  Create a reviewable memory proposal or adopt one into .greenhouse/memory/**.
+
+skills propose/adopt
+  Create a proposed skill or adopt it into .greenhouse/skills/adopted/**.
 
 inspect
   Refresh generated intelligence under .greenhouse/grown/**.

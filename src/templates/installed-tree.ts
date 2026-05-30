@@ -45,6 +45,8 @@ export const mvpInstalledDirectories = [
   "skills",
   "skills/adopted",
   "skills/drafts",
+  "skills/proposals",
+  "proposals",
   "scripts",
   "evidence",
   "templates",

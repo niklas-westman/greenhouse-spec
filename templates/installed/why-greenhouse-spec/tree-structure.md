@@ -40,6 +40,8 @@ This file explains the purpose of each installed `.greenhouse/` area.
     README.md
     adopted/
     drafts/
+    proposals/
+  proposals/
   scripts/
     check-changed.mjs
     check-greenhouse.mjs
@@ -202,12 +204,18 @@ context briefs.
 ### `memory/`
 
 Canonical repo-local Markdown memory. Adopted files can be indexed into
-`.greenhouse/grown/memory-index.yaml`; `inbox/` is a draft lane.
+`.greenhouse/grown/memory-index.yaml`; `inbox/` is a draft lane and
+`.greenhouse/proposals/` is the reviewable proposal lane.
 
 ### `skills/`
 
 Repo-local skill Markdown. Adopted skills can be surfaced by
-`greenhouse-spec context`; draft skills remain lower authority until reviewed.
+`greenhouse-spec context`; draft and proposed skills remain lower authority
+until reviewed.
+
+### `proposals/`
+
+Reviewable memory proposals written by agents or developers before adoption.
 
 Declares Greenhouse context entries and activation rules.
 

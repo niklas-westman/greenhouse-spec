@@ -2,7 +2,8 @@
 
 Repo-local memory is canonical Markdown that agents may read as task context.
 
-Use adopted lanes for reviewed knowledge and `inbox/` for agent-created drafts:
+Use adopted lanes for reviewed knowledge, `inbox/` for agent-created drafts,
+and `.greenhouse/proposals/` for reviewable memory proposals:
 
 - `decisions/`
 - `lessons/`

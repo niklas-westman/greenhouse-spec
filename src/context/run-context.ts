@@ -1,5 +1,5 @@
 import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
-import { basename, join, relative } from "node:path";
+import { join, relative } from "node:path";
 
 import { parseYamlWithSchema } from "../schemas/common.js";
 import {
@@ -87,7 +87,6 @@ export function runContext(options: ContextOptions): ContextReport {
     .sort((left, right) => right.score - left.score)
     .slice(0, maxIndexedMatches);
   const skillSources = skillIndex.skills
-    .filter((entry) => entry.status === "adopted")
     .map((entry) => scoredSkillSource(options.cwd, entry, queryTerms))
     .filter((source): source is ContextSource & { score: number } => Boolean(source))
     .sort((left, right) => right.score - left.score)
@@ -140,8 +139,20 @@ export function formatContextReport(report: ContextReport): string {
   const rules = report.sources.filter((source) =>
     ["rule", "doc", "report"].includes(source.kind),
   );
-  const memories = report.sources.filter((source) => source.kind === "memory");
-  const skills = report.sources.filter((source) => source.kind === "skill");
+  const memories = report.sources.filter(
+    (source) =>
+      source.kind === "memory" &&
+      source.status !== "draft" &&
+      source.status !== "proposed",
+  );
+  const skills = report.sources.filter(
+    (source) => source.kind === "skill" && source.status === "adopted",
+  );
+  const candidates = report.sources.filter(
+    (source) =>
+      (source.kind === "memory" || source.kind === "skill") &&
+      (source.status === "draft" || source.status === "proposed"),
+  );
   const lines = [
     "# Greenhouse Context Brief",
     "",
@@ -168,6 +179,9 @@ export function formatContextReport(report: ContextReport): string {
 
   lines.push("", "## Relevant Skills", "");
   appendSources(lines, skills);
+
+  lines.push("", "## Candidate Memory And Skill Proposals", "");
+  appendSources(lines, candidates);
 
   lines.push("", "## Validation Hints", "");
   if (report.validationHints.length === 0) {
@@ -324,7 +338,10 @@ function scoredSkillSource(
     id: entry.id,
     kind: "skill",
     path: entry.path,
-    reason: `adopted skill lexical match (${score})`,
+    reason:
+      entry.status === "adopted"
+        ? `adopted skill lexical match (${score})`
+        : `candidate skill lexical match (${score}); not adopted`,
     status: entry.status,
     freshness: entry.freshness,
     summary: entry.summary,

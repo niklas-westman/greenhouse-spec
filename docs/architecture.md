@@ -22,6 +22,9 @@ src/inspect/*
 src/context/*
   Builds Markdown-first memory/skill indexes and compiles task context briefs.
 
+src/proposal-lanes/*
+  Writes memory/skill proposals and adopts reviewed knowledge into trusted lanes.
+
 src/proposals/*
   Builds, reads, prints, applies, and adopts structured maintenance proposals.
 
@@ -81,6 +84,9 @@ context
   combines manifest routes, repo shape, memory, skills, evidence, and validation
   hints into a source-backed task brief
 
+memory/skills proposal lanes
+  write proposed knowledge into lower-authority lanes before explicit adoption
+
 failure signatures
   generated from recent evidence to explain repeated failures without changing
   validation pass/fail behavior
@@ -97,6 +103,12 @@ Generated and disposable:
 Agent-readable knowledge:
   .greenhouse/memory/**
   .greenhouse/skills/**
+
+Agent-writable proposal lanes:
+  .greenhouse/memory/inbox/**
+  .greenhouse/skills/drafts/**
+  .greenhouse/skills/proposals/**
+  .greenhouse/proposals/**
 
 Append-only records:
   .greenhouse/evidence/**

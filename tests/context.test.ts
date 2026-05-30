@@ -89,6 +89,60 @@ describe("context", () => {
     expect(report.writtenReportPath).toMatch(/\.greenhouse\/reports\/context\/.+-context\.md$/);
     expect(existsSync(report.writtenReportPath ?? "")).toBe(true);
   });
+
+  it("surfaces proposed memory and skills as candidates", () => {
+    const repo = createContextRepo();
+    mkdirSync(join(repo, ".greenhouse", "proposals"), { recursive: true });
+    mkdirSync(join(repo, ".greenhouse", "skills", "proposals"), { recursive: true });
+    writeFileSync(
+      join(repo, ".greenhouse", "proposals", "memory-keyboard.md"),
+      [
+        "---",
+        "proposal_type: memory",
+        "status: proposed",
+        "title: Keyboard Candidate",
+        "memory_type: lesson",
+        "---",
+        "# Keyboard Candidate",
+        "",
+        "Keyboard navigation needs a follow-up review.",
+        "",
+      ].join("\n"),
+      "utf8",
+    );
+    writeFileSync(
+      join(repo, ".greenhouse", "skills", "proposals", "keyboard-review.md"),
+      [
+        "---",
+        "proposal_type: skill",
+        "status: proposed",
+        "name: Keyboard Review",
+        "description: Review keyboard navigation behavior.",
+        "---",
+        "# Keyboard Review",
+        "",
+        "Check keyboard navigation behavior.",
+        "",
+      ].join("\n"),
+      "utf8",
+    );
+    runInspect({ cwd: repo });
+
+    const report = runContext({
+      cwd: repo,
+      task: "Review keyboard navigation",
+    });
+    const markdown = formatContextReport(report);
+
+    expect(report.sources).toContainEqual(
+      expect.objectContaining({
+        path: ".greenhouse/proposals/memory-keyboard.md",
+        status: "proposed",
+      }),
+    );
+    expect(markdown).toContain("## Candidate Memory And Skill Proposals");
+    expect(markdown).toContain("not adopted");
+  });
 });
 
 function createContextRepo(): string {

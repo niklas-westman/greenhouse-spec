@@ -78,6 +78,8 @@ describe("installed templates", () => {
       "skills",
       "skills/adopted",
       "skills/drafts",
+      "skills/proposals",
+      "proposals",
       "scripts",
       "evidence",
       "templates",

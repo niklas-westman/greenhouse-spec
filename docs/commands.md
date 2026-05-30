@@ -22,6 +22,8 @@ Secondary commands expose the same layers directly:
 greenhouse-spec verify --changed --dry-run
 greenhouse-spec verify --changed --write-evidence
 greenhouse-spec context "task"
+greenhouse-spec memory propose --title "..." --type decision --body "..."
+greenhouse-spec skills propose --name "..." --description "..." --body "..."
 greenhouse-spec tend --check
 greenhouse-spec inspect
 greenhouse-spec proposals
@@ -152,6 +154,28 @@ Side effects:
 - `--write-report` writes `.greenhouse/reports/context/<timestamp>-context.md`.
 - `--json` prints the same report as structured JSON.
 - No authored roots are mutated.
+
+## `memory`
+
+```bash
+greenhouse-spec memory propose --title "Navigation decision" --type decision --body "..."
+greenhouse-spec memory adopt --proposal .greenhouse/proposals/<file>.md
+```
+
+Writes reviewable memory proposals and adopts reviewed proposals into
+`.greenhouse/memory/**`. Adoption copies the proposal into the appropriate
+memory lane, marks the adopted memory as `status: adopted`, and marks the
+proposal with its adopted path.
+
+## `skills`
+
+```bash
+greenhouse-spec skills propose --name "Accessibility Review" --description "..." --body "..."
+greenhouse-spec skills adopt --proposal .greenhouse/skills/proposals/<file>.md
+```
+
+Writes reviewable skill proposals and adopts reviewed proposals into
+`.greenhouse/skills/adopted/<skill-name>/SKILL.md`.
 
 ## `proposals`
 

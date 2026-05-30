@@ -1,6 +1,6 @@
 import { basename } from "node:path";
 
-import { parse as parseYaml } from "yaml";
+import { parse as parseYaml, stringify as stringifyYaml } from "yaml";
 
 export type MarkdownDocument = {
   metadata: Record<string, unknown>;
@@ -41,6 +41,18 @@ export function parseMarkdownDocument(source: string): MarkdownDocument {
       body: source,
     };
   }
+}
+
+export function formatMarkdownDocument(
+  metadata: Record<string, unknown>,
+  body: string,
+): string {
+  return [
+    "---",
+    stringifyYaml(metadata, { lineWidth: 0 }).trim(),
+    "---",
+    body.replace(/^\n+/, "").replace(/\s*$/, "\n"),
+  ].join("\n");
 }
 
 export function markdownTitle(body: string, fallbackPath: string): string {

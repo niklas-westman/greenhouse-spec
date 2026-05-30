@@ -319,12 +319,18 @@ final tending state. Full command logs are not stored by default.
 
 ```bash
 greenhouse-spec doctor
+greenhouse-spec doctor --memory
 greenhouse-spec doctor --write-report
 ```
 
 Checks that the installed Greenhouse configuration is internally consistent.
 `--write-report` appends a report under `.greenhouse/reports/doctor/`. Old
 generated reports are pruned unless `--no-prune` is used.
+
+Use `--memory` to include Markdown memory and skill checks: broken local links,
+stale adopted knowledge, old drafts/proposals, invalid skill metadata, missing
+indexed source files, and high-authority memory that is not reachable from the
+context manifest.
 
 ## `alignment`
 

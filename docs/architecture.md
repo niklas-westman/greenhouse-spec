@@ -44,7 +44,8 @@ src/evidence/*
   Writes evidence, evidence indexes, generated failure signatures, and pruning.
 
 src/doctor/*
-  Checks that installed Greenhouse files are internally consistent.
+  Checks that installed Greenhouse files are internally consistent, with optional
+  memory/skill health checks.
 
 src/schemas/*
   Zod schemas for installed YAML and generated proposal data.

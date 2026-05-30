@@ -28,8 +28,9 @@ import {
   mvpInstalledDirectories,
   mvpInstalledTreePaths,
 } from "../templates/installed-tree.js";
+import { validateKnowledgeHealth } from "./knowledge-doctor.js";
 
-export type DoctorSeverity = "error" | "warning";
+export type DoctorSeverity = "error" | "warning" | "info";
 
 export type DoctorFinding = {
   severity: DoctorSeverity;
@@ -48,6 +49,7 @@ export type DoctorReport = {
 
 export type RunDoctorOptions = {
   cwd: string;
+  memory?: boolean;
   writeReport?: boolean;
   noPrune?: boolean;
 };
@@ -166,6 +168,10 @@ export function runDoctor(options: RunDoctorOptions): DoctorReport {
   }
 
   validatePackageAliases(cwd, findings);
+
+  if (options.memory) {
+    validateKnowledgeHealth(cwd, findings);
+  }
 
   const report: DoctorReport = {
     cwd,

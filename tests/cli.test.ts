@@ -60,6 +60,14 @@ describe("greenhouse-spec CLI", () => {
     expect(tendCommand?.options.map((option) => option.long)).toContain("--no-prune");
   });
 
+  it("exposes doctor memory checks", () => {
+    const doctorCommand = createProgram().commands.find(
+      (command) => command.name() === "doctor",
+    );
+
+    expect(doctorCommand?.options.map((option) => option.long)).toContain("--memory");
+  });
+
   it("exposes status verbose and json output modes", () => {
     const statusCommand = createProgram().commands.find(
       (command) => command.name() === "status",

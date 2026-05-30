@@ -24,6 +24,15 @@ Use the result to answer:
 If `status` is `degraded`, read the summary. Degraded does not always mean the
 repo is broken. It usually means there is context an agent should not ignore.
 
+When working with repo-local memory or skills, run:
+
+```bash
+greenhouse-spec doctor --memory
+```
+
+Use the warnings to refresh stale adopted knowledge, repair broken links, or
+triage old drafts before relying on them.
+
 ## Work Normally
 
 Read the code, make the smallest useful change, and follow the repo's existing

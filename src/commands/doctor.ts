@@ -7,11 +7,13 @@ export function registerDoctorCommand(program: Command): void {
     .command("doctor")
     .description("Check that a .greenhouse configuration is internally consistent.")
     .option("--cwd <path>", "Repository root to inspect.", process.cwd())
+    .option("--memory", "Include memory and skill freshness, metadata, link, and proposal checks.")
     .option("--write-report", "Write a doctor report under .greenhouse/reports/doctor/.")
     .option("--no-prune", "Do not prune old generated evidence/report files after writing a doctor report.")
-    .action((options: { cwd: string; writeReport?: boolean; prune?: boolean }) => {
+    .action((options: { cwd: string; memory?: boolean; writeReport?: boolean; prune?: boolean }) => {
       const report = runDoctor({
         cwd: options.cwd,
+        memory: options.memory,
         writeReport: options.writeReport,
         noPrune: options.prune === false,
       });

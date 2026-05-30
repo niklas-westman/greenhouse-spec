@@ -123,7 +123,7 @@ function memoryEntry(cwd: string, path: string): MemoryIndexEntry | null {
     memory_type: memoryType,
     status,
     authority: authorityForMetadata(document.metadata, status),
-    freshness: "unknown",
+    freshness: freshnessForMetadata(document.metadata, status),
     keywords: stringArrayMetadata(document.metadata, "keywords"),
     metadata: metadataForIndex(document.metadata, status),
   };
@@ -146,10 +146,35 @@ function skillEntry(cwd: string, path: string): SkillIndexEntry {
       stringMetadata(document.metadata, "summary") ??
       markdownSummary(document.body),
     status,
-    freshness: "unknown",
+    freshness: freshnessForMetadata(document.metadata, status),
     keywords: stringArrayMetadata(document.metadata, "keywords"),
     metadata: metadataForIndex(document.metadata, status),
   };
+}
+
+function freshnessForMetadata(
+  metadata: Record<string, unknown>,
+  status: SkillStatus,
+): MemoryIndexEntry["freshness"] {
+  if (status !== "adopted") {
+    return "unknown";
+  }
+
+  const reviewAfterDays = numberMetadata(metadata, "review_after_days") ?? 30;
+  const lastReviewed = stringMetadata(metadata, "last_reviewed");
+  const lastUsed = stringMetadata(metadata, "last_used");
+  const latest = [lastReviewed, lastUsed]
+    .filter((value): value is string => Boolean(value))
+    .map((value) => new Date(value).getTime())
+    .filter((value) => !Number.isNaN(value))
+    .sort((left, right) => right - left)[0];
+
+  if (!latest) {
+    return "stale";
+  }
+
+  const ageMs = Date.now() - latest;
+  return ageMs > reviewAfterDays * 24 * 60 * 60 * 1000 ? "stale" : "fresh";
 }
 
 function memoryTypeForPath(

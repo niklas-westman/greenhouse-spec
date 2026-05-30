@@ -5,6 +5,7 @@ import {
   mkdirSync,
   readFileSync,
   rmSync,
+  utimesSync,
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
@@ -384,6 +385,89 @@ describe("doctor", () => {
     expect(existsSync(report.writtenReportPath ?? "")).toBe(true);
     expect(readFileSync(report.writtenReportPath ?? "", "utf8")).toContain(
       "Status: pass",
+    );
+  });
+
+  it("checks memory and skill health when requested", () => {
+    const repo = createFixtureRepo();
+    mkdirSync(join(repo, ".greenhouse", "memory", "decisions"), { recursive: true });
+    mkdirSync(join(repo, ".greenhouse", "proposals"), { recursive: true });
+    mkdirSync(join(repo, ".greenhouse", "skills", "adopted", "bad-skill"), {
+      recursive: true,
+    });
+    const oldDate = new Date("2026-03-01T00:00:00Z");
+    writeFileSync(
+      join(repo, ".greenhouse", "memory", "decisions", "stale.md"),
+      [
+        "---",
+        "id: memory.stale",
+        "status: adopted",
+        "authority: high",
+        "memory_type: decision",
+        "last_reviewed: 2026-03-01",
+        "review_after_days: 30",
+        "---",
+        "# Stale",
+        "",
+        "[Missing](missing.md)",
+        "",
+      ].join("\n"),
+      "utf8",
+    );
+    writeFileSync(
+      join(repo, ".greenhouse", "proposals", "old-memory.md"),
+      [
+        "---",
+        "proposal_type: memory",
+        "status: proposed",
+        "title: Old Memory",
+        "memory_type: lesson",
+        "---",
+        "# Old Memory",
+        "",
+      ].join("\n"),
+      "utf8",
+    );
+    writeFileSync(
+      join(repo, ".greenhouse", "skills", "adopted", "bad-skill", "SKILL.md"),
+      "# Bad Skill\n",
+      "utf8",
+    );
+    utimesSync(join(repo, ".greenhouse", "proposals", "old-memory.md"), oldDate, oldDate);
+
+    const report = runDoctor({ cwd: repo, memory: true });
+
+    expect(report.ok).toBe(true);
+    expect(report.findings).toContainEqual(
+      expect.objectContaining({
+        severity: "warning",
+        check: "knowledge-freshness",
+        path: ".greenhouse/memory/decisions/stale.md",
+      }),
+    );
+    expect(report.findings).toContainEqual(
+      expect.objectContaining({
+        severity: "warning",
+        check: "knowledge-link",
+      }),
+    );
+    expect(report.findings).toContainEqual(
+      expect.objectContaining({
+        severity: "warning",
+        check: "memory-reachability",
+      }),
+    );
+    expect(report.findings).toContainEqual(
+      expect.objectContaining({
+        severity: "warning",
+        check: "skill-metadata",
+      }),
+    );
+    expect(report.findings).toContainEqual(
+      expect.objectContaining({
+        severity: "info",
+        check: "knowledge-draft-age",
+      }),
     );
   });
 });

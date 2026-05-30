@@ -45,6 +45,7 @@ describe("context", () => {
         id: "memory.navigation.accessibility",
         memory_type: "decision",
         status: "adopted",
+        freshness: "stale",
       }),
     );
     expect(skillIndex.skills).toContainEqual(

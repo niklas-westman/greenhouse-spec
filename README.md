@@ -327,6 +327,10 @@ apply-proposals --safe
 
 doctor
   Validate installed Greenhouse files and command wiring.
+
+doctor --memory
+  Audit repo-local memory and skills for stale metadata, broken links, old
+  drafts/proposals, invalid skill metadata, and unreachable high-authority memory.
 ```
 
 See [docs/commands.md](docs/commands.md) for more detail.

@@ -60,6 +60,8 @@ Greenhouse V1 focuses on:
   evidence, and validation hints.
 - Writing proposal-lane memory and skill drafts, then adopting reviewed
   knowledge into higher-authority lanes.
+- Keeping semantic retrieval optional, source-backed, and disabled unless a repo
+  explicitly provides a generated semantic index.
 
 Greenhouse does not yet convert every tend/evidence learning into structured
 proposals. That is a future evolution of the same proposal system.

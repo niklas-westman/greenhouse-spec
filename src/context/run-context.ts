@@ -23,11 +23,14 @@ import {
   querySqliteKnowledgeIndex,
   type SqliteKnowledgeMatch,
 } from "./sqlite-index.js";
+import { readSemanticRetrieval } from "./semantic-index.js";
+import type { SemanticIndexMatch } from "../schemas/semantic-index.js";
 
 export type ContextOptions = {
   cwd: string;
   task: string;
   json?: boolean;
+  semantic?: boolean;
   writeReport?: boolean;
   paths?: string[];
   risks?: string[];
@@ -68,6 +71,13 @@ export type ContextReport = {
   };
   validationHints: string[];
   knownRisks: string[];
+  semantic: {
+    requested: boolean;
+    enabled: boolean;
+    indexPath: string;
+    matches: number;
+    note: string | null;
+  };
   writtenReportPath?: string;
 };
 
@@ -81,6 +91,12 @@ export function runContext(options: ContextOptions): ContextReport {
   const manifest = readContextManifest(options.cwd);
   const queryTerms = terms(options.task);
   const sqliteMatches = querySqliteKnowledgeIndex(options.cwd, options.task);
+  const semantic = readSemanticRetrieval({
+    cwd: options.cwd,
+    manifest,
+    task: options.task,
+    requested: options.semantic,
+  });
   const paths = options.paths ?? [];
   const risks = options.risks ?? [];
   const manifestSources = manifest.context
@@ -91,6 +107,9 @@ export function runContext(options: ContextOptions): ContextReport {
       sqliteSource(options.cwd, match, memoryIndex.memories, skillIndex.skills),
     )
     .filter((source): source is ContextSource => Boolean(source));
+  const semanticSources = semantic.matches.map((match) =>
+    semanticSource(options.cwd, match),
+  );
   const lexicalSources = [
     ...memoryIndex.memories
       .map((entry) => scoredMemorySource(options.cwd, entry, queryTerms))
@@ -121,6 +140,7 @@ export function runContext(options: ContextOptions): ContextReport {
     },
     sources: uniqueSources([
       ...manifestSources,
+      ...semanticSources,
       ...(sqliteSources.length > 0 ? sqliteSources : lexicalSources),
     ]),
     evidence: {
@@ -135,6 +155,13 @@ export function runContext(options: ContextOptions): ContextReport {
     },
     validationHints: validationHints(commandIndex.commands.map((command) => command.command)),
     knownRisks: risks.length > 0 ? risks : repoShape.gaps.map((gap) => gap.message).slice(0, 5),
+    semantic: {
+      requested: Boolean(options.semantic),
+      enabled: semantic.enabled,
+      indexPath: semantic.indexPath,
+      matches: semantic.matches.length,
+      note: semantic.note,
+    },
   };
 
   if (options.writeReport) {
@@ -198,6 +225,14 @@ export function formatContextReport(report: ContextReport): string {
   } else {
     for (const hint of report.validationHints) {
       lines.push(`- ${hint}`);
+    }
+  }
+  if (report.semantic.requested) {
+    lines.push(
+      `- semantic retrieval: ${report.semantic.enabled ? "enabled" : "disabled"} (${report.semantic.matches} match${report.semantic.matches === 1 ? "" : "es"})`,
+    );
+    if (report.semantic.note) {
+      lines.push(`- semantic note: ${report.semantic.note}`);
     }
   }
 
@@ -350,6 +385,19 @@ function scoredMemorySource(
     summary: entry.summary,
     excerpt: excerpt(content || entry.summary, 700),
     score,
+  };
+}
+
+function semanticSource(cwd: string, match: SemanticIndexMatch): ContextSource {
+  const content = readSourceContent(cwd, match.path);
+  return {
+    id: match.id,
+    kind: match.kind,
+    path: match.path,
+    reason: `semantic index candidate${match.score === undefined ? "" : ` (${match.score})`}: ${match.reason}`,
+    status: match.status,
+    summary: firstLine(content) || match.reason,
+    excerpt: content ? excerpt(content, 700) : undefined,
   };
 }
 

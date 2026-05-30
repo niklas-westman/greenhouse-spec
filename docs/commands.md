@@ -140,6 +140,7 @@ Side effects:
 greenhouse-spec context "task"
 greenhouse-spec context "task" --json
 greenhouse-spec context "task" --write-report
+greenhouse-spec context "task" --semantic
 greenhouse-spec context "task" --path src/app.ts --risk api-contract
 ```
 
@@ -155,7 +156,13 @@ Side effects:
 
 - `--write-report` writes `.greenhouse/reports/context/<timestamp>-context.md`.
 - `--json` prints the same report as structured JSON.
+- `--semantic` reads `.greenhouse/grown/semantic-index.yaml` only when semantic
+  retrieval is explicitly enabled in `.greenhouse/context/manifest.yaml`.
 - No authored roots are mutated.
+
+Semantic retrieval is optional and source-backed. Greenhouse does not create
+embeddings or call providers by default; any semantic candidate must keep source
+paths and match reasons visible.
 
 ## `memory`
 

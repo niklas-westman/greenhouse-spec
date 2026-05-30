@@ -215,7 +215,8 @@ Human-readable summary from the latest inspection.
 ### `context/manifest.yaml`
 
 Routes rules, docs, memory, skills, evidence, and reports into task-specific
-context briefs.
+context briefs. Optional semantic retrieval is disabled by default and must keep
+source paths and match reasons visible when enabled.
 
 ### `memory/`
 

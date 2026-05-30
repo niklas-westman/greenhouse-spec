@@ -67,6 +67,16 @@ export const contextManifestEntrySchema = z
 
 export const contextManifestSchema = z.object({
   schema_version: schemaVersionSchema,
+  retrieval: z
+    .object({
+      semantic: z
+        .object({
+          enabled: z.boolean().default(false),
+          index_path: z.string().min(1).default(".greenhouse/grown/semantic-index.yaml"),
+        })
+        .optional(),
+    })
+    .optional(),
   context: z.array(contextManifestEntrySchema),
 });
 

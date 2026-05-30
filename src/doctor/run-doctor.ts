@@ -23,6 +23,7 @@ import { repoShapeSchema } from "../schemas/repo-shape.js";
 import { validationSchema } from "../schemas/validation.js";
 import { validationProposalsSchema } from "../schemas/validation-proposals.js";
 import { memoryIndexSchema, skillIndexSchema } from "../schemas/knowledge-index.js";
+import { semanticIndexSchema } from "../schemas/semantic-index.js";
 import { GREENHOUSE_TEMPLATE_VERSION } from "../version.js";
 import {
   mvpInstalledDirectories,
@@ -98,6 +99,10 @@ const schemaFiles: Array<{ path: string; schema: ZodType<unknown> }> = [
   {
     path: "grown/skill-index.yaml",
     schema: skillIndexSchema,
+  },
+  {
+    path: "grown/semantic-index.yaml",
+    schema: semanticIndexSchema,
   },
   {
     path: "context/manifest.yaml",

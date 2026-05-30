@@ -8,6 +8,7 @@ import { commandIndexSchema } from "../src/schemas/command-index.js";
 import { contextManifestSchema } from "../src/schemas/context-manifest.js";
 import { evidenceSchema } from "../src/schemas/evidence.js";
 import { memoryIndexSchema, skillIndexSchema } from "../src/schemas/knowledge-index.js";
+import { semanticIndexSchema } from "../src/schemas/semantic-index.js";
 import { docsRootSchema } from "../src/schemas/docs-root.js";
 import { parseYamlWithSchema } from "../src/schemas/common.js";
 import { projectSchema } from "../src/schemas/project.js";
@@ -180,6 +181,32 @@ describe("greenhouse schemas", () => {
           "",
         ].join("\n"),
         skillIndexSchema,
+      ),
+    ).not.toThrow();
+  });
+
+  it("validates optional semantic indexes", () => {
+    expect(() =>
+      parseYamlWithSchema(
+        [
+          "schema_version: 1",
+          "managed_by: greenhouse-spec",
+          "generated_at: 2026-05-30T00:00:00Z",
+          "policy:",
+          "  effect: Optional source-backed semantic candidates.",
+          "  requirement: Keep paths and match reasons visible.",
+          "matches:",
+          "  - id: memory.navigation",
+          "    kind: memory",
+          "    path: .greenhouse/memory/decisions/navigation.md",
+          "    status: adopted",
+          "    reason: Related to navigation task.",
+          "    score: 0.82",
+          "    query_hints:",
+          "      - navigation",
+          "",
+        ].join("\n"),
+        semanticIndexSchema,
       ),
     ).not.toThrow();
   });

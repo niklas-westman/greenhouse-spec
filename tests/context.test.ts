@@ -83,6 +83,84 @@ describe("context", () => {
     expect(report.sources[0]?.reason).toContain("sqlite fts");
   });
 
+  it("keeps semantic retrieval opt-in and source-backed", () => {
+    const repo = createContextRepo();
+    writeFileSync(
+      join(repo, ".greenhouse", "context", "manifest.yaml"),
+      [
+        "schema_version: 1",
+        "retrieval:",
+        "  semantic:",
+        "    enabled: true",
+        "    index_path: .greenhouse/grown/semantic-index.yaml",
+        "context: []",
+        "",
+      ].join("\n"),
+      "utf8",
+    );
+    writeFileSync(
+      join(repo, ".greenhouse", "grown", "semantic-index.yaml"),
+      [
+        "schema_version: 1",
+        "managed_by: greenhouse-spec",
+        "generated_at: 2026-05-30T00:00:00Z",
+        "policy:",
+        "  effect: Optional source-backed semantic candidates.",
+        "  requirement: Keep source paths and match reasons visible.",
+        "matches:",
+        "  - id: memory.navigation.accessibility",
+        "    kind: memory",
+        "    path: .greenhouse/memory/decisions/navigation-accessibility.md",
+        "    status: adopted",
+        "    reason: External semantic experiment linked navigation and focus.",
+        "    score: 0.91",
+        "    query_hints:",
+        "      - focus",
+        "",
+      ].join("\n"),
+      "utf8",
+    );
+    runInspect({ cwd: repo });
+
+    const report = runContext({
+      cwd: repo,
+      task: "focus states",
+      semantic: true,
+    });
+    const markdown = formatContextReport(report);
+
+    expect(report.semantic).toEqual(
+      expect.objectContaining({
+        requested: true,
+        enabled: true,
+        matches: 1,
+      }),
+    );
+    expect(report.sources[0]).toEqual(
+      expect.objectContaining({
+        id: "memory.navigation.accessibility",
+        reason: expect.stringContaining("semantic index candidate"),
+        path: ".greenhouse/memory/decisions/navigation-accessibility.md",
+      }),
+    );
+    expect(markdown).toContain("semantic retrieval: enabled");
+  });
+
+  it("falls back when semantic retrieval is requested but disabled", () => {
+    const repo = createContextRepo();
+    runInspect({ cwd: repo });
+
+    const report = runContext({
+      cwd: repo,
+      task: "keyboard navigation",
+      semantic: true,
+    });
+
+    expect(report.semantic.enabled).toBe(false);
+    expect(report.semantic.note).toContain("not enabled");
+    expect(report.sources.length).toBeGreaterThan(0);
+  });
+
   it("compiles Markdown, JSON, and report output for a task", () => {
     const repo = createContextRepo();
     runInspect({ cwd: repo });

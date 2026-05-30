@@ -310,6 +310,9 @@ context "task"
   Compile a task-specific agent context brief from rules, memory, skills,
   repo shape, evidence, and validation hints.
 
+context "task" --semantic
+  Include optional source-backed semantic candidates only when explicitly enabled.
+
 memory propose/adopt
   Create a reviewable memory proposal or adopt one into .greenhouse/memory/**.
 

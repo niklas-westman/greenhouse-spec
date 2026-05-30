@@ -18,6 +18,7 @@ export function registerContextCommand(program: Command): void {
     .argument("<task>", "Task description to compile context for.")
     .option("--cwd <path>", "Repository root to inspect.", process.cwd())
     .option("--json", "Print the context brief as JSON.")
+    .option("--semantic", "Include optional source-backed semantic index candidates when enabled.")
     .option("--write-report", "Write a Markdown context report under .greenhouse/reports/context/.")
     .option("--path <path>", "Changed or relevant path to route manifest entries.", collect, [])
     .option("--risk <risk>", "Known risk label to route manifest entries.", collect, [])
@@ -27,6 +28,7 @@ export function registerContextCommand(program: Command): void {
         options: {
           cwd: string;
           json?: boolean;
+          semantic?: boolean;
           writeReport?: boolean;
           path: string[];
           risk: string[];
@@ -36,6 +38,7 @@ export function registerContextCommand(program: Command): void {
           cwd: options.cwd,
           task,
           json: options.json,
+          semantic: options.semantic,
           writeReport: options.writeReport,
           paths: options.path,
           risks: options.risk,

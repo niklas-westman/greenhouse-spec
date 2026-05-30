@@ -77,6 +77,14 @@ describe("greenhouse-spec CLI", () => {
     expect(statusCommand?.options.map((option) => option.long)).toContain("--verbose");
   });
 
+  it("exposes optional semantic context retrieval", () => {
+    const contextCommand = createProgram().commands.find(
+      (command) => command.name() === "context",
+    );
+
+    expect(contextCommand?.options.map((option) => option.long)).toContain("--semantic");
+  });
+
   it("detects direct execution through symlinked package bin wrappers", () => {
     expect(
       isDirectCliExecution(

@@ -1,3 +1,8 @@
 schema_version: 1
 
+retrieval:
+  semantic:
+    enabled: false
+    index_path: .greenhouse/grown/semantic-index.yaml
+
 context: []

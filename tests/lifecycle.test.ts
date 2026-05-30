@@ -25,6 +25,7 @@ import {
   runStatus,
 } from "../src/status/run-status.js";
 import { runPlant } from "../src/plant/run-plant.js";
+import { GREENHOUSE_SPEC_VERSION } from "../src/version.js";
 
 const tempRepos: string[] = [];
 
@@ -83,7 +84,7 @@ describe("lifecycle commands", () => {
 
     expect(report.ok).toBe(true);
     expect(readFileSync(scriptPath, "utf8")).not.toBe("// stale\n");
-    expect(project.greenhouse.installed_version).toBe("0.1.3");
+    expect(project.greenhouse.installed_version).toBe(GREENHOUSE_SPEC_VERSION);
     expect(project.greenhouse.template_version).toBe(1);
     expect(project.greenhouse.install_mode).toBe("npm-package");
     expect(project.greenhouse.cli_command).toBe("greenhouse-spec");
@@ -110,7 +111,9 @@ describe("lifecycle commands", () => {
     expect(project.greenhouse.cli_command).toBe("greenhouse-spec");
     expect(packageJson.scripts.greenhouse).toBe("greenhouse-spec");
     expect(packageJson.scripts["greenhouse:tend"]).toBe("greenhouse-spec tend");
-    expect(packageJson.devDependencies["greenhouse-spec"]).toBe("^0.1.3");
+    expect(packageJson.devDependencies["greenhouse-spec"]).toBe(
+      `^${GREENHOUSE_SPEC_VERSION}`,
+    );
   });
 
   it("update adds missing installed purpose docs without overwriting authored roots", () => {
@@ -643,7 +646,7 @@ function writePackageJson(repo: string, scripts: Record<string, string>): void {
         name: "lifecycle-fixture",
         scripts,
         devDependencies: {
-          "greenhouse-spec": "^0.1.3",
+          "greenhouse-spec": `^${GREENHOUSE_SPEC_VERSION}`,
         },
       },
       null,

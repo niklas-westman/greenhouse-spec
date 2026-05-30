@@ -26,6 +26,7 @@ This file explains the purpose of each installed `.greenhouse/` area.
     evidence-index.yaml
     failure-signatures.yaml
     memory-index.yaml
+    memory-index.sqlite
     skill-index.yaml
     last-inspection.md
   context/
@@ -195,6 +196,11 @@ These explain recurring failures, but never turn failed validation green.
 ### `grown/memory-index.yaml`
 
 Generated source-backed index of repo-local memory Markdown.
+
+### `grown/memory-index.sqlite`
+
+Generated SQLite FTS5 index for faster lexical context ranking. Markdown files
+remain canonical; this database is disposable.
 
 ### `grown/skill-index.yaml`
 

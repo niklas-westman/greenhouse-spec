@@ -16,6 +16,7 @@ import {
   type SafeWriteResult,
 } from "../filesystem/safe-write.js";
 import { buildMemoryIndex, buildSkillIndex } from "../context/knowledge-index.js";
+import { writeSqliteKnowledgeIndex } from "../context/sqlite-index.js";
 import { proposePackageScripts } from "../native-scripts/package-script-proposals.js";
 import { buildValidationProposals } from "../proposals/build-proposals.js";
 
@@ -54,10 +55,26 @@ export function runInspect(options: InspectOptions): InspectReport {
     dryRun: options.dryRun,
     writes: grownPlan.writes,
   });
+  const ok = results.every((result) => result.status !== "blocked");
+
+  if (ok) {
+    if (options.dryRun) {
+      results.push({
+        relativePath: ".greenhouse/grown/memory-index.sqlite",
+        status: "dry-run",
+      });
+    } else {
+      const sqlite = writeSqliteKnowledgeIndex(options.cwd);
+      results.push({
+        relativePath: formatPath(options.cwd, sqlite.path),
+        status: sqlite.status,
+      });
+    }
+  }
 
   return {
     cwd: options.cwd,
-    ok: results.every((result) => result.status !== "blocked"),
+    ok,
     dryRun: Boolean(options.dryRun),
     writes: results,
     proposals: buildProposals(options.cwd),
@@ -220,4 +237,10 @@ function yaml(value: unknown): string {
   return stringifyYaml(value, {
     lineWidth: 0,
   });
+}
+
+function formatPath(cwd: string, path: string): string {
+  return path.startsWith(cwd)
+    ? path.slice(cwd.length + 1).replace(/\\/g, "/")
+    : path.replace(/\\/g, "/");
 }

@@ -149,6 +149,7 @@ fail
     evidence-index.yaml
     failure-signatures.yaml
     memory-index.yaml
+    memory-index.sqlite
     skill-index.yaml
 
   context/

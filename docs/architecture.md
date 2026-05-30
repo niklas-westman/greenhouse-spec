@@ -85,7 +85,8 @@ verify
 
 context
   combines manifest routes, repo shape, memory, skills, evidence, and validation
-  hints into a source-backed task brief
+  hints into a source-backed task brief; uses generated SQLite FTS ranking when
+  available and falls back to YAML/Markdown lexical matching
 
 memory/skills proposal lanes
   write proposed knowledge into lower-authority lanes before explicit adoption

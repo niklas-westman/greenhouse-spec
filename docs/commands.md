@@ -129,6 +129,8 @@ Side effects:
 - Generates `.greenhouse/grown/validation-proposals.yaml`.
 - Generates `.greenhouse/grown/memory-index.yaml` from `.greenhouse/memory/**/*.md`.
 - Generates `.greenhouse/grown/skill-index.yaml` from `.greenhouse/skills/**/*.md`.
+- Generates `.greenhouse/grown/memory-index.sqlite` as a disposable SQLite FTS5
+  ranking index for context retrieval.
 - Generates `.greenhouse/grown/failure-signatures.yaml` from recent evidence.
 - Does not apply proposals or mutate authored roots.
 

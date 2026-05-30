@@ -18,6 +18,10 @@ import {
   formatContextReport,
   runContext,
 } from "../src/context/run-context.js";
+import {
+  querySqliteKnowledgeIndex,
+  sqliteKnowledgeIndexPath,
+} from "../src/context/sqlite-index.js";
 import { runInspect } from "../src/inspect/run-inspect.js";
 import { runPlant } from "../src/plant/run-plant.js";
 
@@ -59,6 +63,23 @@ describe("context", () => {
     expect(report.ok).toBe(true);
     expect(readGreenhouseYaml(repo, "grown/memory-index.yaml").memories).toHaveLength(1);
     expect(readGreenhouseYaml(repo, "grown/skill-index.yaml").skills).toHaveLength(1);
+    expect(existsSync(sqliteKnowledgeIndexPath(repo))).toBe(true);
+  });
+
+  it("uses SQLite FTS ranking when the generated database exists", () => {
+    const repo = createContextRepo();
+    runInspect({ cwd: repo });
+
+    const matches = querySqliteKnowledgeIndex(repo, "keyboard navigation");
+    const report = runContext({
+      cwd: repo,
+      task: "keyboard navigation",
+    });
+
+    expect(matches.map((match) => match.id)).toContain(
+      "memory.navigation.accessibility",
+    );
+    expect(report.sources[0]?.reason).toContain("sqlite fts");
   });
 
   it("compiles Markdown, JSON, and report output for a task", () => {

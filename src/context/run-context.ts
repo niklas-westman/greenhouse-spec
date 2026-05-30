@@ -19,6 +19,10 @@ import { discoverRepoShape } from "../discovery/repo-shape.js";
 import { matchesPath } from "../validation/path-match.js";
 
 import { readMemoryIndex, readSkillIndex } from "./knowledge-index.js";
+import {
+  querySqliteKnowledgeIndex,
+  type SqliteKnowledgeMatch,
+} from "./sqlite-index.js";
 
 export type ContextOptions = {
   cwd: string;
@@ -76,19 +80,25 @@ export function runContext(options: ContextOptions): ContextReport {
   const skillIndex = readSkillIndex(options.cwd);
   const manifest = readContextManifest(options.cwd);
   const queryTerms = terms(options.task);
+  const sqliteMatches = querySqliteKnowledgeIndex(options.cwd, options.task);
   const paths = options.paths ?? [];
   const risks = options.risks ?? [];
   const manifestSources = manifest.context
     .map((entry) => manifestSource(options.cwd, entry, options.task, paths, risks))
     .filter((source): source is ContextSource => Boolean(source));
-  const memorySources = memoryIndex.memories
-    .map((entry) => scoredMemorySource(options.cwd, entry, queryTerms))
-    .filter((source): source is ContextSource & { score: number } => Boolean(source))
-    .sort((left, right) => right.score - left.score)
-    .slice(0, maxIndexedMatches);
-  const skillSources = skillIndex.skills
-    .map((entry) => scoredSkillSource(options.cwd, entry, queryTerms))
-    .filter((source): source is ContextSource & { score: number } => Boolean(source))
+  const sqliteSources = sqliteMatches
+    .map((match) =>
+      sqliteSource(options.cwd, match, memoryIndex.memories, skillIndex.skills),
+    )
+    .filter((source): source is ContextSource => Boolean(source));
+  const lexicalSources = [
+    ...memoryIndex.memories
+      .map((entry) => scoredMemorySource(options.cwd, entry, queryTerms))
+      .filter((source): source is ContextSource & { score: number } => Boolean(source)),
+    ...skillIndex.skills
+      .map((entry) => scoredSkillSource(options.cwd, entry, queryTerms))
+      .filter((source): source is ContextSource & { score: number } => Boolean(source)),
+  ]
     .sort((left, right) => right.score - left.score)
     .slice(0, maxIndexedMatches);
   const evidenceIndex = readEvidenceIndex(options.cwd);
@@ -111,8 +121,7 @@ export function runContext(options: ContextOptions): ContextReport {
     },
     sources: uniqueSources([
       ...manifestSources,
-      ...memorySources,
-      ...skillSources,
+      ...(sqliteSources.length > 0 ? sqliteSources : lexicalSources),
     ]),
     evidence: {
       latestPath: latestEvidence?.path ?? null,
@@ -341,6 +350,50 @@ function scoredMemorySource(
     summary: entry.summary,
     excerpt: excerpt(content || entry.summary, 700),
     score,
+  };
+}
+
+function sqliteSource(
+  cwd: string,
+  match: SqliteKnowledgeMatch,
+  memories: MemoryIndexEntry[],
+  skills: SkillIndexEntry[],
+): ContextSource | null {
+  if (match.kind === "memory") {
+    const entry = memories.find((item) => item.id === match.id);
+    if (!entry) {
+      return null;
+    }
+    const content = readSourceContent(cwd, entry.path);
+    return {
+      id: entry.id,
+      kind: "memory",
+      path: entry.path,
+      reason: `sqlite fts match (rank ${match.rank.toFixed(3)})`,
+      status: entry.status,
+      freshness: entry.freshness,
+      summary: entry.summary,
+      excerpt: excerpt(content || entry.summary, 700),
+    };
+  }
+
+  const entry = skills.find((item) => item.id === match.id);
+  if (!entry) {
+    return null;
+  }
+  const content = readSourceContent(cwd, entry.path);
+  return {
+    id: entry.id,
+    kind: "skill",
+    path: entry.path,
+    reason:
+      entry.status === "adopted"
+        ? `sqlite fts adopted skill match (rank ${match.rank.toFixed(3)})`
+        : `sqlite fts candidate skill match (rank ${match.rank.toFixed(3)}); not adopted`,
+    status: entry.status,
+    freshness: entry.freshness,
+    summary: entry.summary,
+    excerpt: excerpt(content || entry.summary, 900),
   };
 }
 

@@ -19,6 +19,9 @@ src/plant/*
 src/inspect/*
   Discovers repo shape and writes generated indexes under .greenhouse/grown/**.
 
+src/context/*
+  Builds Markdown-first memory/skill indexes and compiles task context briefs.
+
 src/proposals/*
   Builds, reads, prints, applies, and adopts structured maintenance proposals.
 
@@ -74,6 +77,10 @@ tend --check
 verify
   maps changed files to validation commands and optionally writes evidence
 
+context
+  combines manifest routes, repo shape, memory, skills, evidence, and validation
+  hints into a source-backed task brief
+
 failure signatures
   generated from recent evidence to explain repeated failures without changing
   validation pass/fail behavior
@@ -86,6 +93,10 @@ Greenhouse has three practical ownership zones:
 ```text
 Generated and disposable:
   .greenhouse/grown/**
+
+Agent-readable knowledge:
+  .greenhouse/memory/**
+  .greenhouse/skills/**
 
 Append-only records:
   .greenhouse/evidence/**

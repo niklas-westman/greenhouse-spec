@@ -17,6 +17,7 @@ import { buildEvidenceIndex } from "../evidence/evidence-index.js";
 import { buildFailureSignatures } from "../evidence/failure-signatures.js";
 import { findPackageRoot } from "../filesystem/package-root.js";
 import { runInspect } from "../inspect/run-inspect.js";
+import { buildMemoryIndex, buildSkillIndex } from "../context/knowledge-index.js";
 import { buildAgentOnboardingWrites } from "../lifecycle/agent-onboarding.js";
 import { buildPackageScriptOnboardingWrites } from "../lifecycle/package-script-onboarding.js";
 import {
@@ -152,6 +153,8 @@ function buildPlantWrites(
     })),
     generated("grown/evidence-index.yaml", yaml(buildEvidenceIndex(cwd))),
     generated("grown/failure-signatures.yaml", yaml(buildFailureSignatures(cwd))),
+    generated("grown/memory-index.yaml", yaml(buildMemoryIndex(cwd))),
+    generated("grown/skill-index.yaml", yaml(buildSkillIndex(cwd))),
     generated(
       "grown/last-inspection.md",
       [
@@ -166,6 +169,8 @@ function buildPlantWrites(
       ].join("\n"),
     ),
     authored("context/manifest.yaml", template("context/manifest.yaml")),
+    authored("memory/README.md", template("memory/README.md")),
+    authored("skills/README.md", template("skills/README.md")),
     authored("scripts/check-changed.mjs", template("scripts/check-changed.mjs"), true),
     authored("scripts/check-greenhouse.mjs", template("scripts/check-greenhouse.mjs"), true),
     authored("scripts/validate-scope.mjs", template("scripts/validate-scope.mjs"), true),

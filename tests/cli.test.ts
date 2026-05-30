@@ -10,6 +10,7 @@ describe("greenhouse-spec CLI", () => {
       "adopt-proposals",
       "alignment",
       "apply-proposals",
+      "context",
       "doctor",
       "evidence",
       "init",
@@ -32,6 +33,7 @@ describe("greenhouse-spec CLI", () => {
     expect(help).toContain("status");
     expect(help).toContain("doctor");
     expect(help).toContain("inspect");
+    expect(help).toContain("context");
     expect(help).toContain("verify");
     expect(help).toContain("proposals");
     expect(help).toContain("adopt-proposals");

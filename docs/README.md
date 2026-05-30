@@ -24,6 +24,8 @@ another repository, and work safely with the files it creates.
 target repo
   |
   +-- .greenhouse/roots/**       human-authored contract
+  +-- .greenhouse/memory/**      repo-local Markdown memory
+  +-- .greenhouse/skills/**      repo-local Markdown skills
   +-- .greenhouse/grown/**       generated repo intelligence
   +-- .greenhouse/evidence/**    validation proof records
   +-- .greenhouse/reports/**     generated health/tend reports
@@ -53,6 +55,8 @@ Greenhouse V1 focuses on:
 - Running one read-only `status` command for repo health.
 - Running a conservative `tend --check` gate before push.
 - Routing changed files to validation commands and writing bounded evidence.
+- Compiling task-specific context briefs from manifest routes, memory, skills,
+  evidence, and validation hints.
 
 Greenhouse does not yet convert every tend/evidence learning into structured
 proposals. That is a future evolution of the same proposal system.

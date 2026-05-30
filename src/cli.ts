@@ -9,6 +9,7 @@ import { registerEvidenceCommand } from "./commands/evidence.js";
 import { registerInitCommand } from "./commands/init.js";
 import { registerAdoptProposalsCommand } from "./commands/adopt-proposals.js";
 import { registerApplyProposalsCommand } from "./commands/apply-proposals.js";
+import { registerContextCommand } from "./commands/context.js";
 import { registerDoctorCommand } from "./commands/doctor.js";
 import { registerInspectCommand } from "./commands/inspect.js";
 import { registerPlantCommand } from "./commands/plant.js";
@@ -34,6 +35,7 @@ export function createProgram(): Command {
   registerStatusCommand(program);
   registerDoctorCommand(program);
   registerInspectCommand(program);
+  registerContextCommand(program);
   registerVerifyCommand(program);
   registerProposalsCommand(program);
   registerAdoptProposalsCommand(program);

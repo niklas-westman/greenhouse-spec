@@ -25,9 +25,23 @@ This file explains the purpose of each installed `.greenhouse/` area.
     agent-index.yaml
     evidence-index.yaml
     failure-signatures.yaml
+    memory-index.yaml
+    skill-index.yaml
     last-inspection.md
   context/
     manifest.yaml
+  memory/
+    README.md
+    decisions/
+    lessons/
+    playbooks/
+    references/
+    projects/
+    inbox/
+  skills/
+    README.md
+    adopted/
+    drafts/
   scripts/
     check-changed.mjs
     check-greenhouse.mjs
@@ -35,6 +49,7 @@ This file explains the purpose of each installed `.greenhouse/` area.
   evidence/
     *.md
   reports/
+    context/
     doctor/
     tend/
   templates/
@@ -175,6 +190,14 @@ Generated repeated-failure observations.
 
 These explain recurring failures, but never turn failed validation green.
 
+### `grown/memory-index.yaml`
+
+Generated source-backed index of repo-local memory Markdown.
+
+### `grown/skill-index.yaml`
+
+Generated source-backed index of repo-local skill Markdown.
+
 ### `grown/last-inspection.md`
 
 Human-readable summary from the latest inspection.
@@ -183,7 +206,18 @@ Human-readable summary from the latest inspection.
 
 ### `context/manifest.yaml`
 
-Declares Greenhouse context entries and activation rules.
+Routes rules, docs, memory, skills, evidence, and reports into task-specific
+context briefs.
+
+### `memory/`
+
+Canonical repo-local Markdown memory. Adopted files can be indexed into
+`.greenhouse/grown/memory-index.yaml`; `inbox/` is a draft lane.
+
+### `skills/`
+
+Repo-local skill Markdown. Adopted skills can be surfaced by
+`greenhouse-spec context`; draft skills remain lower authority until reviewed.
 
 ### `scripts/check-changed.mjs`
 

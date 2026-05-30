@@ -22,6 +22,7 @@ import { repoMapSchema, type RepoMap } from "../schemas/repo-map.js";
 import { repoShapeSchema } from "../schemas/repo-shape.js";
 import { validationSchema } from "../schemas/validation.js";
 import { validationProposalsSchema } from "../schemas/validation-proposals.js";
+import { memoryIndexSchema, skillIndexSchema } from "../schemas/knowledge-index.js";
 import { GREENHOUSE_TEMPLATE_VERSION } from "../version.js";
 import {
   mvpInstalledDirectories,
@@ -87,6 +88,14 @@ const schemaFiles: Array<{ path: string; schema: ZodType<unknown> }> = [
   {
     path: "grown/failure-signatures.yaml",
     schema: failureSignaturesSchema,
+  },
+  {
+    path: "grown/memory-index.yaml",
+    schema: memoryIndexSchema,
+  },
+  {
+    path: "grown/skill-index.yaml",
+    schema: skillIndexSchema,
   },
   {
     path: "context/manifest.yaml",
@@ -284,7 +293,10 @@ function validateContextManifestPaths(
   const contextPath = join(greenhousePath, "context");
 
   for (const entry of manifest.context) {
-    const targetPath = join(contextPath, entry.path);
+    const rootRelativePath = join(cwd, entry.path);
+    const targetPath = existsSync(rootRelativePath)
+      ? rootRelativePath
+      : join(contextPath, entry.path);
     if (!existsSync(targetPath)) {
       findings.push({
         severity: "error",

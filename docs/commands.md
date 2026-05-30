@@ -21,6 +21,7 @@ Secondary commands expose the same layers directly:
 ```bash
 greenhouse-spec verify --changed --dry-run
 greenhouse-spec verify --changed --write-evidence
+greenhouse-spec context "task"
 greenhouse-spec tend --check
 greenhouse-spec inspect
 greenhouse-spec proposals
@@ -124,8 +125,33 @@ Side effects:
 
 - Rewrites `.greenhouse/grown/**` unless `--dry-run` is used.
 - Generates `.greenhouse/grown/validation-proposals.yaml`.
+- Generates `.greenhouse/grown/memory-index.yaml` from `.greenhouse/memory/**/*.md`.
+- Generates `.greenhouse/grown/skill-index.yaml` from `.greenhouse/skills/**/*.md`.
 - Generates `.greenhouse/grown/failure-signatures.yaml` from recent evidence.
 - Does not apply proposals or mutate authored roots.
+
+## `context`
+
+```bash
+greenhouse-spec context "task"
+greenhouse-spec context "task" --json
+greenhouse-spec context "task" --write-report
+greenhouse-spec context "task" --path src/app.ts --risk api-contract
+```
+
+Compiles an agent-readable context brief from the task query, repo shape,
+command index, context manifest routes, memory files, adopted skills, recent
+evidence, repeated failures, and validation hints.
+
+Context manifest paths are repo-root-relative when they point to paths such as
+`.greenhouse/memory/**`; older context-relative paths are still accepted for
+compatibility.
+
+Side effects:
+
+- `--write-report` writes `.greenhouse/reports/context/<timestamp>-context.md`.
+- `--json` prints the same report as structured JSON.
+- No authored roots are mutated.
 
 ## `proposals`
 

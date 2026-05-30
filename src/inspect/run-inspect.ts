@@ -15,6 +15,7 @@ import {
   type PlannedWrite,
   type SafeWriteResult,
 } from "../filesystem/safe-write.js";
+import { buildMemoryIndex, buildSkillIndex } from "../context/knowledge-index.js";
 import { proposePackageScripts } from "../native-scripts/package-script-proposals.js";
 import { buildValidationProposals } from "../proposals/build-proposals.js";
 
@@ -135,6 +136,8 @@ function buildGrownPlan(cwd: string): {
       })),
       grownWrite("evidence-index.yaml", yaml(buildEvidenceIndex(cwd))),
       grownWrite("failure-signatures.yaml", yaml(buildFailureSignatures(cwd))),
+      grownWrite("memory-index.yaml", yaml(buildMemoryIndex(cwd))),
+      grownWrite("skill-index.yaml", yaml(buildSkillIndex(cwd))),
       grownWrite(
         "last-inspection.md",
         [

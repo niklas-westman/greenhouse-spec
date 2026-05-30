@@ -148,10 +148,14 @@ fail
     validation-proposals.yaml
     evidence-index.yaml
     failure-signatures.yaml
+    memory-index.yaml
+    skill-index.yaml
 
   context/
     manifest.yaml         agent-readable context routing
 
+  memory/                 repo-local Markdown memory
+  skills/                 repo-local Markdown skills
   evidence/               validation records
   reports/                generated reports
   scripts/                installed helper scripts
@@ -296,6 +300,10 @@ verify --changed --dry-run
 
 verify --changed --write-evidence
   Run selected validation and write evidence.
+
+context "task"
+  Compile a task-specific agent context brief from rules, memory, skills,
+  repo shape, evidence, and validation hints.
 
 inspect
   Refresh generated intelligence under .greenhouse/grown/**.

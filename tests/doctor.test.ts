@@ -133,6 +133,38 @@ describe("doctor", () => {
     );
   });
 
+  it("accepts root-relative context manifest paths", () => {
+    const repo = createFixtureRepo();
+    mkdirSync(join(repo, ".greenhouse", "memory", "decisions"), { recursive: true });
+    writeFileSync(
+      join(repo, ".greenhouse", "memory", "decisions", "navigation.md"),
+      "# Navigation\n",
+      "utf8",
+    );
+    writeFileSync(
+      join(repo, ".greenhouse", "context", "manifest.yaml"),
+      [
+        "schema_version: 1",
+        "context:",
+        "  - id: navigation-decision",
+        "    kind: memory",
+        "    memory_type: decision",
+        "    path: .greenhouse/memory/decisions/navigation.md",
+        "    activation:",
+        "      mode: always",
+        "    budget:",
+        "      max_tokens: 600",
+        "",
+      ].join("\n"),
+      "utf8",
+    );
+
+    const report = runDoctor({ cwd: repo });
+
+    expect(report.ok).toBe(true);
+    expect(report.findings).toEqual([]);
+  });
+
   it("fails when generated paths are also listed as source paths", () => {
     const repo = createFixtureRepo();
     writeFileSync(

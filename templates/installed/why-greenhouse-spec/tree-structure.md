@@ -28,6 +28,18 @@ This file explains the purpose of each installed `.greenhouse/` area.
     last-inspection.md
   context/
     manifest.yaml
+  memory/
+    README.md
+    decisions/
+    lessons/
+    playbooks/
+    references/
+    projects/
+    inbox/
+  skills/
+    README.md
+    adopted/
+    drafts/
   scripts/
     check-changed.mjs
     check-greenhouse.mjs
@@ -35,6 +47,7 @@ This file explains the purpose of each installed `.greenhouse/` area.
   evidence/
     *.md
   reports/
+    context/
     doctor/
     tend/
   templates/
@@ -182,6 +195,19 @@ Human-readable summary from the latest inspection.
 ## Context And Helper Scripts
 
 ### `context/manifest.yaml`
+
+Routes rules, docs, memory, skills, evidence, and reports into task-specific
+context briefs.
+
+### `memory/`
+
+Canonical repo-local Markdown memory. Adopted files can be indexed into
+`.greenhouse/grown/memory-index.yaml`; `inbox/` is a draft lane.
+
+### `skills/`
+
+Repo-local skill Markdown. Adopted skills can be surfaced by
+`greenhouse-spec context`; draft skills remain lower authority until reviewed.
 
 Declares Greenhouse context entries and activation rules.
 

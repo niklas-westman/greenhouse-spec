@@ -7,6 +7,7 @@ import { describe, expect, it } from "vitest";
 import { parseYamlWithSchema } from "../src/schemas/common.js";
 import { contextManifestSchema } from "../src/schemas/context-manifest.js";
 import { evidenceIndexSchema } from "../src/schemas/evidence-index.js";
+import { memoryIndexSchema, skillIndexSchema } from "../src/schemas/knowledge-index.js";
 import { projectSchema } from "../src/schemas/project.js";
 import { commandIndexSchema } from "../src/schemas/command-index.js";
 import { repoMapSchema } from "../src/schemas/repo-map.js";
@@ -67,10 +68,21 @@ describe("installed templates", () => {
       "why-greenhouse-spec",
       "grown",
       "context",
+      "memory",
+      "memory/decisions",
+      "memory/lessons",
+      "memory/playbooks",
+      "memory/references",
+      "memory/projects",
+      "memory/inbox",
+      "skills",
+      "skills/adopted",
+      "skills/drafts",
       "scripts",
       "evidence",
       "templates",
       "reports",
+      "reports/context",
       "reports/doctor",
     ]);
   });
@@ -105,6 +117,18 @@ describe("installed templates", () => {
     ).not.toThrow();
     expect(() =>
       parseYamlWithSchema(
+        readTemplate("grown/memory-index.yaml"),
+        memoryIndexSchema,
+      ),
+    ).not.toThrow();
+    expect(() =>
+      parseYamlWithSchema(
+        readTemplate("grown/skill-index.yaml"),
+        skillIndexSchema,
+      ),
+    ).not.toThrow();
+    expect(() =>
+      parseYamlWithSchema(
         readTemplate("context/manifest.yaml"),
         contextManifestSchema,
       ),
@@ -125,6 +149,8 @@ describe("installed templates", () => {
     expect(readTemplate("why-greenhouse-spec/tree-structure.md")).toContain(
       ".greenhouse/",
     );
+    expect(readTemplate("memory/README.md")).toContain("Repo-local memory");
+    expect(readTemplate("skills/README.md")).toContain("Repo-local skills");
     expect(readTemplate("why-greenhouse-spec/agent-workflow.md")).toContain(
       "greenhouse-spec tend",
     );

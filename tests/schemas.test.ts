@@ -7,6 +7,7 @@ import { describe, expect, it } from "vitest";
 import { commandIndexSchema } from "../src/schemas/command-index.js";
 import { contextManifestSchema } from "../src/schemas/context-manifest.js";
 import { evidenceSchema } from "../src/schemas/evidence.js";
+import { memoryIndexSchema, skillIndexSchema } from "../src/schemas/knowledge-index.js";
 import { docsRootSchema } from "../src/schemas/docs-root.js";
 import { parseYamlWithSchema } from "../src/schemas/common.js";
 import { projectSchema } from "../src/schemas/project.js";
@@ -114,6 +115,73 @@ describe("greenhouse schemas", () => {
       "keyword",
       "path",
     ]);
+  });
+
+  it("validates context manifest memory and skill entries", () => {
+    const manifest = parseYamlWithSchema(
+      [
+        "schema_version: 1",
+        "context:",
+        "  - id: memory.navigation",
+        "    kind: memory",
+        "    memory_type: decision",
+        "    path: .greenhouse/memory/decisions/navigation.md",
+        "    activation:",
+        "      mode: keyword",
+        "      keywords:",
+        "        - navigation",
+        "    budget:",
+        "      max_tokens: 800",
+        "  - id: skill.accessibility",
+        "    kind: skill",
+        "    skill_status: adopted",
+        "    path: .greenhouse/skills/adopted/accessibility/SKILL.md",
+        "    activation:",
+        "      mode: always",
+        "    budget:",
+        "      max_tokens: 1200",
+        "",
+      ].join("\n"),
+      contextManifestSchema,
+    );
+
+    expect(manifest.context.map((entry) => entry.kind)).toEqual([
+      "memory",
+      "skill",
+    ]);
+  });
+
+  it("validates generated memory and skill indexes", () => {
+    expect(() =>
+      parseYamlWithSchema(
+        [
+          "schema_version: 1",
+          "managed_by: greenhouse-spec",
+          "generated_at: 2026-05-30T00:00:00Z",
+          "policy:",
+          "  canonical_source: .greenhouse/memory/**/*.md",
+          "  generated_index: Generated from Markdown.",
+          "memories: []",
+          "",
+        ].join("\n"),
+        memoryIndexSchema,
+      ),
+    ).not.toThrow();
+    expect(() =>
+      parseYamlWithSchema(
+        [
+          "schema_version: 1",
+          "managed_by: greenhouse-spec",
+          "generated_at: 2026-05-30T00:00:00Z",
+          "policy:",
+          "  canonical_source: .greenhouse/skills/**/*.md",
+          "  generated_index: Generated from Markdown.",
+          "skills: []",
+          "",
+        ].join("\n"),
+        skillIndexSchema,
+      ),
+    ).not.toThrow();
   });
 
   it("rejects incomplete context activation", () => {

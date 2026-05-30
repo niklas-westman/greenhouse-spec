@@ -227,6 +227,7 @@ managed so future safe apply can maintain them.
 
 ```bash
 greenhouse-spec tend
+greenhouse-spec tend --context latest
 greenhouse-spec tend --check
 ```
 
@@ -248,6 +249,11 @@ adoptable, or conflict proposal exists.
 `tend --check` is structural-only and does not run validation or write evidence.
 Normal evidence/report writes prune old generated records unless `--no-prune`
 is used.
+
+Use `--context latest` after `greenhouse-spec context "task" --write-report`
+to link the latest context report into the evidence written by `tend`. You can
+also pass a specific context report path. Evidence records the report path and
+source IDs from the context brief.
 
 ## `verify`
 

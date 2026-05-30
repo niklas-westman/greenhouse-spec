@@ -8,11 +8,13 @@ export function registerTendCommand(program: Command): void {
     .description("Tend the repository before finishing work.")
     .option("--cwd <path>", "Repository root to inspect.", process.cwd())
     .option("--check", "Fail when structural Greenhouse tending is required.")
+    .option("--context <report>", "Link a context report path, or use \"latest\".")
     .option("--no-prune", "Do not prune old generated evidence/report files after writing a tend report.")
-    .action((options: { cwd: string; check?: boolean; prune?: boolean }) => {
+    .action((options: { cwd: string; check?: boolean; context?: string; prune?: boolean }) => {
       const report = runTend({
         cwd: options.cwd,
         check: options.check,
+        context: options.context,
         noPrune: options.prune === false,
       });
 

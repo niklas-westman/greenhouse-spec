@@ -21,6 +21,11 @@
 |---|---:|---|
 | Human risk review | pending/pass/fail | |
 
+## Context used
+
+Record any `.greenhouse/reports/context/**` report and source IDs used for this
+verification.
+
 ## Blocked or skipped validation
 
 Explain any validation that could not run.

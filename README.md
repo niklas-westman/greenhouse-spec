@@ -293,6 +293,9 @@ tend
   Everyday finish gate. Runs install health, drift checks, changed-file
   validation, evidence writing, and proposal summary.
 
+tend --context latest
+  Link the latest written context brief into the evidence for the run.
+
 tend --check
   Structural-only check for CI and debugging. Does not run validation.
 

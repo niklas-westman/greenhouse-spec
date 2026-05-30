@@ -6,7 +6,7 @@ import {
   statSync,
   writeFileSync,
 } from "node:fs";
-import { join } from "node:path";
+import { isAbsolute, join, relative } from "node:path";
 
 import { discoverRepoShape } from "../discovery/repo-shape.js";
 import { runDoctor, type DoctorReport } from "../doctor/run-doctor.js";
@@ -22,6 +22,10 @@ import {
   detectChangeImpact,
   type ImpactWarning,
 } from "../impact/detect-change-impact.js";
+import {
+  latestContextReport,
+  readContextReportSourceIds,
+} from "../context/run-context.js";
 import { readDocsRoot } from "../impact/docs-root.js";
 import { buildValidationProposals } from "../proposals/build-proposals.js";
 import type { ValidationProposal } from "../schemas/validation-proposals.js";
@@ -66,6 +70,8 @@ export type TendReport = {
   verify?: VerifyReport;
   validation: TendValidationSummary;
   writes: TendWriteSummary;
+  contextReportPath: string | null;
+  contextSourceIds: string[];
   selfTending?: {
     total: number;
     pending: number;
@@ -82,9 +88,15 @@ export type TendReport = {
   writtenReportPath?: string;
 };
 
-export function runTend(options: { cwd: string; check?: boolean; noPrune?: boolean }): TendReport {
+export function runTend(options: {
+  cwd: string;
+  check?: boolean;
+  context?: string;
+  noPrune?: boolean;
+}): TendReport {
   const changedFiles = safeChangedFiles(options.cwd);
   const latestEvidencePath = findLatestEvidence(options.cwd);
+  const contextLink = resolveContextLink(options.cwd, options.context);
   const repoShape = discoverRepoShape(options.cwd);
   const latestEvidence = latestEvidencePath
     ? readFileSync(latestEvidencePath, "utf8")
@@ -107,6 +119,8 @@ export function runTend(options: { cwd: string; check?: boolean; noPrune?: boole
     proposals,
     repeatedFailures,
     impactWarnings,
+    contextReportPath: contextLink.path,
+    contextSourceIds: contextLink.sourceIds,
     validation: {
       executed: false,
       evidenceWritten: false,
@@ -122,6 +136,13 @@ export function runTend(options: { cwd: string; check?: boolean; noPrune?: boole
       evidencePath: null,
     },
   };
+
+  if (contextLink.error) {
+    report.ok = false;
+    report.state = "fail";
+    report.validation.reason = contextLink.error;
+    return report;
+  }
 
   if (options.check) {
     report.selfTending = buildSelfTendingCheck(options.cwd);
@@ -188,6 +209,12 @@ export function runTend(options: { cwd: string; check?: boolean; noPrune?: boole
           ? "selected validation passed."
           : "selected validation failed.",
       },
+      context: report.contextReportPath
+        ? {
+            reportPath: formatPath(options.cwd, report.contextReportPath),
+            sourceIds: report.contextSourceIds,
+          }
+        : undefined,
       noPrune: options.noPrune,
     });
     verify.evidencePath = evidence.path;
@@ -295,6 +322,10 @@ export function formatTendReport(report: TendReport): string {
   }
 
   lines.push("", "## Evidence", "");
+  if (report.contextReportPath) {
+    lines.push(`- context loaded: ${formatPath(report.cwd, report.contextReportPath)}`);
+    lines.push(`- context source IDs: ${report.contextSourceIds.length}`);
+  }
   if (report.validation.evidenceWritten) {
     lines.push(`- written: ${report.writes.evidencePath ?? "yes"}`);
   } else if (report.latestEvidencePath) {
@@ -555,6 +586,50 @@ function safeChangedFiles(cwd: string): string[] {
   } catch {
     return [];
   }
+}
+
+function resolveContextLink(
+  cwd: string,
+  requested: string | undefined,
+): {
+  path: string | null;
+  sourceIds: string[];
+  error?: string;
+} {
+  if (!requested) {
+    return {
+      path: null,
+      sourceIds: [],
+    };
+  }
+
+  const reportPath =
+    requested === "latest"
+      ? latestContextReport(cwd)
+      : isAbsolute(requested)
+        ? requested
+        : join(cwd, requested);
+
+  if (!reportPath || !existsSync(reportPath)) {
+    return {
+      path: null,
+      sourceIds: [],
+      error:
+        requested === "latest"
+          ? "context report requested but no context report exists."
+          : `context report not found: ${requested}`,
+    };
+  }
+
+  return {
+    path: reportPath,
+    sourceIds: readContextReportSourceIds(reportPath),
+  };
+}
+
+function formatPath(cwd: string, path: string): string {
+  const relativePath = relative(cwd, path).replace(/\\/g, "/");
+  return relativePath.startsWith("..") ? path : relativePath;
 }
 
 function uniqueProposals(proposals: TendProposal[]): TendProposal[] {

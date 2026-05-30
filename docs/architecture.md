@@ -77,6 +77,9 @@ adopt-proposals
 tend --check
   runs fresh discovery in memory and fails if structural drift remains
 
+tend --context latest
+  links a written context report into validation evidence
+
 verify
   maps changed files to validation commands and optionally writes evidence
 

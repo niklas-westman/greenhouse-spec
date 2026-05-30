@@ -263,6 +263,27 @@ export function latestContextReport(cwd: string): string | null {
   return reports[0] ?? null;
 }
 
+export function readContextReportSourceIds(reportPath: string): string[] {
+  const content = readFileSync(reportPath, "utf8");
+  const lines = content.split("\n");
+  const start = lines.findIndex((line) => line.trim() === "## Context Source IDs");
+  if (start === -1) {
+    return [];
+  }
+
+  const ids: string[] = [];
+  for (const line of lines.slice(start + 1)) {
+    if (line.startsWith("## ")) {
+      break;
+    }
+    const id = line.match(/^-\s+(.+)$/)?.[1]?.trim();
+    if (id && id !== "none") {
+      ids.push(id);
+    }
+  }
+  return ids;
+}
+
 function readContextManifest(cwd: string): ContextManifest {
   const manifestPath = join(cwd, ".greenhouse", "context", "manifest.yaml");
 

@@ -94,8 +94,9 @@ function evidenceEntry(cwd: string, path: string): EvidenceIndex["recent"][numbe
     status: metadata.status,
     mode: metadata.mode,
     changed_files: metadata.changedFiles,
-    commands: metadata.commands,
-    manual_checks: metadata.manualChecks,
+      commands: metadata.commands,
+      context_loaded: metadata.contextLoaded,
+      manual_checks: metadata.manualChecks,
     impact_warnings: metadata.impactWarnings,
     failed_commands: metadata.failedCommands,
     tending_state: metadata.tendingState,
@@ -123,6 +124,7 @@ function parseEvidenceMetadata(content: string): {
   mode?: string;
   changedFiles: string[];
   commands: string[];
+  contextLoaded: string[];
   failedCommands: Array<{
     command: string;
     notes: string;
@@ -134,6 +136,9 @@ function parseEvidenceMetadata(content: string): {
   const mode = content.match(/Change mode:\s*([^\n]+)/i)?.[1]?.trim();
   const changedFiles = splitCsv(
     content.match(/Changed files:\s*([^\n]+)/i)?.[1]?.trim(),
+  );
+  const contextLoaded = splitCsv(
+    content.match(/Context loaded:\s*([^\n]+)/i)?.[1]?.trim(),
   );
   const commandRows = parseTableRows(content, "## Commands run");
   const manualRows = parseTableRows(content, "## Manual checks");
@@ -160,6 +165,7 @@ function parseEvidenceMetadata(content: string): {
     status: commandRows.some((row) => row[1] === "fail") ? "fail" : "pass",
     mode,
     changedFiles,
+    contextLoaded,
     commands,
     failedCommands,
     manualChecks,

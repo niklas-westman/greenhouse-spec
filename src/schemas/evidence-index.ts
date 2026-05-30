@@ -30,6 +30,7 @@ export const evidenceIndexSchema = z.object({
       mode: z.string().min(1).optional(),
       changed_files: z.array(z.string()).optional(),
       commands: z.array(z.string()).optional(),
+      context_loaded: z.array(z.string()).optional(),
       failed_commands: z.array(
         z.object({
           command: z.string().min(1),

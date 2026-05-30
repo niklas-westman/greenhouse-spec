@@ -23,6 +23,11 @@ export type EvidenceTendingContext = {
   reason: string;
 };
 
+export type EvidenceContextLink = {
+  reportPath: string;
+  sourceIds: string[];
+};
+
 export function writeEvidence(options: {
   cwd: string;
   route: ValidationRoute;
@@ -30,6 +35,7 @@ export function writeEvidence(options: {
   failureAnnotations?: FailureAnnotation[];
   impactWarnings?: ImpactWarning[];
   tending?: EvidenceTendingContext;
+  context?: EvidenceContextLink;
   noPrune?: boolean;
 }): EvidenceWriteResult {
   const evidenceDirectory = join(options.cwd, ".greenhouse", "evidence");
@@ -54,6 +60,7 @@ function formatEvidence(options: {
   failureAnnotations?: FailureAnnotation[];
   impactWarnings?: ImpactWarning[];
   tending?: EvidenceTendingContext;
+  context?: EvidenceContextLink;
 }): string {
   const lines = [
     `# Verification: verify-${new Date().toISOString().slice(0, 10)}`,
@@ -63,7 +70,7 @@ function formatEvidence(options: {
     `- Change mode: ${options.route.mode}`,
     `- Changed files: ${options.route.changedFiles.join(", ") || "none"}`,
     `- Risks: ${options.route.risks.join(", ") || "none"}`,
-    "- Context loaded: none",
+    `- Context loaded: ${options.context?.reportPath ?? "none"}`,
     `- Evidence source: ${options.tending ? "tend" : "verify"}`,
     `- Evidence policy: bounded command excerpts; full logs are not stored by default.`,
     "",
@@ -163,6 +170,21 @@ function formatEvidence(options: {
     lines.push(`- Reason: ${options.tending.reason}`);
   } else {
     lines.push("- not recorded: evidence was written by direct verify.");
+  }
+
+  lines.push("", "## Context used", "");
+  if (options.context) {
+    lines.push(`- Report: ${options.context.reportPath}`);
+    if (options.context.sourceIds.length === 0) {
+      lines.push("- Source IDs: none recorded");
+    } else {
+      lines.push("- Source IDs:");
+      for (const sourceId of options.context.sourceIds) {
+        lines.push(`  - ${sourceId}`);
+      }
+    }
+  } else {
+    lines.push("- none");
   }
 
   lines.push(

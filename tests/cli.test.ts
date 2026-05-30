@@ -56,6 +56,7 @@ describe("greenhouse-spec CLI", () => {
       "Tend the repository before finishing work.",
     );
     expect(tendCommand?.options.map((option) => option.long)).toContain("--check");
+    expect(tendCommand?.options.map((option) => option.long)).toContain("--context");
     expect(tendCommand?.options.map((option) => option.long)).toContain("--no-prune");
   });
 

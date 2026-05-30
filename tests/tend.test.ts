@@ -13,6 +13,7 @@ import { execFileSync } from "node:child_process";
 import { afterEach, describe, expect, it } from "vitest";
 
 import { applyProposals } from "../src/proposals/apply-proposals.js";
+import { runContext } from "../src/context/run-context.js";
 import { formatTendReport } from "../src/tend/run-tend.js";
 import { runInspect } from "../src/inspect/run-inspect.js";
 import { runPlant } from "../src/plant/run-plant.js";
@@ -78,6 +79,64 @@ describe("tend", () => {
     expect(readFileSync(report.writes.evidencePath ?? "", "utf8")).toContain(
       "- State: pass",
     );
+  });
+
+  it("links latest context reports into tend evidence", () => {
+    const repo = createReadyRepo();
+    mkdirSync(join(repo, "src"), { recursive: true });
+    mkdirSync(join(repo, ".greenhouse", "memory", "decisions"), { recursive: true });
+    writeFileSync(join(repo, "src", "app.ts"), "export const app = 1;\n");
+    writeFileSync(
+      join(repo, ".greenhouse", "memory", "decisions", "navigation.md"),
+      [
+        "---",
+        "id: memory.navigation",
+        "status: adopted",
+        "memory_type: decision",
+        "keywords:",
+        "  - navigation",
+        "---",
+        "# Navigation",
+        "",
+        "Navigation context.",
+        "",
+      ].join("\n"),
+      "utf8",
+    );
+    runInspect({ cwd: repo });
+    const contextReport = runContext({
+      cwd: repo,
+      task: "navigation change",
+      writeReport: true,
+    });
+    initGitRepo(repo);
+    writeFileSync(join(repo, "src", "app.ts"), "export const app = 2;\n");
+
+    const report = runTend({ cwd: repo, context: "latest" });
+    const evidence = readFileSync(report.writes.evidencePath ?? "", "utf8");
+    const output = formatTendReport(report);
+
+    expect(report.ok).toBe(true);
+    expect(report.contextReportPath).toBe(contextReport.writtenReportPath);
+    expect(report.contextSourceIds).toContain("memory.navigation");
+    expect(evidence).toContain("- Context loaded: .greenhouse/reports/context/");
+    expect(evidence).toContain("## Context used");
+    expect(evidence).toContain("memory.navigation");
+    expect(output).toContain("- context loaded: .greenhouse/reports/context/");
+  });
+
+  it("fails cleanly when tend is asked for a missing context report", () => {
+    const repo = createReadyRepo();
+    initGitRepo(repo);
+
+    const report = runTend({ cwd: repo, context: "latest" });
+
+    expect(report.ok).toBe(false);
+    expect(report.state).toBe("fail");
+    expect(report.validation.reason).toBe(
+      "context report requested but no context report exists.",
+    );
+    expect(report.writes.evidencePath).toBeNull();
   });
 
   it("surfaces impact warnings in the finish gate without mutating roots", () => {

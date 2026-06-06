@@ -5,6 +5,7 @@ import { ZodError, type ZodType } from "zod";
 
 import { pruneGeneratedRecords } from "../evidence/prune.js";
 import { commandIndexSchema } from "../schemas/command-index.js";
+import { areaIndexSchema } from "../schemas/area-index.js";
 import {
   contextManifestSchema,
   type ContextManifest,
@@ -75,6 +76,10 @@ const schemaFiles: Array<{ path: string; schema: ZodType<unknown> }> = [
   {
     path: "grown/repo-shape.yaml",
     schema: repoShapeSchema,
+  },
+  {
+    path: "grown/area-index.yaml",
+    schema: areaIndexSchema,
   },
   {
     path: "grown/command-index.yaml",

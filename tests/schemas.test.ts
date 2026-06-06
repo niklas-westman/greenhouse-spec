@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
 import { commandIndexSchema } from "../src/schemas/command-index.js";
+import { areaIndexSchema } from "../src/schemas/area-index.js";
 import { contextManifestSchema } from "../src/schemas/context-manifest.js";
 import { evidenceSchema } from "../src/schemas/evidence.js";
 import { memoryIndexSchema, skillIndexSchema } from "../src/schemas/knowledge-index.js";
@@ -78,6 +79,16 @@ describe("greenhouse schemas", () => {
     );
 
     expect(commandIndex.commands[0]?.command).toBe("pnpm check");
+  });
+
+  it("validates grown area-index.yaml", () => {
+    const areaIndex = parseYamlWithSchema(
+      readFixture("area-index.valid.yaml"),
+      areaIndexSchema,
+    );
+
+    expect(areaIndex.areas[0]?.path).toBe("src/");
+    expect(areaIndex.areas[0]?.validation.status).toBe("covered");
   });
 
   it("validates grown repo-shape.yaml", () => {

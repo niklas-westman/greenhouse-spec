@@ -29,6 +29,7 @@ import {
 import { readDocsRoot } from "../impact/docs-root.js";
 import { buildValidationProposals } from "../proposals/build-proposals.js";
 import type { ValidationProposal } from "../schemas/validation-proposals.js";
+import type { ValidationEnvironment } from "../schemas/common.js";
 import { getChangedFiles } from "../validation/changed-files.js";
 import { runVerify, type VerifyReport } from "../verify/run-verify.js";
 
@@ -72,6 +73,7 @@ export type TendReport = {
   writes: TendWriteSummary;
   contextReportPath: string | null;
   contextSourceIds: string[];
+  acknowledgements: string[];
   selfTending?: {
     total: number;
     pending: number;
@@ -92,6 +94,8 @@ export function runTend(options: {
   cwd: string;
   check?: boolean;
   context?: string;
+  environment?: ValidationEnvironment | "all";
+  acknowledgements?: string[];
   noPrune?: boolean;
 }): TendReport {
   const changedFiles = safeChangedFiles(options.cwd);
@@ -121,6 +125,7 @@ export function runTend(options: {
     impactWarnings,
     contextReportPath: contextLink.path,
     contextSourceIds: contextLink.sourceIds,
+    acknowledgements: options.acknowledgements ?? [],
     validation: {
       executed: false,
       evidenceWritten: false,
@@ -170,7 +175,13 @@ export function runTend(options: {
     return report;
   }
 
-  const dryRun = runVerify({ cwd: options.cwd, changed: true, dryRun: true });
+  const dryRun = runVerify({
+    cwd: options.cwd,
+    changed: true,
+    dryRun: true,
+    environment: options.environment ?? "local",
+    skipGreenhouseCommands: true,
+  });
   report.impactWarnings = dryRun.impactWarnings;
   if (hasBlockingImpactWarnings(report.impactWarnings)) {
     report.verify = dryRun;
@@ -186,10 +197,40 @@ export function runTend(options: {
     report.verify = dryRun;
     report.validation.reason =
       dryRun.route.skippedValidation ?? "No validation commands were selected.";
+    report.state = finalTendState(report);
+    if (report.acknowledgements.length > 0) {
+      const evidence = writeEvidence({
+        cwd: options.cwd,
+        route: dryRun.route,
+        commandResults: [],
+        failureAnnotations: dryRun.failureAnnotations,
+        impactWarnings: dryRun.impactWarnings,
+        acknowledgements: report.acknowledgements,
+        tending: {
+          flow: report.flow,
+          state: report.state,
+          ok: report.ok,
+          reason: "manual acknowledgements recorded without command execution.",
+        },
+        context: report.contextReportPath
+          ? {
+              reportPath: formatPath(options.cwd, report.contextReportPath),
+              sourceIds: report.contextSourceIds,
+            }
+          : undefined,
+        noPrune: options.noPrune,
+      });
+      report.validation.evidenceWritten = true;
+      report.writes.evidencePath = evidence.path;
+      report.latestEvidencePath = evidence.path;
+    }
   } else {
     const verify = runVerify({
       cwd: options.cwd,
       changed: true,
+      environment: options.environment ?? "local",
+      acknowledgements: report.acknowledgements,
+      skipGreenhouseCommands: true,
     });
     report.verify = verify;
     report.impactWarnings = verify.impactWarnings;
@@ -201,6 +242,7 @@ export function runTend(options: {
       commandResults: verify.commandResults,
       failureAnnotations: verify.failureAnnotations,
       impactWarnings: verify.impactWarnings,
+      acknowledgements: report.acknowledgements,
       tending: {
         flow: report.flow,
         state: report.state,
@@ -247,13 +289,27 @@ function finalTendState(report: TendReport): TendState {
   }
   if (
     report.proposals.length > 0 ||
-    report.impactWarnings.length > 0 ||
+    unacknowledgedImpactWarnings(report).length > 0 ||
     report.repeatedFailures.length > 0 ||
-    (report.verify?.route.manualChecks.length ?? 0) > 0
+    unacknowledgedManualChecks(report).length > 0
   ) {
     return "warning";
   }
   return "pass";
+}
+
+function unacknowledgedManualChecks(report: TendReport): NonNullable<VerifyReport["route"]["manualChecks"]> {
+  const acknowledgements = new Set(report.acknowledgements);
+  return (report.verify?.route.manualChecks ?? []).filter(
+    (check) => !acknowledgements.has(check.id),
+  );
+}
+
+function unacknowledgedImpactWarnings(report: TendReport): ImpactWarning[] {
+  const acknowledgements = new Set(report.acknowledgements);
+  return report.impactWarnings.filter(
+    (warning) => !acknowledgements.has(warning.id),
+  );
 }
 
 function hasBlockingImpactWarnings(warnings: ImpactWarning[]): boolean {
@@ -306,7 +362,9 @@ export function formatTendReport(report: TendReport): string {
     lines.push(`- not run: ${report.validation.reason}`);
   }
   if (report.verify?.route.manualChecks.length) {
-    lines.push(`- manual checks: ${report.verify.route.manualChecks.length}`);
+    lines.push(
+      `- manual checks: ${unacknowledgedManualChecks(report).length} pending, ${report.verify.route.manualChecks.length - unacknowledgedManualChecks(report).length} acknowledged`,
+    );
   }
 
   lines.push("", "## Impact", "");
@@ -314,7 +372,10 @@ export function formatTendReport(report: TendReport): string {
     lines.push("- none");
   } else {
     for (const warning of report.impactWarnings) {
-      lines.push(`- ${warning.severity}: ${warning.reason}`);
+      const status = report.acknowledgements.includes(warning.id)
+        ? "acknowledged"
+        : "pending";
+      lines.push(`- ${warning.severity}: ${warning.reason} (${status}: ${warning.id})`);
       lines.push(`  - changed: ${warning.changedFiles.join(", ")}`);
       lines.push(`  - affected: ${warning.affected.join(", ")}`);
       lines.push(`  - resolution: ${warning.resolution}`);
@@ -325,6 +386,9 @@ export function formatTendReport(report: TendReport): string {
   if (report.contextReportPath) {
     lines.push(`- context loaded: ${formatPath(report.cwd, report.contextReportPath)}`);
     lines.push(`- context source IDs: ${report.contextSourceIds.length}`);
+  }
+  if (report.acknowledgements.length > 0) {
+    lines.push(`- acknowledgements: ${report.acknowledgements.join(", ")}`);
   }
   if (report.validation.evidenceWritten) {
     lines.push(`- written: ${report.writes.evidencePath ?? "yes"}`);
@@ -421,15 +485,15 @@ function nextActions(report: TendReport): string[] {
     return ["resolve blocking impact warnings before rerunning greenhouse-spec tend"];
   }
 
-  if (report.verify?.route.manualChecks.length) {
+  if (unacknowledgedManualChecks(report).length > 0) {
     return ["review manual checks, then rerun greenhouse-spec tend if code changes"];
   }
 
-  if (report.impactWarnings.some((warning) => warning.severity === "guarded")) {
+  if (unacknowledgedImpactWarnings(report).some((warning) => warning.severity === "guarded")) {
     return ["review guarded impact warnings before finishing"];
   }
 
-  if (report.impactWarnings.length > 0) {
+  if (unacknowledgedImpactWarnings(report).length > 0) {
     return ["review impact warnings before finishing"];
   }
 

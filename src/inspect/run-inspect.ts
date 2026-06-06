@@ -1,4 +1,4 @@
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
 import { stringify as stringifyYaml } from "yaml";
@@ -8,6 +8,7 @@ import { discoverCommandIndex } from "../discovery/scripts.js";
 import { discoverRepoMap } from "../discovery/repo-map.js";
 import { discoverRepoShape } from "../discovery/repo-shape.js";
 import { discoverRiskIndex } from "../discovery/risks.js";
+import { buildAreaIndex } from "../discovery/area-index.js";
 import { buildEvidenceIndex } from "../evidence/evidence-index.js";
 import { buildFailureSignatures } from "../evidence/failure-signatures.js";
 import {
@@ -19,6 +20,8 @@ import { buildMemoryIndex, buildSkillIndex } from "../context/knowledge-index.js
 import { writeSqliteKnowledgeIndex } from "../context/sqlite-index.js";
 import { proposePackageScripts } from "../native-scripts/package-script-proposals.js";
 import { buildValidationProposals } from "../proposals/build-proposals.js";
+import { parseYamlWithSchema } from "../schemas/common.js";
+import { validationSchema } from "../schemas/validation.js";
 
 export type InspectOptions = {
   cwd: string;
@@ -128,6 +131,7 @@ function buildGrownPlan(cwd: string): {
   const repoShape = discoverRepoShape(cwd);
   const commandIndex = discoverCommandIndex(cwd);
   const riskIndex = discoverRiskIndex(cwd);
+  const validation = readValidation(cwd);
   const validationProposals = buildValidationProposals({ cwd, repoShape });
   const now = new Date().toISOString();
 
@@ -136,6 +140,12 @@ function buildGrownPlan(cwd: string): {
     writes: [
       grownWrite("repo-map.yaml", yaml(repoMap)),
       grownWrite("repo-shape.yaml", yaml(repoShape)),
+      grownWrite("area-index.yaml", yaml(buildAreaIndex({
+        repoMap,
+        repoShape,
+        validation,
+        riskIndex,
+      }))),
       grownWrite("command-index.yaml", yaml(commandIndex)),
       grownWrite("validation-proposals.yaml", yaml(validationProposals)),
       grownWrite("docs-index.yaml", yaml({
@@ -231,6 +241,15 @@ function grownWrite(relativePath: string, content: string): PlannedWrite {
     content,
     kind: "generated",
   };
+}
+
+function readValidation(cwd: string) {
+  const validationPath = join(cwd, ".greenhouse", "roots", "validation.yaml");
+  if (!existsSync(validationPath)) {
+    return null;
+  }
+
+  return parseYamlWithSchema(readFileSync(validationPath, "utf8"), validationSchema);
 }
 
 function yaml(value: unknown): string {

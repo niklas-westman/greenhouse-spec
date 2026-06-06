@@ -39,6 +39,7 @@ export type EvidenceCoverage = {
   path: string | null;
   status: "pass" | "fail" | "missing";
   reason: string;
+  acknowledgements: string[];
 };
 
 export type StatusReport = {
@@ -58,7 +59,12 @@ export type StatusReport = {
 export function runStatus(options: { cwd: string }): StatusReport {
   const doctor = runDoctor({ cwd: options.cwd });
   const tend = runTend({ cwd: options.cwd, check: true });
-  const verify = runVerify({ cwd: options.cwd, changed: true, dryRun: true });
+  const verify = runVerify({
+    cwd: options.cwd,
+    changed: true,
+    dryRun: true,
+    skipGreenhouseCommands: true,
+  });
   const evidenceIndex = readEvidenceIndex(options.cwd);
   const repeatedFailures = unresolvedRepeatedFailureSummaries(
     readFailureSignatures(options.cwd),
@@ -307,7 +313,7 @@ function buildHealthCategories(options: {
     installHealth(options.doctor),
     selfTendingHealth(options.tend),
     changedValidationHealth(options.verify, options.evidenceCoverage),
-    impactHealth(options.verify),
+    impactHealth(options.verify, options.evidenceCoverage),
     repeatedFailuresHealth(options.repeatedFailures),
     evidenceHealth(options.repeatedFailures, options.latestEvidencePath),
   ];
@@ -423,8 +429,15 @@ function repeatedFailuresHealth(
   };
 }
 
-function impactHealth(verify: VerifyReport): HealthCategory {
+function impactHealth(
+  verify: VerifyReport,
+  evidenceCoverage: EvidenceCoverage,
+): HealthCategory {
   const warnings = verify.impactWarnings;
+  const unacknowledgedWarnings = warnings.filter(
+    (warning) => !evidenceCoverage.acknowledgements.includes(warning.id),
+  );
+
   if (warnings.some((warning) => warning.severity === "blocking")) {
     return {
       id: "impact",
@@ -435,13 +448,23 @@ function impactHealth(verify: VerifyReport): HealthCategory {
     };
   }
 
-  if (warnings.some((warning) => warning.severity === "guarded")) {
+  if (unacknowledgedWarnings.some((warning) => warning.severity === "guarded")) {
     return {
       id: "impact",
       label: "Impact warnings",
       state: "degraded",
-      summary: impactSummary(warnings),
+      summary: impactSummary(unacknowledgedWarnings),
       nextCommand: "review guarded impact warnings before finishing work",
+    };
+  }
+
+  if (unacknowledgedWarnings.length > 0) {
+    return {
+      id: "impact",
+      label: "Impact warnings",
+      state: "degraded",
+      summary: impactSummary(unacknowledgedWarnings),
+      nextCommand: "review impact warnings before finishing work",
     };
   }
 
@@ -449,7 +472,9 @@ function impactHealth(verify: VerifyReport): HealthCategory {
     id: "impact",
     label: "Impact warnings",
     state: "pass",
-    summary: warnings.length === 0 ? "none detected." : impactSummary(warnings),
+    summary: warnings.length === 0
+      ? "none detected."
+      : `all current impact warnings acknowledged by ${evidenceCoverage.path}.`,
   };
 }
 
@@ -524,6 +549,7 @@ function routeEvidenceCoverage(options: {
       path: null,
       status: "pass",
       reason: "no routed files require evidence.",
+      acknowledgements: [],
     };
   }
 
@@ -534,6 +560,7 @@ function routeEvidenceCoverage(options: {
       path: null,
       status: "missing",
       reason: "no evidence is indexed for the current route.",
+      acknowledgements: [],
     };
   }
 
@@ -545,6 +572,7 @@ function routeEvidenceCoverage(options: {
       path: latest.path,
       status: latest.status ?? "missing",
       reason: "latest evidence does not match current routed files and commands.",
+      acknowledgements: [],
     };
   }
 
@@ -554,6 +582,7 @@ function routeEvidenceCoverage(options: {
       path: latest.path,
       status: latest.status ?? "missing",
       reason: "latest matching evidence did not pass.",
+      acknowledgements: [],
     };
   }
 
@@ -562,6 +591,7 @@ function routeEvidenceCoverage(options: {
     path: latest.path,
     status: "pass",
     reason: "latest passing evidence covers current route.",
+    acknowledgements: latest.acknowledgements ?? [],
   };
 }
 

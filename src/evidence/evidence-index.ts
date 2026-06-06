@@ -95,6 +95,7 @@ function evidenceEntry(cwd: string, path: string): EvidenceIndex["recent"][numbe
     mode: metadata.mode,
     changed_files: metadata.changedFiles,
       commands: metadata.commands,
+      acknowledgements: metadata.acknowledgements,
       context_loaded: metadata.contextLoaded,
       manual_checks: metadata.manualChecks,
     impact_warnings: metadata.impactWarnings,
@@ -124,6 +125,7 @@ function parseEvidenceMetadata(content: string): {
   mode?: string;
   changedFiles: string[];
   commands: string[];
+  acknowledgements: string[];
   contextLoaded: string[];
   failedCommands: Array<{
     command: string;
@@ -139,6 +141,9 @@ function parseEvidenceMetadata(content: string): {
   );
   const contextLoaded = splitCsv(
     content.match(/Context loaded:\s*([^\n]+)/i)?.[1]?.trim(),
+  );
+  const acknowledgements = splitCsv(
+    content.match(/Acknowledgements:\s*([^\n]+)/i)?.[1]?.trim(),
   );
   const commandRows = parseTableRows(content, "## Commands run");
   const manualRows = parseTableRows(content, "## Manual checks");
@@ -167,6 +172,7 @@ function parseEvidenceMetadata(content: string): {
     changedFiles,
     contextLoaded,
     commands,
+    acknowledgements,
     failedCommands,
     manualChecks,
     impactWarnings,

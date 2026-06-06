@@ -36,6 +36,7 @@ export function writeEvidence(options: {
   impactWarnings?: ImpactWarning[];
   tending?: EvidenceTendingContext;
   context?: EvidenceContextLink;
+  acknowledgements?: string[];
   noPrune?: boolean;
 }): EvidenceWriteResult {
   const evidenceDirectory = join(options.cwd, ".greenhouse", "evidence");
@@ -61,6 +62,7 @@ function formatEvidence(options: {
   impactWarnings?: ImpactWarning[];
   tending?: EvidenceTendingContext;
   context?: EvidenceContextLink;
+  acknowledgements?: string[];
 }): string {
   const lines = [
     `# Verification: verify-${new Date().toISOString().slice(0, 10)}`,
@@ -72,6 +74,7 @@ function formatEvidence(options: {
     `- Risks: ${options.route.risks.join(", ") || "none"}`,
     `- Context loaded: ${options.context?.reportPath ?? "none"}`,
     `- Evidence source: ${options.tending ? "tend" : "verify"}`,
+    `- Acknowledgements: ${(options.acknowledgements ?? []).join(", ") || "none"}`,
     `- Evidence policy: bounded command excerpts; full logs are not stored by default.`,
     "",
     "## Commands run",
@@ -86,6 +89,7 @@ function formatEvidence(options: {
     );
     const notes = [
       annotation?.message,
+      result.failureHint,
       result.output
         ? result.result === "fail"
           ? failureExcerpt(result.output)
@@ -137,7 +141,10 @@ function formatEvidence(options: {
   );
 
   for (const check of options.route.manualChecks) {
-    lines.push(`| ${check.prompt} | pending | ${check.reason} |`);
+    const acknowledged = (options.acknowledgements ?? []).includes(check.id);
+    lines.push(
+      `| ${check.prompt} | ${acknowledged ? "reviewed" : "pending"} | ${check.reason} |`,
+    );
   }
 
   if (options.route.manualChecks.length === 0) {
@@ -160,6 +167,24 @@ function formatEvidence(options: {
 
   if ((options.impactWarnings ?? []).length === 0) {
     lines.push("| none | none | none | none | No impact warnings detected. | none |");
+  }
+
+  lines.push(
+    "",
+    "## Acknowledgements",
+    "",
+    "| ID | Result | Evidence |",
+    "|---|---:|---|",
+  );
+
+  for (const acknowledgement of options.acknowledgements ?? []) {
+    lines.push(
+      `| ${sanitizeCell(acknowledgement)} | reviewed | Explicitly acknowledged for this evidence record. |`,
+    );
+  }
+
+  if ((options.acknowledgements ?? []).length === 0) {
+    lines.push("| none | pending | No manual acknowledgements recorded. |");
   }
 
   lines.push("", "## Tending state", "");

@@ -1,6 +1,6 @@
 schema_version: 1
 managed_by: greenhouse-spec
-generated_at: 2026-05-29T19:23:30.512Z
+generated_at: 2026-06-06T07:52:35.753Z
 policy:
   agent_reading: Do not bulk-read evidence. Read specific evidence only when continuing a change, debugging validation, or following a tend/report pointer.
   retention: Keep recent evidence indexed here; archive or prune old records when they no longer help future validation decisions.
@@ -32,6 +32,8 @@ recent:
       - pnpm test:doctor
       - pnpm test:native-scripts
       - pnpm test:lifecycle
+    acknowledgements: []
+    context_loaded: []
     manual_checks: []
     impact_warnings: []
     failed_commands: []
@@ -47,6 +49,8 @@ recent:
     commands:
       - pnpm test:lifecycle
       - pnpm typecheck
+    acknowledgements: []
+    context_loaded: []
     manual_checks: []
     impact_warnings: []
     failed_commands: []
@@ -92,6 +96,8 @@ recent:
       - pnpm test:tend
       - pnpm test:discovery
       - pnpm test:lifecycle
+    acknowledgements: []
+    context_loaded: []
     manual_checks:
       - Review Greenhouse authored config changes before relying on validation routing.
     impact_warnings: []
@@ -126,6 +132,8 @@ recent:
       - pnpm test:templates
       - pnpm test:tend
       - pnpm test:lifecycle
+    acknowledgements: []
+    context_loaded: []
     manual_checks:
       - Review Greenhouse authored config changes before relying on validation routing.
     impact_warnings: []
@@ -152,6 +160,8 @@ recent:
       - pnpm typecheck
       - pnpm test:templates
       - pnpm test:lifecycle
+    acknowledgements: []
+    context_loaded: []
     manual_checks:
       - Review Greenhouse authored config changes before relying on validation routing.
     impact_warnings: []
@@ -173,6 +183,8 @@ recent:
       - pnpm typecheck
       - pnpm test:doctor
       - pnpm test:lifecycle
+    acknowledgements: []
+    context_loaded: []
     manual_checks: []
     impact_warnings: []
     failed_commands: []
@@ -196,6 +208,8 @@ recent:
       - pnpm check
       - pnpm test
       - pnpm build
+    acknowledgements: []
+    context_loaded: []
     manual_checks:
       - Review Greenhouse self-bootstrap and package validation changes.
       - Human must review guarded risk notes before merge.
@@ -234,6 +248,8 @@ recent:
       - pnpm check
       - pnpm test
       - pnpm build
+    acknowledgements: []
+    context_loaded: []
     manual_checks:
       - Review Greenhouse self-bootstrap and package validation changes.
       - Human must review guarded risk notes before merge.
@@ -251,6 +267,8 @@ recent:
     commands:
       - pnpm test:templates
       - pnpm typecheck
+    acknowledgements: []
+    context_loaded: []
     manual_checks: []
     impact_warnings: []
     failed_commands: []
@@ -261,6 +279,8 @@ recent:
     mode: patch
     changed_files: []
     commands: []
+    acknowledgements: []
+    context_loaded: []
     manual_checks: []
     impact_warnings: []
     failed_commands: []
@@ -320,6 +340,8 @@ recent:
       - pnpm test:evidence
       - pnpm test
       - pnpm build
+    acknowledgements: []
+    context_loaded: []
     manual_checks:
       - Review Greenhouse self-bootstrap and package validation changes.
       - Review Greenhouse authored config changes before relying on validation routing.
@@ -381,6 +403,8 @@ recent:
       - pnpm test:evidence
       - pnpm test
       - pnpm build
+    acknowledgements: []
+    context_loaded: []
     manual_checks:
       - Review Greenhouse self-bootstrap and package validation changes.
       - Review Greenhouse authored config changes before relying on validation routing.
@@ -412,6 +436,8 @@ recent:
       - pnpm test
       - pnpm test:cli
       - pnpm build
+    acknowledgements: []
+    context_loaded: []
     manual_checks:
       - Review Greenhouse self-bootstrap and package validation changes.
       - Human must review guarded risk notes before merge.
@@ -439,6 +465,8 @@ recent:
       - pnpm test
       - pnpm test:cli
       - pnpm build
+    acknowledgements: []
+    context_loaded: []
     manual_checks:
       - Review Greenhouse self-bootstrap and package validation changes.
       - Human must review guarded risk notes before merge.

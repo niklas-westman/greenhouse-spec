@@ -15,6 +15,7 @@ import { runPlant } from "../src/plant/run-plant.js";
 import { getChangedFiles } from "../src/validation/changed-files.js";
 import { classifyChangedFiles } from "../src/validation/classify-changed-files.js";
 import { routeValidation } from "../src/validation/route-validation.js";
+import { runValidationCommand } from "../src/validation/run-command.js";
 import { formatVerifyReport, runVerify } from "../src/verify/run-verify.js";
 
 const tempRepos: string[] = [];
@@ -591,6 +592,68 @@ describe("validation routing and evidence", () => {
     ]);
   });
 
+  it("filters validation commands by selected environment", () => {
+    const route = routeValidation({
+      changedFiles: ["src/app.ts"],
+      environment: "local",
+      validation: {
+        schema_version: 1,
+        defaults: {
+          required: [
+            {
+              id: "smoke",
+              command: "pnpm smoke",
+              environments: ["local"],
+            },
+            {
+              id: "smoke:ci",
+              command: "pnpm smoke:ci",
+              environments: ["ci"],
+            },
+          ],
+          recommended: [],
+          manual: [],
+        },
+      },
+    });
+
+    expect(route.commands.map((command) => command.command)).toEqual([
+      "pnpm smoke",
+    ]);
+    expect(route.explanations).toContainEqual({
+      kind: "environment-excluded",
+      message:
+        'Skipped command "pnpm smoke:ci" because it is not enabled for local validation.',
+    });
+  });
+
+  it("skips nested Greenhouse commands when requested", () => {
+    const route = routeValidation({
+      changedFiles: [".github/workflows/ci.yml"],
+      skipGreenhouseCommands: true,
+      validation: {
+        schema_version: 1,
+        defaults: {
+          required: [
+            { id: "greenhouse", command: "greenhouse-spec tend --check" },
+            { id: "test", command: "pnpm test" },
+          ],
+          recommended: [],
+          manual: [],
+        },
+      },
+    });
+
+    expect(route.commands.map((command) => command.command)).toEqual([
+      "pnpm test",
+    ]);
+    expect(route.explanations).toContainEqual({
+      kind: "nested-greenhouse-excluded",
+      message:
+        'Skipped nested Greenhouse command "greenhouse-spec tend --check"; tend already runs the structural Greenhouse phase before validation.',
+    });
+  });
+
   it("explains selected checks in dry-run", () => {
     const repo = createVerifyRepo();
     writeValidationConfig(repo, "node -e \"process.exit(0)\"");
@@ -704,6 +767,24 @@ describe("validation routing and evidence", () => {
         exitCode: 1,
       }),
     );
+  });
+
+  it("classifies local server bind permission failures with command capabilities", () => {
+    const repo = createVerifyRepo();
+    const result = runValidationCommand(
+      repo,
+      "node -e \"console.error('listen EPERM: operation not permitted 127.0.0.1:3000'); process.exit(1)\"",
+      {
+        capabilities: {
+          requires_local_server: true,
+          binds_ports: [3000],
+        },
+      },
+    );
+
+    expect(result.result).toBe("fail");
+    expect(result.failureKind).toBe("environment-permission");
+    expect(result.failureHint).toContain("environment permission boundary");
   });
 
   it("does not fall back to full validation for generated-only greenhouse changes", () => {

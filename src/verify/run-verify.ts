@@ -17,6 +17,7 @@ import { readDocsRoot } from "../impact/docs-root.js";
 import { parseYamlWithSchema } from "../schemas/common.js";
 import { validationSchema } from "../schemas/validation.js";
 import { commandIndexSchema } from "../schemas/command-index.js";
+import type { ValidationEnvironment } from "../schemas/common.js";
 import { getChangedFiles } from "../validation/changed-files.js";
 import {
   classifyChangedFiles,
@@ -37,8 +38,11 @@ export type VerifyOptions = {
   changed?: boolean;
   dryRun?: boolean;
   mode?: string;
+  environment?: ValidationEnvironment | "all";
   paths?: string[];
   writeEvidence?: boolean;
+  acknowledgements?: string[];
+  skipGreenhouseCommands?: boolean;
   noPrune?: boolean;
 };
 
@@ -46,6 +50,7 @@ export type VerifyReport = {
   cwd: string;
   ok: boolean;
   dryRun: boolean;
+  environment: ValidationEnvironment | "all";
   route: ValidationRoute;
   commandResults: CommandExecutionResult[];
   failureAnnotations: FailureAnnotation[];
@@ -55,6 +60,7 @@ export type VerifyReport = {
 };
 
 export function runVerify(options: VerifyOptions): VerifyReport {
+  const environment = parseEnvironment(options.environment);
   const validation = readValidationConfig(options.cwd);
   const commandIndex = readCommandIndex(options.cwd);
   const riskIndex = readRiskIndex(options.cwd);
@@ -67,6 +73,8 @@ export function runVerify(options: VerifyOptions): VerifyReport {
     allChangedFiles: classification.all,
     commandIndex,
     forcedMode: options.mode,
+    environment,
+    skipGreenhouseCommands: options.skipGreenhouseCommands,
     allowDefaultFallback: classification.routeFiles.length > 0,
     riskIndex,
     validation,
@@ -79,7 +87,9 @@ export function runVerify(options: VerifyOptions): VerifyReport {
         output: command.reason,
       }))
     : route.commands.map((command) =>
-        runValidationCommand(options.cwd, command.command),
+        runValidationCommand(options.cwd, command.command, {
+          capabilities: command.capabilities,
+        }),
       );
   const ok = commandResults.every((result) => result.result !== "fail");
   const failureAnnotations = annotateRepeatedFailures({
@@ -120,6 +130,7 @@ export function runVerify(options: VerifyOptions): VerifyReport {
     cwd: options.cwd,
     ok,
     dryRun: Boolean(options.dryRun),
+    environment,
     route,
     commandResults,
     failureAnnotations,
@@ -134,11 +145,21 @@ export function runVerify(options: VerifyOptions): VerifyReport {
       commandResults,
       failureAnnotations,
       impactWarnings,
+      acknowledgements: options.acknowledgements,
       noPrune: options.noPrune,
     }).path;
   }
 
   return report;
+}
+
+function parseEnvironment(
+  environment: VerifyOptions["environment"],
+): ValidationEnvironment | "all" {
+  if (environment === "ci" || environment === "review" || environment === "all") {
+    return environment;
+  }
+  return "local";
 }
 
 function readCommandIndex(cwd: string) {
@@ -167,6 +188,7 @@ export function formatVerifyReport(report: VerifyReport): string {
     "",
     `Repository: ${report.cwd}`,
     `Mode: ${report.route.mode}`,
+    `Environment: ${report.environment}`,
     `Run mode: ${report.dryRun ? "dry-run" : "execute"}`,
     `Status: ${report.ok ? "pass" : "fail"}`,
     "",
@@ -246,6 +268,15 @@ export function formatVerifyReport(report: VerifyReport): string {
       lines.push(
         `- ${result?.result ?? "not_run"}: ${command.command}`,
       );
+      if (result?.failureHint) {
+        lines.push(`  - failure hint: ${result.failureHint}`);
+      }
+      if (command.environments?.length) {
+        lines.push(`  - environments: ${command.environments.join(", ")}`);
+      }
+      if (command.capabilities) {
+        lines.push(`  - capabilities: ${formatCapabilities(command.capabilities)}`);
+      }
       lines.push(
         `  - source: ${command.source}${command.matched ? ` (${command.matched})` : ""}`,
       );
@@ -299,6 +330,22 @@ export function formatVerifyReport(report: VerifyReport): string {
 
   lines.push("");
   return lines.join("\n");
+}
+
+function formatCapabilities(
+  capabilities: NonNullable<ValidationRoute["commands"][number]["capabilities"]>,
+): string {
+  const labels = [
+    capabilities.requires_local_server ? "requires-local-server" : null,
+    capabilities.requires_network ? "requires-network" : null,
+    capabilities.writes_home ? "writes-home" : null,
+    capabilities.ci_only ? "ci-only" : null,
+    capabilities.binds_ports?.length
+      ? `binds-ports:${capabilities.binds_ports.join(",")}`
+      : null,
+  ].filter(Boolean);
+
+  return labels.join(", ") || "none";
 }
 
 function detectMissingPackageScriptImpacts(options: {

@@ -139,6 +139,26 @@ describe("tend", () => {
     expect(report.writes.evidencePath).toBeNull();
   });
 
+  it("writes evidence for acknowledgements even when no commands are selected", () => {
+    const repo = createReadyRepo();
+    initGitRepo(repo);
+
+    const report = runTend({
+      cwd: repo,
+      acknowledgements: ["review-only"],
+    });
+    const evidence = readFileSync(report.writes.evidencePath ?? "", "utf8");
+
+    expect(report.ok).toBe(true);
+    expect(report.state).toBe("pass");
+    expect(report.validation.executed).toBe(false);
+    expect(report.validation.evidenceWritten).toBe(true);
+    expect(evidence).toContain("| review-only | reviewed |");
+    expect(evidence).toContain(
+      "manual acknowledgements recorded without command execution",
+    );
+  });
+
   it("surfaces impact warnings in the finish gate without mutating roots", () => {
     const repo = createReadyRepo();
     const packagePath = join(repo, "package.json");
@@ -181,6 +201,50 @@ describe("tend", () => {
     expect(output).toContain("review impact warnings before finishing");
     expect(report.writes.authoredRootsMutated).toBe(false);
     expect(report.writes.packageScriptsMutated).toBe(false);
+  });
+
+  it("lets reviewed manual checks and impact warnings be acknowledged in tend evidence", () => {
+    const repo = createReadyRepo();
+    const packagePath = join(repo, "package.json");
+    const packageJson = JSON.parse(readFileSync(packagePath, "utf8")) as {
+      scripts: Record<string, string>;
+      devDependencies?: Record<string, string>;
+    };
+    initGitRepo(repo);
+    writeFileSync(
+      packagePath,
+      JSON.stringify(
+        {
+          name: "tend-fixture",
+          scripts: {
+            ...packageJson.scripts,
+            "new-script": "node -e \"process.exit(0)\"",
+          },
+          devDependencies: packageJson.devDependencies,
+        },
+        null,
+        2,
+      ),
+      "utf8",
+    );
+
+    const report = runTend({
+      cwd: repo,
+      acknowledgements: [
+        "impact.package-scripts-docs",
+        "greenhouse-self-config-review",
+      ],
+    });
+    const output = formatTendReport(report);
+    const evidence = readFileSync(report.writes.evidencePath ?? "", "utf8");
+
+    expect(report.ok).toBe(true);
+    expect(report.state).toBe("pass");
+    expect(output).toContain("acknowledged: impact.package-scripts-docs");
+    expect(output).not.toContain("review impact warnings before finishing");
+    expect(evidence).toContain("## Acknowledgements");
+    expect(evidence).toContain("| impact.package-scripts-docs | reviewed |");
+    expect(evidence).toContain("| greenhouse-self-config-review | reviewed |");
   });
 
   it("fails before validation when impact warnings are blocking", () => {

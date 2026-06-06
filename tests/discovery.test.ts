@@ -10,6 +10,7 @@ import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 
 import { discoverAgentFiles } from "../src/discovery/agent-files.js";
+import { buildAreaIndex } from "../src/discovery/area-index.js";
 import { detectPackageManager } from "../src/discovery/package-manager.js";
 import { discoverRepoMap } from "../src/discovery/repo-map.js";
 import { discoverRepoShape } from "../src/discovery/repo-shape.js";
@@ -109,6 +110,59 @@ describe("discovery", () => {
       path: ".github/copilot-instructions.md",
       present: true,
     });
+  });
+
+  it("builds area index entries with purpose, validation coverage, and gaps", () => {
+    const repo = createTempRepo();
+    mkdirSync(join(repo, "src", "engine", "sources"), { recursive: true });
+    mkdirSync(join(repo, "docs"), { recursive: true });
+    writeFileSync(join(repo, "README.md"), "# Fixture\n");
+    writeFileSync(join(repo, "src", "engine", "sources", "index.ts"), "export {}\n");
+    writePackageJson(repo, {
+      scripts: {
+        test: "vitest run",
+        typecheck: "tsc --noEmit",
+      },
+      devDependencies: {
+        typescript: "5.6.3",
+        vitest: "2.1.4",
+      },
+    });
+
+    const repoMap = discoverRepoMap(repo);
+    const repoShape = discoverRepoShape(repo);
+    const riskIndex = discoverRiskIndex(repo);
+    const areaIndex = buildAreaIndex({
+      repoMap,
+      repoShape,
+      riskIndex,
+      validation: {
+        schema_version: 1,
+        paths: {
+          "src/**": {
+            mode: "patch",
+            required: [{ id: "test", command: "pnpm test" }],
+            recommended: [],
+            manual: [],
+          },
+        },
+      },
+    });
+
+    expect(areaIndex.areas).toContainEqual(
+      expect.objectContaining({
+        path: "src/",
+        kind: "source-area",
+        purpose: "Application or repository source area.",
+        validation: expect.objectContaining({
+          status: "covered",
+          routes: ["src/**"],
+          commands: ["pnpm test"],
+        }),
+        risks: ["official-source-change"],
+        gaps: ["Risk area has no manual review check in matching validation routes."],
+      }),
+    );
   });
 
   it("detects guarded domain risk paths", () => {

@@ -99,6 +99,68 @@ failure signatures
   validation pass/fail behavior
 ```
 
+## Spec / Status / Reconciler Model
+
+Greenhouse intentionally mirrors the useful part of the Kubernetes object model:
+
+```text
+spec
+  desired repo maintenance state
+
+status
+  observed repo maintenance state
+
+reconciler
+  commands that compare desired and observed state, then report or apply safe
+  changes
+```
+
+For Greenhouse, this maps to repo-local files and commands:
+
+```text
+Spec / desired state:
+  .greenhouse/project.yaml
+  .greenhouse/roots/validation.yaml
+  .greenhouse/roots/docs.yaml
+  .greenhouse/roots/rules.md
+  .greenhouse/roots/authority.md
+  .greenhouse/roots/protected-boundaries.md
+  .greenhouse/context/manifest.yaml
+
+Status / observed state:
+  .greenhouse/grown/repo-shape.yaml
+  .greenhouse/grown/repo-map.yaml
+  .greenhouse/grown/area-index.yaml
+  .greenhouse/grown/command-index.yaml
+  .greenhouse/grown/risk-index.yaml
+  .greenhouse/grown/evidence-index.yaml
+  .greenhouse/grown/failure-signatures.yaml
+  greenhouse-spec status
+
+Reconciliation:
+  greenhouse-spec inspect
+  greenhouse-spec proposals
+  greenhouse-spec apply-proposals --safe
+  greenhouse-spec adopt-proposals
+  greenhouse-spec tend
+```
+
+The invariant is important: generated status must never become authority.
+`.greenhouse/grown/**` may explain drift and propose changes, but authored roots
+remain the source of desired state. Mutation of authored roots must stay behind
+explicit proposal/adoption commands.
+
+Future status work should make this model more concrete, for example with a
+generated `.greenhouse/grown/status.yaml` containing conditions such as
+`Installed`, `StructuralDrift`, `ValidationEvidenceCurrent`,
+`ImpactReviewed`, and `RepeatedFailuresObserved`.
+
+`area-index.yaml` is the first explicit "plants in the greenhouse" status map:
+it observes repo areas, infers their purpose, records validation coverage, and
+lists tending gaps. It must stay generated; if an inferred purpose or gap should
+become policy, that change belongs in authored roots, memory, skills, docs, or
+validation routes.
+
 ## Ownership Zones
 
 Greenhouse has three practical ownership zones:

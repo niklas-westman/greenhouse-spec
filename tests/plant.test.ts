@@ -129,6 +129,7 @@ describe("plant", () => {
 
     const project = readGreenhouseYaml(repo, "project.yaml");
     const commandIndex = readGreenhouseYaml(repo, "grown/command-index.yaml");
+    const areaIndex = readGreenhouseYaml(repo, "grown/area-index.yaml");
     const repoMap = readGreenhouseYaml(repo, "grown/repo-map.yaml");
     const repoShape = readGreenhouseYaml(repo, "grown/repo-shape.yaml");
 
@@ -149,6 +150,13 @@ describe("plant", () => {
         "greenhouse:proposals",
         "prepush",
       ]),
+    );
+    expect(areaIndex.areas.map((area: { path: string }) => area.path)).toContain("src/");
+    expect(areaIndex.areas).toContainEqual(
+      expect.objectContaining({
+        path: "src/",
+        kind: "source-area",
+      }),
     );
     expect(repoMap.docs.map((entry: { path: string }) => entry.path)).toEqual([
       "README.md",

@@ -9,9 +9,11 @@ export function registerVerifyCommand(program: Command): void {
     .option("--cwd <path>", "Repository root to verify.", process.cwd())
     .option("--changed", "Verify currently changed files.")
     .option("--mode <mode>", "Force validation mode.")
+    .option("--env <environment>", "Select validation environment: local, ci, or all.", "local")
     .option("--paths <paths...>", "Verify specific paths.")
     .option("--dry-run", "Explain selected validation without running commands.")
     .option("--write-evidence", "Write verification evidence.")
+    .option("--ack <ids...>", "Record manual review acknowledgement IDs in written evidence.")
     .option("--no-prune", "Do not prune old generated evidence/report files after writing evidence.")
     .action(
       (options: {
@@ -19,8 +21,10 @@ export function registerVerifyCommand(program: Command): void {
         changed?: boolean;
         dryRun?: boolean;
         mode?: string;
+        env?: "local" | "ci" | "all";
         paths?: string[];
         writeEvidence?: boolean;
+        ack?: string[];
         prune?: boolean;
       }) => {
         const report = runVerify({
@@ -28,8 +32,10 @@ export function registerVerifyCommand(program: Command): void {
           changed: options.changed,
           dryRun: options.dryRun,
           mode: options.mode,
+          environment: options.env,
           paths: options.paths,
           writeEvidence: options.writeEvidence,
+          acknowledgements: options.ack,
           noPrune: options.prune === false,
         });
 

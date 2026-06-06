@@ -127,6 +127,8 @@ Side effects:
 
 - Rewrites `.greenhouse/grown/**` unless `--dry-run` is used.
 - Generates `.greenhouse/grown/validation-proposals.yaml`.
+- Generates `.greenhouse/grown/area-index.yaml` with observed repo areas,
+  inferred purpose, validation coverage, risks, and tending gaps.
 - Generates `.greenhouse/grown/memory-index.yaml` from `.greenhouse/memory/**/*.md`.
 - Generates `.greenhouse/grown/skill-index.yaml` from `.greenhouse/skills/**/*.md`.
 - Generates `.greenhouse/grown/memory-index.sqlite` as a disposable SQLite FTS5
@@ -237,6 +239,8 @@ managed so future safe apply can maintain them.
 ```bash
 greenhouse-spec tend
 greenhouse-spec tend --context latest
+greenhouse-spec tend --env ci
+greenhouse-spec tend --ack package-scripts-reviewed
 greenhouse-spec tend --check
 ```
 
@@ -264,11 +268,21 @@ to link the latest context report into the evidence written by `tend`. You can
 also pass a specific context report path. Evidence records the report path and
 source IDs from the context brief.
 
+Use `--env local`, `--env ci`, or `--env all` to select validation commands by
+their route metadata. Commands without environment metadata still run in all
+environments. The default is `local`.
+
+Use `--ack <id>` after a manual review is complete. Acknowledgements are written
+to evidence and can clear reviewed manual checks or non-blocking impact warnings
+for the current route. Blocking impact warnings still require repair.
+
 ## `verify`
 
 ```bash
 greenhouse-spec verify --changed --dry-run
 greenhouse-spec verify --changed --write-evidence
+greenhouse-spec verify --changed --env ci --dry-run
+greenhouse-spec verify --changed --write-evidence --ack docs-reviewed
 greenhouse-spec verify --paths README.md src/cli.ts --dry-run
 greenhouse-spec verify --mode guarded --paths src/engine/tax/example.ts
 ```
@@ -310,7 +324,9 @@ Important options:
 - `--changed`: read changed files from git.
 - `--paths`: verify explicit paths.
 - `--mode`: force a validation mode.
+- `--env`: select `local`, `ci`, or `all` route commands. Defaults to `local`.
 - `--write-evidence`: write a verification record under `.greenhouse/evidence/`.
+- `--ack`: record manual review acknowledgement IDs in written evidence.
 - `--no-prune`: keep all generated evidence/report files for this run.
 
 Failed commands always fail validation. If a failed command resembles a recent

@@ -53,6 +53,7 @@ describe("inspect", () => {
         (command: { id: string }) => command.id,
       ),
     ).toContain("validate:domain");
+    expect(readGreenhouseYaml(repo, "grown/area-index.yaml").areas.length).toBeGreaterThan(0);
   });
 
   it("supports dry-run without updating grown files", () => {

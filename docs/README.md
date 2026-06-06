@@ -17,6 +17,7 @@ another repository, and work safely with the files it creates.
    evidence behavior.
 8. [Operating Playbook](operating-playbook.md) for day-to-day use and drift
    resolution.
+9. [Release Notes](release-notes.md) for version-level changes.
 
 ## Mental Model
 

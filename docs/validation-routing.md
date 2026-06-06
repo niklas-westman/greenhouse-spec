@@ -85,6 +85,46 @@ confidence: high
 Human-owned routes without this metadata are protected. If they already match a
 proposal, `adopt-proposals` can add metadata without changing commands.
 
+## Command Metadata
+
+Validation commands may include optional environment and capability metadata:
+
+```yaml
+required:
+  - id: reflection-smoke
+    command: pnpm reflection:smoke
+    environments:
+      - local
+    capabilities:
+      requires_local_server: true
+      binds_ports:
+        - 3000
+
+  - id: reflection-smoke-ci
+    command: pnpm reflection:smoke:ci
+    environments:
+      - ci
+    capabilities:
+      ci_only: true
+      requires_local_server: true
+      binds_ports:
+        - 3000
+```
+
+`greenhouse-spec tend` and `greenhouse-spec verify` default to the `local`
+environment. Use `--env ci` for CI command selection or `--env all` when you
+intentionally want every command selected.
+
+Capability metadata does not weaken validation. It gives Greenhouse enough
+context to explain failures more accurately. For example, a local server command
+that fails with `listen EPERM` can be reported as an environment permission
+boundary instead of an ordinary product failure.
+
+When `tend` sees a nested Greenhouse command such as
+`greenhouse-spec tend --check` in ordinary validation routes, it skips that
+command during the validation phase and explains why. `tend` already runs the
+structural Greenhouse phase before changed-file validation.
+
 ## Evidence
 
 `verify --changed --write-evidence` writes proof of selected commands and their
@@ -142,6 +182,18 @@ generated output
 Warnings are severity-based. Advisory and warning findings keep the finish gate
 visible without mutating docs. Guarded and blocking findings require review or
 repair before the repo should be treated as fully tended.
+
+After review, non-blocking impact warnings and manual checks can be acknowledged
+in evidence:
+
+```bash
+greenhouse-spec tend --ack impact.package-scripts-docs docs-reviewed
+```
+
+Acknowledgements are evidence, not rule changes. They record that a review was
+performed for the current route so Greenhouse can stop reporting reviewed manual
+work as pending. Blocking impact warnings still require fixing the underlying
+route, package script, or repo contract.
 
 Every warning includes a resolution hint. `blocking` warnings fail `status` and
 the default `tend` finish gate. One practical blocking case is a selected

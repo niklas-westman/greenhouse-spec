@@ -1,10 +1,12 @@
 schema_version: 1
 managed_by: greenhouse-spec
-generated_at: 2026-05-28T07:59:25.697Z
+generated_at: 2026-06-06T07:52:35.745Z
 agent_files:
   - path: AGENTS.md
     present: false
   - path: CLAUDE.md
+    present: false
+  - path: .github/copilot-instructions.md
     present: false
   - path: .cursor/rules/
     present: false

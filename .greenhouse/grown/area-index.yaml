@@ -1,0 +1,104 @@
+schema_version: 1
+managed_by: greenhouse-spec
+generated_at: 2026-06-06T07:52:35.747Z
+policy:
+  purpose: Generated map of repo areas, inferred purpose, validation coverage, and tending gaps.
+  authority: Area purpose is observed status, not authored truth. Use it to propose roots, docs, memory, or validation updates.
+areas:
+  - id: area:readme-md
+    path: README.md
+    kind: documentation-area
+    purpose: Documentation and repo knowledge surface.
+    confidence: high
+    signals:
+      - documentation-area
+      - repo-map-docs
+    validation:
+      status: covered
+      routes:
+        - README.md
+      commands:
+        - pnpm test:templates
+        - pnpm typecheck
+      manual_checks: []
+    risks: []
+    gaps: []
+  - id: area:docs
+    path: docs/
+    kind: documentation-area
+    purpose: Documentation and repo knowledge surface.
+    confidence: high
+    signals:
+      - documentation-area
+      - repo-map-docs
+    validation:
+      status: covered
+      routes:
+        - docs/**
+      commands:
+        - pnpm test:templates
+        - pnpm typecheck
+      manual_checks: []
+    risks: []
+    gaps: []
+  - id: area:src
+    path: src/
+    kind: source-area
+    purpose: Application or repository source area.
+    confidence: high
+    signals:
+      - source-area
+      - repo-map-source
+    validation:
+      status: covered
+      routes:
+        - src/cli.ts
+        - src/commands/**
+        - src/schemas/**
+        - src/proposals/**
+        - src/validation/**
+        - src/verify/**
+        - src/plant/**
+        - src/templates/**
+        - src/tend/**
+        - src/doctor/**
+        - src/discovery/**
+        - src/inspect/**
+        - src/native-scripts/**
+        - src/lifecycle/**
+        - src/status/**
+        - src/evidence/**
+      commands:
+        - pnpm test:cli
+        - pnpm typecheck
+        - pnpm test:schemas
+        - pnpm test:proposals
+        - pnpm test:validation
+        - pnpm test:plant
+        - pnpm test:templates
+        - pnpm test:tend
+        - pnpm test:doctor
+        - pnpm test:discovery
+        - pnpm test:inspect
+        - pnpm test:native-scripts
+        - pnpm test:lifecycle
+        - pnpm test:evidence
+      manual_checks: []
+    risks: []
+    gaps: []
+  - id: area:tests
+    path: tests/
+    kind: test-area
+    purpose: Automated test coverage and fixtures.
+    confidence: medium
+    signals:
+      - test-area
+      - repo-map-tests
+    validation:
+      status: missing
+      routes: []
+      commands: []
+      manual_checks: []
+    risks: []
+    gaps:
+      - No explicit validation route covers this area.

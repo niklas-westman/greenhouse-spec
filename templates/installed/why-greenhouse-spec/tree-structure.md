@@ -149,6 +149,15 @@ roots.
 A generated classification of the repo shape: package manager, package kinds,
 framework hints, backend/frontend/infra areas, and discovered gaps.
 
+### `grown/area-index.yaml`
+
+A generated map of repo areas.
+
+This is the first "plants in the greenhouse" view: each area has an observed
+path, inferred purpose, validation coverage, risk hints, and tending gaps. It is
+status, not authority; use it to propose better roots, docs, memory, skills, or
+validation routes.
+
 ### `grown/command-index.yaml`
 
 A generated index of available commands, usually from package scripts.

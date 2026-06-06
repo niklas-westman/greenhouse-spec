@@ -1,5 +1,6 @@
 import type { ValidationConfig } from "../schemas/validation.js";
 import type { CommandIndex } from "../schemas/command-index.js";
+import type { ValidationEnvironment } from "../schemas/common.js";
 
 import { matchesPath } from "./path-match.js";
 
@@ -13,6 +14,14 @@ export type RiskIndex = {
 export type RoutedCommand = {
   id: string;
   command: string;
+  environments?: ValidationEnvironment[];
+  capabilities?: {
+    requires_local_server?: boolean;
+    requires_network?: boolean;
+    writes_home?: boolean;
+    ci_only?: boolean;
+    binds_ports?: number[];
+  };
   reason: string;
   source: RouteSource;
   matched?: string;
@@ -45,6 +54,8 @@ export type RouteExplanation = {
     | "fallback-default"
     | "manual-check"
     | "generated-excluded"
+    | "environment-excluded"
+    | "nested-greenhouse-excluded"
     | "skipped";
   message: string;
 };
@@ -73,6 +84,8 @@ export function routeValidation(options: {
   allChangedFiles?: string[];
   allowDefaultFallback?: boolean;
   forcedMode?: string;
+  environment?: ValidationEnvironment | "all";
+  skipGreenhouseCommands?: boolean;
   commandIndex?: CommandIndex;
   riskIndex?: RiskIndex;
   validation: ValidationConfig;
@@ -227,8 +240,14 @@ export function routeValidation(options: {
       });
     }
   }
+  const filteredCommands = filterCommands({
+    commands: uniqueCommands(commands),
+    environment: options.environment ?? "local",
+    skipGreenhouseCommands: Boolean(options.skipGreenhouseCommands),
+    explanations,
+  });
   const skippedValidation =
-    commands.length === 0
+    filteredCommands.length === 0
       ? (options.allowDefaultFallback === false
           ? "No validation commands were selected because no non-generated files were routed."
           : "No validation commands were selected from validation.yaml.")
@@ -245,11 +264,54 @@ export function routeValidation(options: {
     changedFiles,
     allChangedFiles: options.allChangedFiles,
     risks,
-    commands: uniqueCommands(commands),
+    commands: filteredCommands,
     manualChecks: uniqueManualChecks(manualChecks),
     skippedValidation,
     explanations: uniqueExplanations(explanations),
   };
+}
+
+function filterCommands(options: {
+  commands: RoutedCommand[];
+  environment: ValidationEnvironment | "all";
+  skipGreenhouseCommands: boolean;
+  explanations: RouteExplanation[];
+}): RoutedCommand[] {
+  return options.commands.filter((command) => {
+    if (
+      options.environment !== "all" &&
+      command.environments &&
+      !command.environments.includes(options.environment)
+    ) {
+      options.explanations.push({
+        kind: "environment-excluded",
+        message: `Skipped command "${command.command}" because it is not enabled for ${options.environment} validation.`,
+      });
+      return false;
+    }
+
+    if (command.capabilities?.ci_only && options.environment === "local") {
+      options.explanations.push({
+        kind: "environment-excluded",
+        message: `Skipped CI-only command "${command.command}" during local validation.`,
+      });
+      return false;
+    }
+
+    if (options.skipGreenhouseCommands && isGreenhouseCommand(command.command)) {
+      options.explanations.push({
+        kind: "nested-greenhouse-excluded",
+        message: `Skipped nested Greenhouse command "${command.command}"; tend already runs the structural Greenhouse phase before validation.`,
+      });
+      return false;
+    }
+
+    return true;
+  });
+}
+
+function isGreenhouseCommand(command: string): boolean {
+  return /\b(?:greenhouse-spec|greenhouse)\b/.test(command);
 }
 
 function inferLightweightPatchCommands(options: {

@@ -26,6 +26,7 @@ greenhouse-spec inspect
 .greenhouse/grown/*
   |
   +-- repo-shape.yaml
+  +-- area-index.yaml
   +-- command-index.yaml
   +-- validation-proposals.yaml
   +-- risk-index.yaml

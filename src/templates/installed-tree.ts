@@ -9,6 +9,7 @@ export const mvpInstalledTreePaths = [
   "why-greenhouse-spec/tree-structure.md",
   "why-greenhouse-spec/agent-workflow.md",
   "grown/repo-map.yaml",
+  "grown/area-index.yaml",
   "grown/command-index.yaml",
   "grown/docs-index.yaml",
   "grown/risk-index.yaml",

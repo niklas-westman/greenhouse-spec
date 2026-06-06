@@ -1,6 +1,6 @@
 schema_version: 1
 managed_by: greenhouse-spec
-generated_at: 2026-05-28T07:59:25.650Z
+generated_at: 2026-06-06T07:52:35.688Z
 confidence: medium
 source:
   - path: src/
@@ -22,6 +22,8 @@ agent_files:
   - path: AGENTS.md
     present: false
   - path: CLAUDE.md
+    present: false
+  - path: .github/copilot-instructions.md
     present: false
   - path: .cursor/rules/
     present: false

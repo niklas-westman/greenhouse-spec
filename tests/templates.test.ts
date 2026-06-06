@@ -10,6 +10,7 @@ import { evidenceIndexSchema } from "../src/schemas/evidence-index.js";
 import { memoryIndexSchema, skillIndexSchema } from "../src/schemas/knowledge-index.js";
 import { projectSchema } from "../src/schemas/project.js";
 import { commandIndexSchema } from "../src/schemas/command-index.js";
+import { areaIndexSchema } from "../src/schemas/area-index.js";
 import { repoMapSchema } from "../src/schemas/repo-map.js";
 import { validationSchema } from "../src/schemas/validation.js";
 import {
@@ -104,6 +105,9 @@ describe("installed templates", () => {
     ).not.toThrow();
     expect(() =>
       parseYamlWithSchema(readTemplate("grown/repo-map.yaml"), repoMapSchema),
+    ).not.toThrow();
+    expect(() =>
+      parseYamlWithSchema(readTemplate("grown/area-index.yaml"), areaIndexSchema),
     ).not.toThrow();
     expect(() =>
       parseYamlWithSchema(

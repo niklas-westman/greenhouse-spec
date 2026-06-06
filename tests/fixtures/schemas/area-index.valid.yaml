@@ -1,0 +1,24 @@
+schema_version: 1
+managed_by: greenhouse-spec
+generated_at: 2026-06-05T00:00:00Z
+policy:
+  purpose: Generated map of repo areas, inferred purpose, validation coverage, and tending gaps.
+  authority: Area purpose is observed status, not authored truth.
+areas:
+  - id: area:src
+    path: src/
+    kind: source-area
+    purpose: Application or repository source area.
+    confidence: high
+    signals:
+      - source-area
+      - repo-map-source
+    validation:
+      status: covered
+      routes:
+        - src/**
+      commands:
+        - pnpm test
+      manual_checks: []
+    risks: []
+    gaps: []

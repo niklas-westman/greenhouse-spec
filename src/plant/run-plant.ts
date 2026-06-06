@@ -1,7 +1,7 @@
 import { mkdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
-import { stringify as stringifyYaml } from "yaml";
+import { parse as parseYaml, stringify as stringifyYaml } from "yaml";
 
 import { discoverAgentFiles } from "../discovery/agent-files.js";
 import type { AgentFileEntry } from "../discovery/agent-files.js";
@@ -12,6 +12,8 @@ import { greenhouseCommandForRepo } from "../native-scripts/package-script-propo
 import { discoverRepoMap } from "../discovery/repo-map.js";
 import { discoverRepoShape } from "../discovery/repo-shape.js";
 import { discoverRiskIndex } from "../discovery/risks.js";
+import { buildAreaIndex } from "../discovery/area-index.js";
+import type { ValidationConfig } from "../schemas/validation.js";
 import { buildValidationProposals } from "../proposals/build-proposals.js";
 import { buildEvidenceIndex } from "../evidence/evidence-index.js";
 import { buildFailureSignatures } from "../evidence/failure-signatures.js";
@@ -122,6 +124,7 @@ function buildPlantWrites(
   const commandIndex = discoverCommandIndex(cwd);
   const riskIndex = discoverRiskIndex(cwd);
   const validationProposals = buildValidationProposals({ cwd, repoShape });
+  const validationConfig = parseYaml(validationYaml(cwd)) as ValidationConfig;
   const now = new Date().toISOString();
 
   return [
@@ -136,6 +139,12 @@ function buildPlantWrites(
     authored("why-greenhouse-spec/agent-workflow.md", template("why-greenhouse-spec/agent-workflow.md")),
     generated("grown/repo-map.yaml", yaml(repoMap)),
     generated("grown/repo-shape.yaml", yaml(repoShape)),
+    generated("grown/area-index.yaml", yaml(buildAreaIndex({
+      repoMap,
+      repoShape,
+      validation: validationConfig,
+      riskIndex,
+    }))),
     generated("grown/command-index.yaml", yaml(commandIndex)),
     generated("grown/validation-proposals.yaml", yaml(validationProposals)),
     generated("grown/docs-index.yaml", yaml({

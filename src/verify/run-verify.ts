@@ -32,7 +32,7 @@ import {
   type RiskIndex,
   type ValidationRoute,
 } from "../validation/route-validation.js";
-import { terminalWords } from "../terminal/words.js";
+import { terminalStatusLabel, terminalWords } from "../terminal/words.js";
 
 export type VerifyOptions = {
   cwd: string;
@@ -185,6 +185,14 @@ export function formatVerifyReport(report: VerifyReport): string {
     (file) => !report.route.changedFiles.includes(file),
   );
   const lines = [
+    ...formatVerifyGuideCard({
+      report,
+      consideredFiles,
+      commandCount,
+      manualCheckCount,
+      validationAction,
+    }),
+    "",
     "# Greenhouse Verify",
     "",
     `Repository: ${report.cwd}`,
@@ -331,6 +339,47 @@ export function formatVerifyReport(report: VerifyReport): string {
 
   lines.push("");
   return lines.join("\n");
+}
+
+function formatVerifyGuideCard(options: {
+  report: VerifyReport;
+  consideredFiles: string[];
+  commandCount: number;
+  manualCheckCount: number;
+  validationAction: "selected" | "executed";
+}): string[] {
+  const status = options.report.ok ? "pass" : "fail";
+  return [
+    "+-- GREENHOUSE VERIFY ------------------------------+",
+    `| State: ${fitVerifyText(`${terminalStatusLabel(status)} (${status})`)} |`,
+    `| Mode : ${fitVerifyText(`${options.report.dryRun ? "dry-run" : "execute"}, ${options.report.route.mode}, ${options.report.environment}`)} |`,
+    `| Files: ${fitVerifyText(`${options.consideredFiles.length} considered, ${options.report.route.changedFiles.length} routed`)} |`,
+    `| Checks: ${fitVerifyText(formatVerifyCheckSummary(options))} |`,
+    `| Watch: ${fitVerifyText(formatImpactSummary(options.report.impactWarnings))} |`,
+    `| Next : ${fitVerifyText(formatVerifyNextStep(options.report))} |`,
+    "+----------------------------------------------------+",
+  ];
+}
+
+function formatVerifyCheckSummary(options: {
+  commandCount: number;
+  manualCheckCount: number;
+  validationAction: "selected" | "executed";
+}): string {
+  const commandSummary = options.commandCount === 0
+    ? "no commands"
+    : `${options.commandCount} ${pluralize("command", options.commandCount)} ${options.validationAction}`;
+  const manualSummary = options.manualCheckCount === 0
+    ? "no manual review"
+    : `${options.manualCheckCount} manual ${pluralize("check", options.manualCheckCount)}`;
+  return `${commandSummary}; ${manualSummary}`;
+}
+
+function fitVerifyText(value: string): string {
+  const width = 44;
+  const normalized = value.replace(/\s+/g, " ").trim();
+  const clipped = normalized.length > width ? `${normalized.slice(0, width - 1)}…` : normalized;
+  return clipped.padEnd(width, " ");
 }
 
 function formatCapabilities(

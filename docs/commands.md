@@ -319,10 +319,13 @@ greenhouse-spec verify --mode guarded --paths src/engine/tax/example.ts
 Selects validation commands from `.greenhouse/roots/validation.yaml` and runs
 them unless `--dry-run` is used.
 
-Dry-run output is the validation routing explanation surface. It is ordered for
-fast agent scanning:
+Dry-run output is the validation routing explanation surface. It starts with a
+compact `GREENHOUSE VERIFY` card showing state, mode/environment, file coverage,
+check/manual-review count, needs-attention summary, and the next step before the
+longer report. The detailed report remains ordered for fast agent scanning:
 
 ```text
+Greenhouse Verify card
 Changed
 Groups
 Impact

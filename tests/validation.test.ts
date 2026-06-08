@@ -678,6 +678,13 @@ describe("validation routing and evidence", () => {
       message: 'Matched risk "generated-output-contract".',
     });
     const output = formatVerifyReport(report);
+    expect(output).toContain("+-- GREENHOUSE VERIFY");
+    expect(output).toContain("| State: ready (pass)");
+    expect(output).toContain("| Mode : dry-run, guarded, local");
+    expect(output).toContain("| Files: 1 considered, 1 routed");
+    expect(output).toContain("| Checks: 3 commands selected; 1 manual check");
+    expect(output).toContain("| Watch: none");
+    expect(output).toContain("| Next : run greenhouse-spec tend for the normal fin…");
     expect(output).toContain("# Greenhouse Verify");
     expect(output).toContain("## Changed");
     expect(output).toContain("## Groups");
@@ -881,6 +888,8 @@ describe("validation routing and evidence", () => {
         ),
       }),
     );
+    expect(output).toContain("| State: ready (pass)");
+    expect(output).toContain("| Watch: 1 blocking");
     expect(output).toContain("- summary: 1 blocking");
     expect(output).toContain(
       'selected validation command "pnpm missing-script" references missing package script "missing-script"',

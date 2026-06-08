@@ -144,7 +144,9 @@ greenhouse-spec update
 ```
 
 Refreshes generated intelligence and Greenhouse-managed install files in an
-existing repo. Authored roots remain protected.
+existing repo. Authored roots remain protected. The report starts with what the
+update provides to the consumer repo in Guide / Check / Remember terms, then
+lists generated intelligence and managed install-file writes.
 
 Side effects:
 

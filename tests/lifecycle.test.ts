@@ -16,7 +16,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { createProgram } from "../src/cli.js";
 import { writeEvidence } from "../src/evidence/write-evidence.js";
 import { formatInitReport, runInit } from "../src/lifecycle/run-init.js";
-import { runUpdate } from "../src/lifecycle/run-update.js";
+import { formatUpdateReport, runUpdate } from "../src/lifecycle/run-update.js";
 import { greenhouseCommandForRepo } from "../src/native-scripts/package-script-proposals.js";
 import {
   formatStatusJsonReport,
@@ -69,6 +69,20 @@ describe("lifecycle commands", () => {
     expect(report.ok).toBe(true);
     expect(report.writes.some((write) => write.status === "dry-run")).toBe(true);
     expect(readFileSync(scriptPath, "utf8")).toBe(before);
+  });
+
+  it("update output explains what the new consumer contract provides", () => {
+    const repo = createRepo();
+    runPlant({ cwd: repo });
+
+    const output = formatUpdateReport(runUpdate({ cwd: repo, dryRun: true }));
+
+    expect(output).toContain("## What This Update Provides");
+    expect(output).toContain("Guide / Check / Remember");
+    expect(output).toContain("- Guide: refreshed generated repo intelligence for task context.");
+    expect(output).toContain("- Check: refreshed command indexes, risk indexes, and validation proposals.");
+    expect(output).toContain("- Remember: preserved repo-local evidence/reports and refreshed managed helpers.");
+    expect(output).toContain("Authored roots remain protected");
   });
 
   it("update refreshes managed helper files and project metadata", () => {

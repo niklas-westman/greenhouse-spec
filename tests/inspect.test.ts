@@ -13,7 +13,7 @@ import { parse as parseYaml } from "yaml";
 import { afterEach, describe, expect, it } from "vitest";
 
 import { runDoctor } from "../src/doctor/run-doctor.js";
-import { runInspect } from "../src/inspect/run-inspect.js";
+import { formatInspectReport, runInspect } from "../src/inspect/run-inspect.js";
 import { runPlant } from "../src/plant/run-plant.js";
 
 const tempRepos: string[] = [];
@@ -93,6 +93,25 @@ describe("inspect", () => {
     expect(readFileSync(join(repo, "package.json"), "utf8")).toBe(
       packageJsonBefore,
     );
+  });
+
+  it("prints a compact guide card before inspect details", () => {
+    const repo = createTinyNodeRepo();
+    runPlant({ cwd: repo });
+
+    const dryRunMarkdown = formatInspectReport(runInspect({ cwd: repo, dryRun: true }));
+
+    expect(dryRunMarkdown).toContain("+-- GREENHOUSE INSPECT");
+    expect(dryRunMarkdown).toContain("| Mode : preview only");
+    expect(dryRunMarkdown).toContain("| Files: 14 planned");
+    expect(dryRunMarkdown).toContain("| Next : run greenhouse-spec inspect");
+    expect(dryRunMarkdown).toContain("## Refreshed Files");
+
+    const writeMarkdown = formatInspectReport(runInspect({ cwd: repo }));
+
+    expect(writeMarkdown).toContain("| Mode : refresh files");
+    expect(writeMarkdown).toContain("| Files: 14 refreshed");
+    expect(writeMarkdown).toContain("| Next : use refreshed context");
   });
 
   it("refreshes the evidence index from recent evidence files", () => {

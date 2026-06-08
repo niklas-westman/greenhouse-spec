@@ -87,6 +87,8 @@ export function runInspect(options: InspectOptions): InspectReport {
 
 export function formatInspectReport(report: InspectReport): string {
   const lines = [
+    ...formatInspectGuideCard(report),
+    "",
     "# Greenhouse Inspect Report",
     "",
     `Repository: ${report.cwd}`,
@@ -94,7 +96,7 @@ export function formatInspectReport(report: InspectReport): string {
     `Status: ${report.ok ? "pass" : "blocked"}`,
     `Validation proposals: ${report.validationProposals.total} total, ${report.validationProposals.pending} pending, ${report.validationProposals.adoptable} adoptable, ${report.validationProposals.conflicts} conflicts`,
     "",
-    "## Grown Files",
+    "## Refreshed Files",
     "",
   ];
 
@@ -121,6 +123,73 @@ export function formatInspectReport(report: InspectReport): string {
 
   lines.push("");
   return lines.join("\n");
+}
+
+function formatInspectGuideCard(report: InspectReport): string[] {
+  const refreshSummary = summarizeInspectWrites(report.writes);
+  const proposalSummary = summarizeInspectProposals(report);
+  const nextStep = inspectNextStep(report);
+
+  return [
+    "+-- GREENHOUSE INSPECT -----------------------------+",
+    `| Mode : ${fitInspectText(report.dryRun ? "preview only" : "refresh files")} |`,
+    `| State: ${fitInspectText(report.ok ? "ready" : "blocked")} |`,
+    `| Files: ${fitInspectText(refreshSummary)} |`,
+    `| Ideas: ${fitInspectText(proposalSummary)} |`,
+    `| Next : ${fitInspectText(nextStep)} |`,
+    "+----------------------------------------------------+",
+  ];
+}
+
+function summarizeInspectWrites(writes: InspectReport["writes"]): string {
+  if (writes.length === 0) {
+    return "none";
+  }
+
+  const blocked = writes.filter((write) => write.status === "blocked").length;
+  if (blocked > 0) {
+    return `${blocked} blocked, ${writes.length} planned`;
+  }
+
+  const dryRun = writes.every((write) => write.status === "dry-run");
+  return `${writes.length} ${dryRun ? "planned" : "refreshed"}`;
+}
+
+function summarizeInspectProposals(report: InspectReport): string {
+  const pending = report.validationProposals.pending + report.proposals.length;
+  const adoptable = report.validationProposals.adoptable;
+  const conflicts = report.validationProposals.conflicts;
+
+  if (conflicts > 0) {
+    return `${conflicts} conflict${conflicts === 1 ? "" : "s"}`;
+  }
+  if (adoptable > 0) {
+    return `${adoptable} adoptable`;
+  }
+  if (pending > 0) {
+    return `${pending} to review`;
+  }
+  return "none";
+}
+
+function inspectNextStep(report: InspectReport): string {
+  if (!report.ok) {
+    return "review blocked writes";
+  }
+  if (report.dryRun) {
+    return "run greenhouse-spec inspect";
+  }
+  if (report.validationProposals.adoptable > 0 || report.proposals.length > 0) {
+    return "review proposals";
+  }
+  return "use refreshed context";
+}
+
+function fitInspectText(value: string): string {
+  const width = 44;
+  const normalized = value.replace(/\s+/g, " ").trim();
+  const clipped = normalized.length > width ? `${normalized.slice(0, width - 1)}…` : normalized;
+  return clipped.padEnd(width, " ");
 }
 
 function buildGrownPlan(cwd: string): {

@@ -136,7 +136,10 @@ greenhouse-spec inspect
 greenhouse-spec inspect --dry-run
 ```
 
-Refreshes generated repo intelligence.
+Refreshes generated repo intelligence. Markdown output starts with a compact
+`GREENHOUSE INSPECT` card that shows whether the command is previewing or
+writing, how many generated files are planned/refreshed, whether proposals need
+review, and the next step.
 
 Side effects:
 

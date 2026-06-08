@@ -90,6 +90,9 @@ export function formatPlantReport(report: PlantReport): string {
   const lines = [
     "# Greenhouse Plant Report",
     "",
+    "   _\\|/_   Greenhouse planted with roots, checks, and proof.",
+    "    /|\\    Keep guidance alive, not decorative.",
+    "",
     `Repository: ${report.cwd}`,
     `Mode: ${report.dryRun ? "dry-run" : "write"}`,
     `Status: ${report.ok ? "pass" : "blocked"}`,

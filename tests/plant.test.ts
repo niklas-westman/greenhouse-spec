@@ -13,7 +13,7 @@ import { parse as parseYaml } from "yaml";
 import { afterEach, describe, expect, it } from "vitest";
 
 import { runDoctor } from "../src/doctor/run-doctor.js";
-import { runPlant } from "../src/plant/run-plant.js";
+import { formatPlantReport, runPlant } from "../src/plant/run-plant.js";
 
 const tempRepos: string[] = [];
 
@@ -30,6 +30,8 @@ describe("plant", () => {
     const report = runPlant({ cwd: repo, dryRun: true });
 
     expect(report.ok).toBe(true);
+    expect(formatPlantReport(report)).toContain("_\\|/_   Greenhouse planted with roots, checks, and proof.");
+    expect(formatPlantReport(report)).toContain("Keep guidance alive, not decorative.");
     expect(report.writes.every((write) => write.status === "dry-run")).toBe(true);
     expect(report.writes.map((write) => write.relativePath)).toContain(
       ".greenhouse/project.yaml",

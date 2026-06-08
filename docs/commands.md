@@ -47,6 +47,13 @@ Older internal words such as validation, routing, evidence, and impact can still
 appear in schemas and JSON, but Markdown output should prefer the terms above
 when the text is meant for humans or agents reading a terminal.
 
+Use compact ASCII cards only as first-screen orientation for dense, high-traffic
+terminal reports. Cards should summarize state, scope, needs-attention, and one
+next step while preserving the detailed Markdown below. Do not turn every
+section, generated artifact, JSON output, or schema into ASCII art. Small brand
+references such as the plant motif belong on welcome/install surfaces where they
+add warmth without slowing diagnostic scanning.
+
 ## `status`
 
 ```bash
@@ -130,7 +137,8 @@ greenhouse-spec plant
 ```
 
 Lower-level install primitive kept for compatibility. Prefer `init` for normal
-repo installation.
+repo installation. Its report carries the tiny plant motif as an install-surface
+identity touch; operational diagnostics should stay restrained and scan-first.
 
 ## `inspect`
 

@@ -174,6 +174,10 @@ describe("lifecycle commands", () => {
       "pass",
       "pass",
     ]);
+    expect(output).toContain("+-- GREENHOUSE STATUS");
+    expect(output).toContain("| State: ready (pass)");
+    expect(output).toContain("| Files: 0 changed, 0 routed");
+    expect(output).toContain("| Next : no action needed");
     expect(output).toContain("Greenhouse Status");
     expect(output).toContain("State: ready (pass)");
     expect(output).toContain("Changed: 0 file(s), 0 routed");
@@ -212,6 +216,7 @@ describe("lifecycle commands", () => {
       }),
     );
     expect(formatStatusReport(report)).toContain("State: needs review (degraded)");
+    expect(formatStatusReport(report)).toContain("| State: needs review (degraded)");
     expect(formatStatusReport(report)).toContain("Next: greenhouse-spec tend");
   });
 

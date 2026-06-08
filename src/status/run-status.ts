@@ -124,6 +124,14 @@ export function formatStatusReport(report: StatusReport): string {
     : "none.";
 
   return [
+    ...formatStatusGuideCard({
+      report,
+      changedCount,
+      routedCount,
+      checks: validation,
+      needsAttention: impactWarnings,
+    }),
+    "",
     "Greenhouse Status",
     "",
     `Repository: ${report.cwd}`,
@@ -138,6 +146,31 @@ export function formatStatusReport(report: StatusReport): string {
     `Next: ${recommendedNextCommand(report) ?? "no action needed"}`,
     "",
   ].join("\n");
+}
+
+function formatStatusGuideCard(options: {
+  report: StatusReport;
+  changedCount: number;
+  routedCount: number;
+  checks: string;
+  needsAttention: string;
+}): string[] {
+  return [
+    "+-- GREENHOUSE STATUS ------------------------------+",
+    `| State: ${fitStatusText(`${terminalStatusLabel(options.report.overallStatus)} (${options.report.overallStatus})`)} |`,
+    `| Files: ${fitStatusText(`${options.changedCount} changed, ${options.routedCount} routed`)} |`,
+    `| Checks: ${fitStatusText(options.checks)} |`,
+    `| Watch: ${fitStatusText(options.needsAttention)} |`,
+    `| Next : ${fitStatusText(recommendedNextCommand(options.report) ?? "no action needed")} |`,
+    "+----------------------------------------------------+",
+  ];
+}
+
+function fitStatusText(value: string): string {
+  const width = 44;
+  const normalized = value.replace(/\s+/g, " ").trim();
+  const clipped = normalized.length > width ? `${normalized.slice(0, width - 1)}…` : normalized;
+  return clipped.padEnd(width, " ");
 }
 
 export function formatStatusVerboseReport(report: StatusReport): string {

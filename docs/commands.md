@@ -56,7 +56,10 @@ greenhouse-spec status --json
 ```
 
 Prints a short read-only health report by combining doctor, self-tending drift
-checks, changed-file validation dry-run, and latest evidence discovery. Use
+checks, changed-file validation dry-run, and latest evidence discovery. The
+default Markdown output starts with a compact `GREENHOUSE STATUS` card showing
+state, changed/routed files, check readiness, needs-attention summary, and the
+next step. Use
 `--verbose` for the detailed Markdown report with health categories and command
 details.
 

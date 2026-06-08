@@ -5,7 +5,7 @@ import { formatVerifyReport, runVerify } from "../verify/run-verify.js";
 export function registerVerifyCommand(program: Command): void {
   program
     .command("verify")
-    .description("Select and run validation based on greenhouse rules.")
+    .description("Debug check selection or run validation directly.")
     .option("--cwd <path>", "Repository root to verify.", process.cwd())
     .option("--changed", "Verify currently changed files.")
     .option("--mode <mode>", "Force validation mode.")

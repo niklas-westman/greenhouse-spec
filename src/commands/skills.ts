@@ -9,7 +9,7 @@ import {
 export function registerSkillsCommand(program: Command): void {
   const skills = program
     .command("skills")
-    .description("Create and adopt repo-local Greenhouse skill proposals.");
+    .description("Create reviewable repo-local skill proposals.");
 
   skills
     .command("propose")

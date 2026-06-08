@@ -27,25 +27,26 @@ export function createProgram(): Command {
 
   program
     .name("greenhouse-spec")
-    .description("Install and maintain repo-local AI agent context.")
+    .description("Repo-local guide, checks, and proof for AI-assisted work.")
     .version(GREENHOUSE_SPEC_VERSION);
 
-  registerInitCommand(program);
-  registerAlignmentCommand(program);
-  registerPlantCommand(program);
-  registerUpdateCommand(program);
   registerStatusCommand(program);
-  registerDoctorCommand(program);
-  registerInspectCommand(program);
   registerContextCommand(program);
+  registerTendCommand(program);
+  registerInitCommand(program);
+  registerUpdateCommand(program);
+
+  registerVerifyCommand(program);
+  registerInspectCommand(program);
+  registerProposalsCommand(program);
+  registerApplyProposalsCommand(program);
+  registerAdoptProposalsCommand(program);
+  registerDoctorCommand(program);
   registerMemoryCommand(program);
   registerSkillsCommand(program);
-  registerVerifyCommand(program);
-  registerProposalsCommand(program);
-  registerAdoptProposalsCommand(program);
-  registerApplyProposalsCommand(program);
-  registerTendCommand(program);
   registerEvidenceCommand(program);
+  registerPlantCommand(program);
+  registerAlignmentCommand(program);
 
   return program;
 }

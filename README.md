@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <code>status</code> · <code>tend</code> · <code>verify</code> · <code>proposals</code> · <code>evidence</code>
+  <code>status</code> · <code>context</code> · <code>tend</code>
 </p>
 
 ---
@@ -23,14 +23,35 @@ It is intentionally lightweight at the surface:
 
 ```bash
 greenhouse-spec status
+greenhouse-spec context "task" --path src/thing.ts
 # work normally
 greenhouse-spec tend
 ```
 
-Greenhouse is not a feature-planning framework like Spec Kit or OpenSpec. Those
-tools help define what to build. Greenhouse cares for the repository around the
-work: what changed, what should be validated, what assumptions may have drifted,
+## Consumer Contract
+
+Greenhouse installs a local repo guide. It does not build features or replace
+CI. It helps humans and agents make safer changes by keeping three promises:
+
+```text
+Guide
+  Show what an agent should know before changing this repo.
+
+Check
+  Route changed files to the checks and reviews that prove the change.
+
+Remember
+  Leave repo-local proof, context, and decisions for future work.
+```
+
+That is the product boundary: Greenhouse cares for the repo around the work. It
+tracks what changed, what should be validated, what assumptions may have drifted,
 and what evidence should be left behind.
+
+Greenhouse is not a feature-planning framework like Spec Kit or OpenSpec. Those
+tools help define what to build. Greenhouse does not choose product scope, run an
+autonomous coding loop, replace tests/CI, or silently rewrite authored repo
+policy.
 
 ## Why It Exists
 
@@ -66,11 +87,20 @@ and evidence instead of relying on hidden chat memory.
 
 ## The Core Loop
 
-For daily work:
+Everyday consumer-repo use is Guide / Check / Remember:
 
 ```bash
-greenhouse-spec status
-greenhouse-spec tend
+greenhouse-spec status                         # read current repo health
+greenhouse-spec context "task" --path src/x.ts # guide the next change
+# work normally
+greenhouse-spec tend                           # check and remember before finish
+```
+
+Setup and refresh stay explicit:
+
+```bash
+greenhouse-spec init
+greenhouse-spec update
 ```
 
 When Greenhouse reports repo evolution work:
@@ -83,7 +113,7 @@ greenhouse-spec apply-proposals --safe
 greenhouse-spec tend
 ```
 
-For direct validation:
+For direct validation/debugging:
 
 ```bash
 greenhouse-spec verify --changed --dry-run
@@ -286,32 +316,47 @@ See [docs/installation.md](docs/installation.md) for the fuller install model.
 
 ## Commands
 
+Everyday consumer commands:
+
 ```text
 status
-  Read-only repo health overview.
+  Read-only repo health overview: what changed, what needs attention, and what
+  to do next.
+
+context "task"
+  Guide an agent before work by compiling task-specific repo context from rules,
+  memory, skills, repo shape, evidence, and validation hints.
 
 tend
-  Everyday finish gate. Runs install health, drift checks, changed-file
-  validation, evidence writing, and proposal summary.
+  Finish gate: check install health and drift, run changed-file validation,
+  write proof, and summarize the next action.
+```
 
-tend --context latest
-  Link the latest written context brief into the evidence for the run.
+Setup commands:
 
-tend --check
-  Structural-only check for CI and debugging. Does not run validation.
+```text
+init
+  Install the .greenhouse guide/check/proof layer into a consumer repo.
 
+update
+  Refresh generated intelligence and Greenhouse-managed install files without
+  rewriting authored roots.
+```
+
+Advanced maintenance and debugging:
+
+```text
 verify --changed --dry-run
   Explain what validation would run and why.
 
 verify --changed --write-evidence
   Run selected validation and write evidence.
 
-context "task"
-  Compile a task-specific agent context brief from rules, memory, skills,
-  repo shape, evidence, and validation hints.
+tend --context latest
+  Link the latest written context brief into the evidence for the run.
 
-context "task" --semantic
-  Include optional source-backed semantic candidates only when explicitly enabled.
+tend --check
+  Structural-only check for CI and debugging. Does not run validation.
 
 memory propose/adopt
   Create a reviewable memory proposal or adopt one into .greenhouse/memory/**.

@@ -8,7 +8,7 @@ import {
 export function registerApplyProposalsCommand(program: Command): void {
   program
     .command("apply-proposals")
-    .description("Apply safe structured Greenhouse proposals.")
+    .description("Apply safe proposal changes to repo wiring.")
     .option("--cwd <path>", "Repository root to update.", process.cwd())
     .option("--safe", "Apply only safe additive or managed proposal changes.")
     .option("--dry-run", "Show what would be changed without writing files.")

@@ -5,7 +5,7 @@ import { formatInspectReport, runInspect } from "../inspect/run-inspect.js";
 export function registerInspectCommand(program: Command): void {
   program
     .command("inspect")
-    .description("Refresh generated repo knowledge under .greenhouse/grown/.")
+    .description("Refresh generated repo knowledge for context and proposals.")
     .option("--cwd <path>", "Repository root to inspect.", process.cwd())
     .option("--dry-run", "Show grown file updates without changing files.")
     .action((options: { cwd: string; dryRun?: boolean }) => {

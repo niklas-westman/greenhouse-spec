@@ -5,7 +5,7 @@ import { formatInitReport, runInit } from "../lifecycle/run-init.js";
 export function registerInitCommand(program: Command): void {
   program
     .command("init")
-    .description("Initialize Greenhouse in a repository.")
+    .description("Install the repo-local guide/check/proof layer.")
     .option("--cwd <path>", "Repository root to initialize.", process.cwd())
     .option("--dry-run", "Show what would be written without changing files.")
     .option("--force-authored", "Allow overwriting authored root files.")

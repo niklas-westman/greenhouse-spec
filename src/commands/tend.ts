@@ -5,7 +5,7 @@ import { formatTendReport, runTend } from "../tend/run-tend.js";
 export function registerTendCommand(program: Command): void {
   program
     .command("tend")
-    .description("Tend the repository before finishing work.")
+    .description("Check changed files and write proof before finishing.")
     .option("--cwd <path>", "Repository root to inspect.", process.cwd())
     .option("--check", "Fail when structural Greenhouse tending is required.")
     .option("--context <report>", "Link a context report path, or use \"latest\".")

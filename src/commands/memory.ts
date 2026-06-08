@@ -10,7 +10,7 @@ import type { MemoryType } from "../schemas/context-manifest.js";
 export function registerMemoryCommand(program: Command): void {
   const memory = program
     .command("memory")
-    .description("Create and adopt repo-local Greenhouse memory proposals.");
+    .description("Create reviewable repo-local memory proposals.");
 
   memory
     .command("propose")

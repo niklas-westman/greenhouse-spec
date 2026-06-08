@@ -14,7 +14,7 @@ function collect(value: string, previous: string[]): string[] {
 export function registerProposalsCommand(program: Command): void {
   const proposals = program
     .command("proposals")
-    .description("List structured Greenhouse proposals.")
+    .description("List repo maintenance proposals for safe wiring changes.")
     .option("--cwd <path>", "Repository root to inspect.", process.cwd())
     .action((options: { cwd: string }) => {
       const report = runProposals({

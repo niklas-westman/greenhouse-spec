@@ -47,13 +47,18 @@ describe("greenhouse-spec CLI", () => {
     expect(help).toContain("evidence");
   });
 
-  it("describes tend as the pre-finish tending surface", () => {
-    const tendCommand = createProgram().commands.find(
-      (command) => command.name() === "tend",
-    );
+  it("describes the everyday surface as guide/check/proof", () => {
+    const program = createProgram();
+    const [statusCommand, contextCommand, tendCommand] = program.commands;
 
+    expect(program.description()).toBe(
+      "Repo-local guide, checks, and proof for AI-assisted work.",
+    );
+    expect(statusCommand?.name()).toBe("status");
+    expect(contextCommand?.name()).toBe("context");
+    expect(tendCommand?.name()).toBe("tend");
     expect(tendCommand?.description()).toBe(
-      "Tend the repository before finishing work.",
+      "Check changed files and write proof before finishing.",
     );
     expect(tendCommand?.options.map((option) => option.long)).toContain("--check");
     expect(tendCommand?.options.map((option) => option.long)).toContain("--context");

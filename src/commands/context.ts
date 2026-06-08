@@ -14,7 +14,7 @@ function collect(value: string, previous: string[]): string[] {
 export function registerContextCommand(program: Command): void {
   program
     .command("context")
-    .description("Compile a Greenhouse context brief for an agent task.")
+    .description("Guide an agent with task-specific repo context.")
     .argument("<task>", "Task description to compile context for.")
     .option("--cwd <path>", "Repository root to inspect.", process.cwd())
     .option("--json", "Print the context brief as JSON.")

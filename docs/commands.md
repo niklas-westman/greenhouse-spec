@@ -5,23 +5,45 @@ from another working directory.
 
 ## Command Model
 
-Primary everyday commands:
+Greenhouse is easiest to understand as a repo-local **Guide / Check / Remember**
+layer:
+
+```text
+Guide
+  Give agents source-backed repo context before they change files.
+
+Check
+  Route changed files to the checks and reviews that prove the change.
+
+Remember
+  Leave repo-local proof, context, decisions, and failure notes for future work.
+```
+
+Everyday consumer commands:
 
 ```bash
 greenhouse-spec status
+greenhouse-spec context "task" --path src/thing.ts
 greenhouse-spec tend
 ```
 
-`status` is the quiet read-only entry point. `tend` is the composed pre-finish
-gate that checks drift, runs changed-file validation, writes evidence, and
-summarizes impact warnings/proposals.
+`status` is the quiet read-only entry point. `context` guides an agent before a
+change. `tend` is the composed pre-finish gate that checks drift, runs
+changed-file validation, writes proof, and summarizes impact warnings/proposals.
 
-Secondary commands expose the same layers directly:
+Setup commands are explicit:
+
+```bash
+greenhouse-spec init
+greenhouse-spec update
+```
+
+Advanced commands expose the same layers directly for debugging, repair, and
+repo evolution:
 
 ```bash
 greenhouse-spec verify --changed --dry-run
 greenhouse-spec verify --changed --write-evidence
-greenhouse-spec context "task"
 greenhouse-spec memory propose --title "..." --type decision --body "..."
 greenhouse-spec skills propose --name "..." --description "..." --body "..."
 greenhouse-spec tend --check
@@ -30,7 +52,8 @@ greenhouse-spec proposals
 greenhouse-spec apply-proposals --safe
 ```
 
-Use these when debugging routing, repairing drift, or evolving repo wiring.
+Use these when debugging routing, repairing drift, or evolving repo wiring. They
+are important, but they are not the normal first impression for a consumer repo.
 
 ## Terminal Language
 

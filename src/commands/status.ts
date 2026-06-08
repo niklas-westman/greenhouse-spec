@@ -10,7 +10,7 @@ import {
 export function registerStatusCommand(program: Command): void {
   program
     .command("status")
-    .description("Show one read-only Greenhouse health report.")
+    .description("Show what changed, what needs attention, and the next step.")
     .option("--cwd <path>", "Repository root to inspect.", process.cwd())
     .option("--json", "Print a stable machine-readable status report.")
     .option("--verbose", "Print the detailed Markdown status report.")

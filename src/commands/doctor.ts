@@ -5,7 +5,7 @@ import { formatDoctorReport, runDoctor } from "../doctor/run-doctor.js";
 export function registerDoctorCommand(program: Command): void {
   program
     .command("doctor")
-    .description("Check that a .greenhouse configuration is internally consistent.")
+    .description("Check installed Greenhouse files and command wiring.")
     .option("--cwd <path>", "Repository root to inspect.", process.cwd())
     .option("--memory", "Include memory and skill freshness, metadata, link, and proposal checks.")
     .option("--write-report", "Write a doctor report under .greenhouse/reports/doctor/.")

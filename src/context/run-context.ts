@@ -2,6 +2,7 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSy
 import { join, relative } from "node:path";
 
 import { parseYamlWithSchema } from "../schemas/common.js";
+import { areaIndexSchema, type AreaIndex } from "../schemas/area-index.js";
 import {
   contextManifestSchema,
   type ContextKind,
@@ -25,6 +26,7 @@ import {
 } from "./sqlite-index.js";
 import { readSemanticRetrieval } from "./semantic-index.js";
 import type { SemanticIndexMatch } from "../schemas/semantic-index.js";
+import { terminalWords } from "../terminal/words.js";
 
 export type ContextOptions = {
   cwd: string;
@@ -59,6 +61,31 @@ export type ContextReport = {
     commands: string[];
   };
   sources: ContextSource[];
+  areas: Array<{
+    id: string;
+    path: string;
+    kind: string;
+    purpose: string;
+    confidence: "low" | "medium" | "high";
+    reason: string;
+    validation: {
+      status: "covered" | "fallback" | "missing";
+      routes: string[];
+      commands: string[];
+      manual_checks: string[];
+    };
+    risks: string[];
+    gaps: string[];
+  }>;
+  contextFreshness: {
+    areaIndex: {
+      status: "fresh" | "stale" | "missing" | "not_requested";
+      path: string;
+      generatedAt: string | null;
+      stalePaths: string[];
+      message: string;
+    };
+  };
   evidence: {
     latestPath: string | null;
     latestSummary: string | null;
@@ -89,6 +116,7 @@ export function runContext(options: ContextOptions): ContextReport {
   const memoryIndex = readMemoryIndex(options.cwd);
   const skillIndex = readSkillIndex(options.cwd);
   const manifest = readContextManifest(options.cwd);
+  const areaIndex = readAreaIndex(options.cwd);
   const queryTerms = terms(options.task);
   const sqliteMatches = querySqliteKnowledgeIndex(options.cwd, options.task);
   const semantic = readSemanticRetrieval({
@@ -99,6 +127,7 @@ export function runContext(options: ContextOptions): ContextReport {
   });
   const paths = options.paths ?? [];
   const risks = options.risks ?? [];
+  const areaIndexFreshness = areaIndexFreshnessForPaths(options.cwd, areaIndex, paths);
   const manifestSources = manifest.context
     .map((entry) => manifestSource(options.cwd, entry, options.task, paths, risks))
     .filter((source): source is ContextSource => Boolean(source));
@@ -143,6 +172,10 @@ export function runContext(options: ContextOptions): ContextReport {
       ...semanticSources,
       ...(sqliteSources.length > 0 ? sqliteSources : lexicalSources),
     ]),
+    areas: matchingAreaContext(areaIndex?.index ?? null, paths),
+    contextFreshness: {
+      areaIndex: areaIndexFreshness,
+    },
     evidence: {
       latestPath: latestEvidence?.path ?? null,
       latestSummary: latestEvidence?.summary ?? null,
@@ -190,6 +223,8 @@ export function formatContextReport(report: ContextReport): string {
       (source.status === "draft" || source.status === "proposed"),
   );
   const lines = [
+    ...formatAgentGuideCard(report),
+    "",
     "# Greenhouse Context Brief",
     "",
     "## Task",
@@ -203,6 +238,7 @@ export function formatContextReport(report: ContextReport): string {
     `- Package manager: ${report.repo.packageManager ?? "unknown"}`,
     `- Paths: ${report.paths.join(", ") || "none supplied"}`,
     `- Risks: ${report.risks.join(", ") || "none supplied"}`,
+    `- Area index: ${report.contextFreshness.areaIndex.message}`,
     "",
     "## Governing Rules",
     "",
@@ -219,7 +255,10 @@ export function formatContextReport(report: ContextReport): string {
   lines.push("", "## Candidate Memory And Skill Proposals", "");
   appendSources(lines, candidates);
 
-  lines.push("", "## Validation Hints", "");
+  lines.push("", `## ${terminalWords.contextLanding}`, "");
+  appendAreas(lines, report.areas);
+
+  lines.push("", `## ${terminalWords.checks}`, "");
   if (report.validationHints.length === 0) {
     lines.push("- none");
   } else {
@@ -336,6 +375,119 @@ function readContextManifest(cwd: string): ContextManifest {
   }
 
   return parseYamlWithSchema(readFileSync(manifestPath, "utf8"), contextManifestSchema);
+}
+
+
+type ReadAreaIndexResult = {
+  index: AreaIndex;
+  path: string;
+  mtimeMs: number;
+};
+
+function readAreaIndex(cwd: string): ReadAreaIndexResult | null {
+  const areaIndexPath = join(cwd, ".greenhouse", "grown", "area-index.yaml");
+
+  if (!existsSync(areaIndexPath)) {
+    return null;
+  }
+
+  return {
+    index: parseYamlWithSchema(readFileSync(areaIndexPath, "utf8"), areaIndexSchema),
+    path: areaIndexPath,
+    mtimeMs: statSync(areaIndexPath).mtimeMs,
+  };
+}
+
+function areaIndexFreshnessForPaths(
+  cwd: string,
+  areaIndex: ReadAreaIndexResult | null,
+  paths: string[],
+): ContextReport["contextFreshness"]["areaIndex"] {
+  const displayPath = ".greenhouse/grown/area-index.yaml";
+
+  if (paths.length === 0) {
+    return {
+      status: "not_requested",
+      path: displayPath,
+      generatedAt: areaIndex ? String(areaIndex.index.generated_at) : null,
+      stalePaths: [],
+      message: "supply --path to check area guidance freshness.",
+    };
+  }
+
+  if (!areaIndex) {
+    return {
+      status: "missing",
+      path: displayPath,
+      generatedAt: null,
+      stalePaths: paths,
+      message: "missing; run greenhouse-spec inspect for area guidance.",
+    };
+  }
+
+  const stalePaths = paths.filter((path) => {
+    const absolutePath = join(cwd, path);
+    return existsSync(absolutePath) && statSync(absolutePath).mtimeMs > areaIndex.mtimeMs;
+  });
+
+  if (stalePaths.length > 0) {
+    return {
+      status: "stale",
+      path: displayPath,
+      generatedAt: String(areaIndex.index.generated_at),
+      stalePaths,
+      message: `${displayPath} may be stale for ${summarizeList(stalePaths, 2)}; run greenhouse-spec inspect.`,
+    };
+  }
+
+  return {
+    status: "fresh",
+    path: displayPath,
+    generatedAt: String(areaIndex.index.generated_at),
+    stalePaths: [],
+    message: `${displayPath} is current for supplied files.`,
+  };
+}
+
+function matchingAreaContext(
+  areaIndex: AreaIndex | null,
+  paths: string[],
+): ContextReport["areas"] {
+  if (!areaIndex || paths.length === 0) {
+    return [];
+  }
+
+  return areaIndex.areas
+    .map((area) => {
+      const matchedPath = paths.find((path) => areaMatchesPath(area.path, path));
+      if (!matchedPath) {
+        return null;
+      }
+
+      return {
+        id: area.id,
+        path: area.path,
+        kind: area.kind,
+        purpose: area.purpose,
+        confidence: area.confidence,
+        reason: `path ${matchedPath} is inside ${area.path}`,
+        validation: area.validation,
+        risks: area.risks,
+        gaps: area.gaps,
+      };
+    })
+    .filter((area): area is ContextReport["areas"][number] => Boolean(area));
+}
+
+function areaMatchesPath(areaPath: string, candidatePath: string): boolean {
+  const normalizedArea = areaPath.replace(/\\/g, "/");
+  const normalizedCandidate = candidatePath.replace(/\\/g, "/");
+
+  if (normalizedArea.endsWith("/")) {
+    return normalizedCandidate.startsWith(normalizedArea);
+  }
+
+  return normalizedCandidate === normalizedArea;
 }
 
 function manifestSource(
@@ -560,6 +712,104 @@ function appendSources(lines: string[], sources: ContextSource[]): void {
     lines.push(`  reason: ${source.reason}${status}${freshness}`);
     lines.push(`  summary: ${source.summary}`);
   }
+}
+
+
+function formatAgentGuideCard(report: ContextReport): string[] {
+  const primaryArea = report.areas[0];
+  const areaSummary = primaryArea
+    ? `${friendlyAreaLabel(primaryArea)} (${primaryArea.validation.status})`
+    : report.paths.length > 0
+      ? "no matching area"
+      : "supply --path for area guidance";
+  const checkSummary =
+    primaryArea?.validation.commands[0] ?? report.validationHints[0] ?? "run routed validation";
+  const pathSummary = summarizeList(report.paths, 2) || "none supplied";
+
+  return [
+    "+-- GREENHOUSE GUIDE --------------------------------+",
+    `| Task : ${fitGuideText(report.task)} |`,
+    `| Files: ${fitGuideText(pathSummary)} |`,
+    `| Where: ${fitGuideText(areaSummary)} |`,
+    `| Next : ${fitGuideText(checkSummary)} |`,
+    ...formatGuideHint(report),
+    "+----------------------------------------------------+",
+  ];
+}
+
+function formatGuideHint(report: ContextReport): string[] {
+  const freshness = report.contextFreshness.areaIndex;
+  if (freshness.status !== "stale" && freshness.status !== "missing") {
+    return [];
+  }
+
+  return [`| Hint : ${fitGuideText("run greenhouse-spec inspect")} |`];
+}
+
+function fitGuideText(value: string): string {
+  const width = 43;
+  const normalized = value.replace(/\s+/g, " ").trim() || "none";
+  const clipped = normalized.length > width ? `${normalized.slice(0, width - 3)}...` : normalized;
+  return clipped.padEnd(width, " ");
+}
+
+function appendAreas(lines: string[], areas: ContextReport["areas"]): void {
+  if (areas.length === 0) {
+    lines.push("- none");
+    return;
+  }
+
+  for (const area of areas) {
+    lines.push(`- ${friendlyAreaName(area)} (${area.path})`);
+    lines.push(`  confidence: ${area.confidence}`);
+    lines.push(`  why: ${area.purpose}`);
+    lines.push(`  matched because: ${area.reason}`);
+    lines.push(`  check coverage: ${friendlyValidationStatus(area.validation.status)}`);
+    if (area.validation.routes.length > 0) {
+      lines.push(`  matching rules: ${summarizeList(area.validation.routes)}`);
+    }
+    if (area.validation.commands.length > 0) {
+      lines.push(`  suggested checks: ${summarizeList(area.validation.commands)}`);
+    }
+    if (area.gaps.length > 0) {
+      lines.push(`  needs attention: ${area.gaps.join("; ")}`);
+    }
+  }
+}
+
+function friendlyAreaName(area: ContextReport["areas"][number]): string {
+  return `${friendlyAreaLabel(area)} - ${area.id}`;
+}
+
+function friendlyAreaLabel(area: ContextReport["areas"][number]): string {
+  const labelByKind: Record<string, string> = {
+    "api-contract-package": "API contract package",
+    "documentation-area": "Docs and project knowledge",
+    "frontend-package": "Frontend package",
+    "infra-package": "Infrastructure package",
+    "java-module": "Java module",
+    "repo-area": "Repository area",
+    "rust-module": "Rust module",
+    "source-area": "Source code",
+    "test-area": "Tests and fixtures",
+  };
+  return labelByKind[area.kind] ?? area.kind.replace(/-/g, " ");
+}
+
+function friendlyValidationStatus(status: ContextReport["areas"][number]["validation"]["status"]): string {
+  if (status === "covered") {
+    return "covered by a matching rule";
+  }
+  if (status === "fallback") {
+    return "using fallback checks";
+  }
+  return "no matching check yet";
+}
+
+function summarizeList(values: string[], limit = 5): string {
+  const visible = values.slice(0, limit);
+  const remaining = values.length - visible.length;
+  return `${visible.join(", ")}${remaining > 0 ? `, +${remaining} more` : ""}`;
 }
 
 function resolveContextEntryPath(cwd: string, entryPath: string): string {

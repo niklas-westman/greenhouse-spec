@@ -11,6 +11,7 @@ import {
 import type { EvidenceIndex } from "../schemas/evidence-index.js";
 import { runTend, type TendReport } from "../tend/run-tend.js";
 import { runVerify, type VerifyReport } from "../verify/run-verify.js";
+import { terminalStatusLabel, terminalWords } from "../terminal/words.js";
 
 export type HealthState = "pass" | "degraded" | "fail";
 
@@ -126,14 +127,14 @@ export function formatStatusReport(report: StatusReport): string {
     "Greenhouse Status",
     "",
     `Repository: ${report.cwd}`,
-    `State: ${report.overallStatus}`,
+    `State: ${terminalStatusLabel(report.overallStatus)} (${report.overallStatus})`,
     `Changed: ${changedCount} file(s), ${routedCount} routed`,
     `Generated-only dirty: ${report.generatedOnlyDirty ? "yes" : "no"}`,
-    `Validation: ${validation}`,
+    `Checks: ${validation}`,
     `Drift: ${drift}`,
-    `Impact: ${impactWarnings}`,
+    `Needs attention: ${impactWarnings}`,
     `Repeated failures: ${repeatedFailures}`,
-    `Evidence: ${evidence}`,
+    `Proof: ${evidence}`,
     `Next: ${recommendedNextCommand(report) ?? "no action needed"}`,
     "",
   ].join("\n");
@@ -144,7 +145,7 @@ export function formatStatusVerboseReport(report: StatusReport): string {
     "# Greenhouse Status Report",
     "",
     `Repository: ${report.cwd}`,
-    `Status: ${report.overallStatus}`,
+    `Status: ${terminalStatusLabel(report.overallStatus)} (${report.overallStatus})`,
     "",
     "## Health Summary",
     "",
@@ -178,7 +179,7 @@ export function formatStatusVerboseReport(report: StatusReport): string {
     }
   }
 
-  lines.push("", "## Changed Validation", "");
+  lines.push("", `## ${terminalWords.changeChecks}`, "");
   if (report.verify.route.changedFiles.length === 0) {
     lines.push("- routed files: none");
   } else {
@@ -199,7 +200,7 @@ export function formatStatusVerboseReport(report: StatusReport): string {
   }
   lines.push(`- evidence coverage: ${report.evidenceCoverage.reason}`);
 
-  lines.push("", "## Impact Warnings", "");
+  lines.push("", `## ${terminalWords.needsAttention}`, "");
   if (report.verify.impactWarnings.length === 0) {
     lines.push("- none");
   } else {
@@ -222,10 +223,10 @@ export function formatStatusVerboseReport(report: StatusReport): string {
     }
   }
 
-  lines.push("", "## Evidence", "");
+  lines.push("", `## ${terminalWords.proof}`, "");
   lines.push(report.latestEvidencePath ? `- latest: ${report.latestEvidencePath}` : "- latest: none");
 
-  lines.push("", "## Next Command", "");
+  lines.push("", `## ${terminalWords.nextStep}`, "");
   lines.push(nextCommand(report));
   lines.push("");
 

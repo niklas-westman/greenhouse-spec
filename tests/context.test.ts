@@ -4,6 +4,7 @@ import {
   mkdtempSync,
   readFileSync,
   rmSync,
+  utimesSync,
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
@@ -161,8 +162,10 @@ describe("context", () => {
     expect(report.sources.length).toBeGreaterThan(0);
   });
 
-  it("compiles Markdown, JSON, and report output for a task", () => {
+  it("compiles Markdown, JSON, area guidance, and report output for a task", () => {
     const repo = createContextRepo();
+    mkdirSync(join(repo, "src", "navigation"), { recursive: true });
+    writeFileSync(join(repo, "src", "navigation", "menu.tsx"), "export {}\n", "utf8");
     runInspect({ cwd: repo });
 
     const report = runContext({
@@ -172,7 +175,10 @@ describe("context", () => {
       writeReport: true,
     });
     const markdown = formatContextReport(report);
-    const json = JSON.parse(formatContextJson(report)) as { sources: Array<{ id: string }> };
+    const json = JSON.parse(formatContextJson(report)) as {
+      sources: Array<{ id: string }>;
+      areas: Array<{ id: string; path: string }>;
+    };
 
     expect(report.sources.map((source) => source.id)).toEqual(
       expect.arrayContaining([
@@ -181,13 +187,61 @@ describe("context", () => {
         "skill.adopted.accessibility.review",
       ]),
     );
+    expect(report.areas).toContainEqual(
+      expect.objectContaining({
+        id: "area:src",
+        path: "src/",
+        purpose:
+          "Main source code. Changes here usually need type, test, or build checks before finishing.",
+        validation: expect.objectContaining({ status: "missing" }),
+        gaps: ["No direct check rule covers this area yet."],
+      }),
+    );
+    expect(markdown).toContain("+-- GREENHOUSE GUIDE --------------------------------+");
+    expect(markdown).toContain("| Where: Source code (missing)");
     expect(markdown).toContain("# Greenhouse Context Brief");
     expect(markdown).toContain("## Relevant Memory");
+    expect(markdown).toContain("## Where This Change Lands");
+    expect(markdown).toContain(
+      "why: Main source code. Changes here usually need type, test, or build checks before finishing.",
+    );
     expect(json.sources.map((source) => source.id)).toContain(
       "memory.navigation.accessibility",
     );
+    expect(json.areas.map((area) => area.id)).toContain("area:src");
+    expect(report.contextFreshness.areaIndex.status).toBe("fresh");
+    expect(markdown).toContain("- Area index: .greenhouse/grown/area-index.yaml is current for supplied files.");
     expect(report.writtenReportPath).toMatch(/\.greenhouse\/reports\/context\/.+-context\.md$/);
     expect(existsSync(report.writtenReportPath ?? "")).toBe(true);
+  });
+
+  it("warns when area guidance may be stale for supplied files", () => {
+    const repo = createContextRepo();
+    const menuPath = join(repo, "src", "navigation", "menu.tsx");
+    mkdirSync(join(repo, "src", "navigation"), { recursive: true });
+    writeFileSync(menuPath, "export {}\n", "utf8");
+    runInspect({ cwd: repo });
+    writeFileSync(menuPath, "export const menu = true;\n", "utf8");
+    const future = new Date(Date.now() + 60_000);
+    utimesSync(menuPath, future, future);
+
+    const report = runContext({
+      cwd: repo,
+      task: "Improve navigation keyboard focus",
+      paths: ["src/navigation/menu.tsx"],
+    });
+    const markdown = formatContextReport(report);
+
+    expect(report.contextFreshness.areaIndex).toEqual(
+      expect.objectContaining({
+        status: "stale",
+        stalePaths: ["src/navigation/menu.tsx"],
+      }),
+    );
+    expect(markdown).toContain("| Hint : run greenhouse-spec inspect");
+    expect(markdown).toContain(
+      "- Area index: .greenhouse/grown/area-index.yaml may be stale for src/navigation/menu.tsx; run greenhouse-spec inspect.",
+    );
   });
 
   it("surfaces proposed memory and skills as candidates", () => {

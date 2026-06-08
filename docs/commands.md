@@ -32,6 +32,21 @@ greenhouse-spec apply-proposals --safe
 
 Use these when debugging routing, repairing drift, or evolving repo wiring.
 
+## Terminal Language
+
+Greenhouse terminal output should use the same customer-facing words across
+commands:
+
+- **Checks**: commands or manual reviews Greenhouse suggests/runs to prove the change.
+- **Where this change lands**: the repo area matched from supplied files.
+- **Needs attention**: warnings, blockers, or risks to review before finishing.
+- **Proof**: evidence Greenhouse found or wrote for the current route.
+- **Next step**: the single recommended action to keep moving.
+
+Older internal words such as validation, routing, evidence, and impact can still
+appear in schemas and JSON, but Markdown output should prefer the terms above
+when the text is meant for humans or agents reading a terminal.
+
 ## `status`
 
 ```bash
@@ -148,7 +163,15 @@ greenhouse-spec context "task" --path src/app.ts --risk api-contract
 
 Compiles an agent-readable context brief from the task query, repo shape,
 command index, context manifest routes, memory files, adopted skills, recent
-evidence, repeated failures, and validation hints.
+evidence, repeated failures, area index guidance, and validation hints.
+
+Markdown output starts with a compact ASCII `GREENHOUSE GUIDE` card so an agent can
+quickly see the task, supplied files, where the change lands, and the next
+suggested check before reading the longer brief. Use `--path` to make the guide
+resolve area-specific purpose, check coverage, suggested checks, needs-attention
+notes, and risks from `.greenhouse/grown/area-index.yaml`. If the generated area
+index is missing or older than the supplied files, the guide prints a visible
+`Hint: run greenhouse-spec inspect` line before the longer brief.
 
 Context manifest paths are repo-root-relative when they point to paths such as
 `.greenhouse/memory/**`; older context-relative paths are still accepted for

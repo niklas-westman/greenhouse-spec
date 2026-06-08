@@ -144,36 +144,36 @@ function areaKind(path: string, repoShape: RepoShape): string {
 
 function areaPurpose(path: string, kind: string): string {
   if (kind === "frontend-package") {
-    return "Frontend application or UI package.";
+    return "Frontend app or UI package. Changes here usually need visual, interaction, and build checks.";
   }
   if (kind === "infra-package") {
-    return "Infrastructure code and deployment support.";
+    return "Infrastructure and deployment support. Changes here can affect runtime setup or release flow.";
   }
   if (kind === "api-contract-package") {
-    return "API contract, generation, or integration surface.";
+    return "API contract or integration surface. Changes here can affect generated clients or service compatibility.";
   }
   if (kind === "java-module") {
-    return "Java backend module.";
+    return "Java backend module. Changes here usually need module-specific build and test checks.";
   }
   if (kind === "rust-module") {
-    return "Rust module or native runtime surface.";
+    return "Rust module or native runtime surface. Changes here usually need cargo checks or native smoke tests.";
   }
   if (kind === "test-area") {
-    return "Automated test coverage and fixtures.";
+    return "Automated tests and fixtures. Changes here affect how the project proves behavior.";
   }
   if (kind === "documentation-area") {
-    return "Documentation and repo knowledge surface.";
+    return "Documentation and project knowledge. Changes here should make the project easier to understand.";
   }
   if (path.includes("schema")) {
-    return "Shared schema or contract source.";
+    return "Shared schema or contract code. Changes here can affect validation, generated data, or API shape.";
   }
   if (path.includes("validation")) {
-    return "Validation or readiness logic.";
+    return "Validation and readiness logic. Changes here affect what Greenhouse asks agents to prove.";
   }
   if (path.includes("engine")) {
-    return "Domain engine source area.";
+    return "Domain engine code. Changes here can affect core business behavior.";
   }
-  return "Application or repository source area.";
+  return "Main source code. Changes here usually need type, test, or build checks before finishing.";
 }
 
 function areaSignals(
@@ -222,13 +222,13 @@ function areaGaps(options: {
   const gaps: string[] = [];
 
   if (options.routes.length === 0 && shouldHaveValidation(options.kind)) {
-    gaps.push("No explicit validation route covers this area.");
+    gaps.push("No direct check rule covers this area yet.");
   }
   if (options.riskIds.length > 0 && options.manualChecks.length === 0) {
-    gaps.push("Risk area has no manual review check in matching validation routes.");
+    gaps.push("This risk area has no manual review step in its matching check rules.");
   }
   if (options.routes.length > 0 && options.commands.length === 0) {
-    gaps.push("Matching validation routes do not run commands.");
+    gaps.push("Matching check rules do not run any commands yet.");
   }
 
   return gaps;

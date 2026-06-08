@@ -681,15 +681,15 @@ describe("validation routing and evidence", () => {
     expect(output).toContain("# Greenhouse Verify");
     expect(output).toContain("## Changed");
     expect(output).toContain("## Groups");
-    expect(output).toContain("## Impact");
-    expect(output).toContain("## Routing");
+    expect(output).toContain("## Needs Attention");
+    expect(output).toContain(`## How Greenhouse Chose Checks`);
     expect(output).toContain("- coverage: 1/1 file(s) routed");
     expect(output).toContain('- path-rule: Matched path rule "src/engine/sru/**".');
-    expect(output).toContain("## Commands");
+    expect(output).toContain("## Suggested Checks");
     expect(output).toContain("- source: path-rule (src/engine/sru/**)");
-    expect(output).toContain("## Manual Checks");
+    expect(output).toContain("## Manual Review");
     expect(output).toContain("## Skipped / Excluded");
-    expect(output).toContain("## Next");
+    expect(output).toContain("## Next Step");
   });
 
   it("routes official source paths to guarded through the risk index", () => {
@@ -830,7 +830,7 @@ describe("validation routing and evidence", () => {
         severity: "warning",
       }),
     );
-    expect(output).toContain("## Impact");
+    expect(output).toContain("## Needs Attention");
     expect(output).toContain("- summary: 1 warning");
     expect(output).toContain("package.json changed; setup docs");
   });
@@ -853,7 +853,7 @@ describe("validation routing and evidence", () => {
       }),
     );
     const output = formatVerifyReport(report);
-    expect(output).toContain("## Impact");
+    expect(output).toContain("## Needs Attention");
     expect(output).toContain("- summary: 1 guarded");
     expect(output).toContain("source files used fallback validation");
     expect(output).toContain("Add a scoped validation route");

@@ -32,6 +32,7 @@ import {
   type RiskIndex,
   type ValidationRoute,
 } from "../validation/route-validation.js";
+import { terminalWords } from "../terminal/words.js";
 
 export type VerifyOptions = {
   cwd: string;
@@ -215,7 +216,7 @@ export function formatVerifyReport(report: VerifyReport): string {
     );
   }
 
-  lines.push("", "## Impact", "");
+  lines.push("", `## ${terminalWords.needsAttention}`, "");
   if (report.impactWarnings.length === 0) {
     lines.push("- none");
   } else {
@@ -228,7 +229,7 @@ export function formatVerifyReport(report: VerifyReport): string {
     }
   }
 
-  lines.push("", "## Routing", "");
+  lines.push("", `## ${terminalWords.routing}`, "");
   lines.push(
     `- coverage: ${report.route.changedFiles.length}/${consideredFiles.length} file(s) routed`,
   );
@@ -253,7 +254,7 @@ export function formatVerifyReport(report: VerifyReport): string {
     }
   }
 
-  lines.push("", "## Commands", "");
+  lines.push("", `## ${terminalWords.checks}`, "");
   if (report.route.commands.length === 0) {
     lines.push(`- skipped: ${report.route.skippedValidation}`);
   } else {
@@ -284,7 +285,7 @@ export function formatVerifyReport(report: VerifyReport): string {
     }
   }
 
-  lines.push("", "## Manual Checks", "");
+  lines.push("", `## ${terminalWords.manualReview}`, "");
   if (report.route.manualChecks.length === 0) {
     lines.push("- none");
   } else {
@@ -323,10 +324,10 @@ export function formatVerifyReport(report: VerifyReport): string {
   }
 
   if (report.evidencePath) {
-    lines.push("", "## Evidence", "", `- written: ${report.evidencePath}`);
+    lines.push("", `## ${terminalWords.proof}`, "", `- written: ${report.evidencePath}`);
   }
 
-  lines.push("", "## Next", "", `- ${formatVerifyNextStep(report)}`);
+  lines.push("", `## ${terminalWords.nextStep}`, "", `- ${formatVerifyNextStep(report)}`);
 
   lines.push("");
   return lines.join("\n");

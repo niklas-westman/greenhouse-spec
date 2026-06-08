@@ -8,7 +8,7 @@ areas:
   - id: area:src
     path: src/
     kind: source-area
-    purpose: Application or repository source area.
+    purpose: Main source code. Changes here usually need type, test, or build checks before finishing.
     confidence: high
     signals:
       - source-area

@@ -175,7 +175,7 @@ describe("lifecycle commands", () => {
       "pass",
     ]);
     expect(output).toContain("Greenhouse Status");
-    expect(output).toContain("State: pass");
+    expect(output).toContain("State: ready (pass)");
     expect(output).toContain("Changed: 0 file(s), 0 routed");
     expect(output).toContain("Generated-only dirty: no");
     expect(output).toContain("Next: no action needed");
@@ -187,12 +187,12 @@ describe("lifecycle commands", () => {
 
     const output = formatStatusVerboseReport(runStatus({ cwd: repo }));
 
-    expect(output).toContain("Status: pass");
+    expect(output).toContain("Status: ready (pass)");
     expect(output).toContain("## Health Summary");
     expect(output).toContain("## Install Health");
     expect(output).toContain("## Self-tending");
-    expect(output).toContain("## Changed Validation");
-    expect(output).toContain("## Impact Warnings");
+    expect(output).toContain("## Change Checks");
+    expect(output).toContain("## Needs Attention");
     expect(output).toContain("## Repeated Failures");
   });
 
@@ -211,7 +211,7 @@ describe("lifecycle commands", () => {
         nextCommand: "greenhouse-spec tend",
       }),
     );
-    expect(formatStatusReport(report)).toContain("State: degraded");
+    expect(formatStatusReport(report)).toContain("State: needs review (degraded)");
     expect(formatStatusReport(report)).toContain("Next: greenhouse-spec tend");
   });
 
@@ -241,8 +241,8 @@ describe("lifecycle commands", () => {
         severity: "warning",
       }),
     );
-    expect(formatStatusReport(report)).toContain("Impact: 1 warning");
-    expect(formatStatusVerboseReport(report)).toContain("## Impact Warnings");
+    expect(formatStatusReport(report)).toContain("Needs attention: 1 warning");
+    expect(formatStatusVerboseReport(report)).toContain("## Needs Attention");
     expect(json.impactWarnings).toContainEqual(
       expect.objectContaining({
         id: "impact.package-scripts-docs",
@@ -285,8 +285,8 @@ describe("lifecycle commands", () => {
         severity: "blocking",
       }),
     );
-    expect(output).toContain("State: fail");
-    expect(output).toContain("Impact: 1 warning, 1 blocking");
+    expect(output).toContain("State: blocked (fail)");
+    expect(output).toContain("Needs attention: 1 warning, 1 blocking");
     expect(verbose).toContain("Add package script \"test\" to package.json");
   });
 
@@ -312,7 +312,7 @@ describe("lifecycle commands", () => {
         summary: "latest passing evidence covers current route.",
       }),
     );
-    expect(output).toContain("Validation: covered by latest passing evidence.");
+    expect(output).toContain("Checks: covered by latest passing evidence.");
   });
 
   it("status degrades when latest matching evidence failed", () => {
@@ -399,7 +399,7 @@ describe("lifecycle commands", () => {
         count: 2,
       }),
     );
-    expect(formatStatusReport(report)).toContain("State: degraded");
+    expect(formatStatusReport(report)).toContain("State: needs review (degraded)");
     expect(formatStatusVerboseReport(report)).toContain("## Repeated Failures");
   });
 
@@ -473,7 +473,7 @@ describe("lifecycle commands", () => {
         { from: "node" },
       );
       expect(process.exitCode).toBeUndefined();
-      expect(output.join("\n")).toContain("State: degraded");
+      expect(output.join("\n")).toContain("State: needs review (degraded)");
     } finally {
       console.log = originalLog;
       process.exitCode = originalExitCode;

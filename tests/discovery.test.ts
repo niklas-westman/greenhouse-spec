@@ -153,14 +153,15 @@ describe("discovery", () => {
       expect.objectContaining({
         path: "src/",
         kind: "source-area",
-        purpose: "Application or repository source area.",
+        purpose:
+          "Main source code. Changes here usually need type, test, or build checks before finishing.",
         validation: expect.objectContaining({
           status: "covered",
           routes: ["src/**"],
           commands: ["pnpm test"],
         }),
         risks: ["official-source-change"],
-        gaps: ["Risk area has no manual review check in matching validation routes."],
+        gaps: ["This risk area has no manual review step in its matching check rules."],
       }),
     );
   });

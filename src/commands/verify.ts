@@ -13,7 +13,7 @@ export function registerVerifyCommand(program: Command): void {
     .option("--paths <paths...>", "Verify specific paths.")
     .option("--dry-run", "Explain selected validation without running commands.")
     .option("--write-evidence", "Write verification evidence.")
-    .option("--ack <ids...>", "Record manual review acknowledgement IDs in written evidence.")
+    .option("--ack <ids...>", "Record reviewed warning/manual-check IDs in written evidence.")
     .option("--no-prune", "Do not prune old generated evidence/report files after writing evidence.")
     .action(
       (options: {

@@ -197,8 +197,14 @@ describe("tend", () => {
     expect(output).toContain("State: warning");
     expect(output).toContain("## Impact");
     expect(output).toContain("package.json changed; setup docs");
+    expect(output).toContain("agent action:");
     expect(output).toContain("## Next");
-    expect(output).toContain("review impact warnings before finishing");
+    expect(output).toContain(
+      "resolve impact warning IDs (impact.package-scripts-docs)",
+    );
+    expect(output).toContain(
+      "greenhouse-spec tend --ack impact.package-scripts-docs",
+    );
     expect(report.writes.authoredRootsMutated).toBe(false);
     expect(report.writes.packageScriptsMutated).toBe(false);
   });
@@ -241,7 +247,7 @@ describe("tend", () => {
     expect(report.ok).toBe(true);
     expect(report.state).toBe("pass");
     expect(output).toContain("acknowledged: impact.package-scripts-docs");
-    expect(output).not.toContain("review impact warnings before finishing");
+    expect(output).not.toContain("resolve impact warning IDs");
     expect(evidence).toContain("## Acknowledgements");
     expect(evidence).toContain("| impact.package-scripts-docs | reviewed |");
     expect(evidence).toContain("| greenhouse-self-config-review | reviewed |");
@@ -290,7 +296,9 @@ describe("tend", () => {
       }),
     );
     expect(output).toContain("Blocking: blocking impact warnings must be resolved.");
-    expect(output).toContain("resolve blocking impact warnings");
+    expect(output).toContain(
+      "repair blocking impact warning IDs (impact.missing-package-script.test)",
+    );
     expect(report.writes.evidencePath).toBeNull();
   });
 

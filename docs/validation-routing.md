@@ -181,7 +181,9 @@ generated output
 
 Warnings are severity-based. Advisory and warning findings keep the finish gate
 visible without mutating docs. Guarded and blocking findings require review or
-repair before the repo should be treated as fully tended.
+repair before the repo should be treated as fully tended. Each warning includes
+an agent action so an agent can see why the change matters and what evidence is
+needed next.
 
 After review, non-blocking impact warnings and manual checks can be acknowledged
 in evidence:
@@ -190,10 +192,10 @@ in evidence:
 greenhouse-spec tend --ack impact.package-scripts-docs docs-reviewed
 ```
 
-Acknowledgements are evidence, not rule changes. They record that a review was
-performed for the current route so Greenhouse can stop reporting reviewed manual
-work as pending. Blocking impact warnings still require fixing the underlying
-route, package script, or repo contract.
+Acknowledgements are evidence, not rule changes. They record that a warning or
+manual check was reviewed for the current route so Greenhouse can stop reporting
+reviewed work as pending. Blocking impact warnings still require fixing the
+underlying route, package script, or repo contract.
 
 Every warning includes a resolution hint. `blocking` warnings fail `status` and
 the default `tend` finish gate. One practical blocking case is a selected

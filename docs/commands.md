@@ -272,9 +272,10 @@ Use `--env local`, `--env ci`, or `--env all` to select validation commands by
 their route metadata. Commands without environment metadata still run in all
 environments. The default is `local`.
 
-Use `--ack <id>` after a manual review is complete. Acknowledgements are written
-to evidence and can clear reviewed manual checks or non-blocking impact warnings
-for the current route. Blocking impact warnings still require repair.
+Use `--ack <id>` after a warning or manual check is reviewed. Acknowledgements
+are written to evidence and can clear reviewed manual checks or non-blocking
+impact warnings for the current route. Blocking impact warnings still require
+repair.
 
 ## `verify`
 
@@ -315,6 +316,9 @@ cases such as package scripts affecting setup docs, CLI source affecting CLI
 docs, API specs affecting generated clients, generated-output edits, workspace
 config changes, CI workflow changes, and source changes that fell back to broad
 validation instead of a scoped route. Each warning includes a resolution hint.
+Each warning also includes an agent action that explains the next useful move:
+update affected files, repair routing, regenerate output, or record review
+evidence with `--ack` when no repository change is needed.
 Blocking warnings, including selected `pnpm` validation commands that reference
 missing package scripts, fail `status` and `tend` until the command or route is
 repaired.
@@ -326,7 +330,7 @@ Important options:
 - `--mode`: force a validation mode.
 - `--env`: select `local`, `ci`, or `all` route commands. Defaults to `local`.
 - `--write-evidence`: write a verification record under `.greenhouse/evidence/`.
-- `--ack`: record manual review acknowledgement IDs in written evidence.
+- `--ack`: record reviewed warning/manual-check IDs in written evidence.
 - `--no-prune`: keep all generated evidence/report files for this run.
 
 Failed commands always fail validation. If a failed command resembles a recent

@@ -86,7 +86,7 @@ describe("validation routing and evidence", () => {
             manual: [
               {
                 id: "human-risk-review",
-                prompt: "Human must review guarded risk notes before merge.",
+                prompt: "Complete guarded risk review before merge.",
               },
             ],
           },
@@ -720,7 +720,7 @@ describe("validation routing and evidence", () => {
             manual: [
               {
                 id: "human-risk-review",
-                prompt: "Human must review guarded risk notes before merge.",
+                prompt: "Complete guarded risk review before merge.",
               },
             ],
           },
@@ -962,7 +962,7 @@ function writeValidationConfig(repo: string, command: string): void {
       `        command: ${JSON.stringify(command)}`,
       "    manual:",
       "      - id: human-risk-review",
-      "        prompt: Human must review guarded risk notes before merge.",
+      "        prompt: Complete guarded risk review before merge.",
       "paths:",
       "  \"src/engine/sru/**\":",
       "    mode: guarded",

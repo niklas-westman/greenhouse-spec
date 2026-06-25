@@ -16,6 +16,7 @@ export type ImpactWarning = {
   affected: string[];
   reason: string;
   resolution: string;
+  agentAction?: string;
 };
 
 export function detectChangeImpact(options: {
@@ -49,6 +50,8 @@ export function detectChangeImpact(options: {
       "package.json changed; setup docs and Greenhouse validation roots may describe stale scripts.",
     resolution:
       "Review affected setup/validation docs and validation roots; update stale command references or leave evidence that behavior did not change.",
+    agentAction:
+      "Compare the package script change with affected docs and validation roots. Update stale references, or acknowledge this warning in tend evidence after confirming behavior is unchanged.",
   });
 
   add({
@@ -60,6 +63,8 @@ export function detectChangeImpact(options: {
     reason: "CLI source changed; CLI docs, examples, or help text may be stale.",
     resolution:
       "Review affected CLI docs and help examples if command behavior or flags changed.",
+    agentAction:
+      "Check whether CLI flags, help text, or output changed. Update affected docs/examples, or acknowledge this warning after confirming public CLI behavior is unchanged.",
   });
 
   add({
@@ -75,6 +80,8 @@ export function detectChangeImpact(options: {
       "API contract changed; generated clients/server stubs and API docs may need regeneration or review.",
     resolution:
       "Regenerate or review generated API outputs and API docs before treating the change as fully tended.",
+    agentAction:
+      "Regenerate or inspect API clients, server stubs, and docs. Keep this guarded until compatibility impact is understood and recorded.",
   });
 
   add({
@@ -87,6 +94,8 @@ export function detectChangeImpact(options: {
       "environment or configuration schema changed; setup and deployment docs may be stale.",
     resolution:
       "Review `.env.example` and affected setup/deployment docs for required variable or config changes.",
+    agentAction:
+      "Review configuration examples and setup/deployment docs. Update required variables or acknowledge that runtime setup guidance did not change.",
   });
 
   add({
@@ -103,6 +112,8 @@ export function detectChangeImpact(options: {
       "workspace configuration changed; repo shape, package scopes, and validation routes may need refresh.",
     resolution:
       "Run `greenhouse-spec inspect` and review validation proposals or route ownership for changed workspace scope.",
+    agentAction:
+      "Run inspect, review generated proposals, and update validation routes or docs when workspace scope changed.",
   });
 
   add({
@@ -118,6 +129,8 @@ export function detectChangeImpact(options: {
       "CI workflow changed; local validation docs and Greenhouse routes may need review.",
     resolution:
       "Review affected validation docs and Greenhouse routes against the updated CI workflow.",
+    agentAction:
+      "Compare CI changes with local validation routes and docs. Update Greenhouse routing or acknowledge that local and CI validation still align.",
   });
 
   add({
@@ -129,6 +142,8 @@ export function detectChangeImpact(options: {
     reason: "Tauri/Rust desktop files changed; packaging or desktop runtime docs may be affected.",
     resolution:
       "Review desktop/runtime docs if packaging, permissions, or native runtime behavior changed.",
+    agentAction:
+      "Check packaging, permissions, and native runtime impact. Update desktop docs or acknowledge that user/runtime behavior is unchanged.",
   });
 
   add({
@@ -143,6 +158,8 @@ export function detectChangeImpact(options: {
       "generated output changed; verify the source generator or boundary rule instead of treating generated files as authored source.",
     resolution:
       "Regenerate from the source generator or document why this generated output change is intentional.",
+    agentAction:
+      "Confirm the generated file came from its source generator. Regenerate from source or document why a direct generated-output change is intentional.",
   });
 
   return uniqueWarnings(warnings);

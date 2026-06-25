@@ -118,6 +118,8 @@ export function runVerify(options: VerifyOptions): VerifyReport {
         "source files used fallback validation; if this is a new repo area, add a scoped validation route.",
       resolution:
         "Add a scoped validation route for the new source area or confirm the fallback route is intentional.",
+      agentAction:
+        "Add a scoped validation route if this source area is recurring. Otherwise acknowledge the fallback route in evidence after confirming broad validation is enough for this change.",
     });
   }
   impactWarnings.push(
@@ -225,6 +227,9 @@ export function formatVerifyReport(report: VerifyReport): string {
       lines.push(`  - changed: ${warning.changedFiles.join(", ")}`);
       lines.push(`  - affected: ${warning.affected.join(", ")}`);
       lines.push(`  - resolution: ${warning.resolution}`);
+      if (warning.agentAction) {
+        lines.push(`  - agent action: ${warning.agentAction}`);
+      }
     }
   }
 
@@ -376,6 +381,8 @@ function detectMissingPackageScriptImpacts(options: {
         ],
         reason: `selected validation command "${command.command}" references missing package script "${scriptName}".`,
         resolution: `Add package script "${scriptName}" to package.json or update .greenhouse/roots/validation.yaml to a command that exists.`,
+        agentAction:
+          "Repair the missing package script or update the validation route before tending can continue.",
       };
     })
     .filter((warning): warning is ImpactWarning => warning !== null);

@@ -54,6 +54,8 @@ describe("inspect", () => {
       ),
     ).toContain("validate:domain");
     expect(readGreenhouseYaml(repo, "grown/area-index.yaml").areas.length).toBeGreaterThan(0);
+    expect(readGreenhouseYaml(repo, "grown/tree-of-knowledge.yaml").areas.length).toBeGreaterThan(0);
+    expect(existsSync(join(repo, ".greenhouse", "tree-of-knowledge", "index.md"))).toBe(true);
   });
 
   it("supports dry-run without updating grown files", () => {
@@ -73,6 +75,9 @@ describe("inspect", () => {
     expect(report.writes.every((write) => write.status === "dry-run")).toBe(true);
     expect(readGreenhouseFile(repo, "grown/command-index.yaml")).toBe(
       commandIndexBefore,
+    );
+    expect(report.writes.map((write) => write.relativePath)).toContain(
+      ".greenhouse/grown/tree-of-knowledge.yaml",
     );
   });
 
@@ -169,6 +174,9 @@ describe("inspect", () => {
         true,
       );
       expect(existsSync(join(repo, ".greenhouse", "grown", "repo-shape.yaml"))).toBe(
+        true,
+      );
+      expect(existsSync(join(repo, ".greenhouse", "grown", "tree-of-knowledge.yaml"))).toBe(
         true,
       );
     }

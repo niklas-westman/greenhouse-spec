@@ -151,6 +151,11 @@ fail
     memory-index.yaml
     memory-index.sqlite
     skill-index.yaml
+    tree-of-knowledge.yaml
+
+  tree-of-knowledge/       generated agent-readable repo map
+    index.md
+    areas/
 
   context/
     manifest.yaml         agent-readable context routing
@@ -169,6 +174,7 @@ The boundary is the product:
 ```text
 Greenhouse may freely rewrite:
   .greenhouse/grown/**
+  .greenhouse/tree-of-knowledge/**
 
 Greenhouse may append:
   .greenhouse/evidence/**

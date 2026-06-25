@@ -229,6 +229,49 @@ paths:
         command: pnpm typecheck
     recommended: []
     manual: []
+  src/context/**:
+    managed_by: greenhouse-spec
+    origin: repo-shape
+    proposal_id: validation-route:src-context
+    confidence: high
+    mode: patch
+    required:
+      - id: test:context
+        command: pnpm test:context
+      - id: typecheck
+        command: pnpm typecheck
+    recommended: []
+    manual: []
+  src/impact/**:
+    managed_by: greenhouse-spec
+    origin: repo-shape
+    proposal_id: validation-route:src-impact
+    confidence: high
+    mode: patch
+    required:
+      - id: test:impact
+        command: pnpm test:impact
+      - id: typecheck
+        command: pnpm typecheck
+    recommended: []
+    manual: []
+  src/tree-of-knowledge/**:
+    managed_by: greenhouse-spec
+    origin: repo-shape
+    proposal_id: validation-route:src-tree-of-knowledge
+    confidence: high
+    mode: patch
+    required:
+      - id: test:discovery
+        command: pnpm test:discovery
+      - id: test:context
+        command: pnpm test:context
+      - id: test:schemas
+        command: pnpm test:schemas
+      - id: typecheck
+        command: pnpm typecheck
+    recommended: []
+    manual: []
   src/native-scripts/**:
     managed_by: greenhouse-spec
     origin: repo-shape

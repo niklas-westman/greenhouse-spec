@@ -27,6 +27,7 @@ export const contextKindSchema = z.enum([
   "skill",
   "evidence",
   "report",
+  "knowledge",
 ]);
 
 export const memoryTypeSchema = z.enum([

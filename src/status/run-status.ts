@@ -440,17 +440,34 @@ function impactHealth(
   const unacknowledgedWarnings = warnings.filter(
     (warning) => !evidenceCoverage.acknowledgements.includes(warning.id),
   );
+  const repairRequiredBlockingWarnings = warnings.filter(
+    (warning) =>
+      warning.severity === "blocking" &&
+      warning.reviewGate !== "acknowledgeable",
+  );
 
-  if (warnings.some((warning) => warning.severity === "blocking")) {
-    const blockingWarnings = warnings.filter(
-      (warning) => warning.severity === "blocking",
-    );
+  if (repairRequiredBlockingWarnings.length > 0) {
     return {
       id: "impact",
       label: "Impact warnings",
       state: "fail",
       summary: impactSummary(warnings),
-      nextCommand: `repair blocking impact warning IDs: ${ids(blockingWarnings)}`,
+      nextCommand: `repair blocking impact warning IDs: ${ids(repairRequiredBlockingWarnings)}`,
+    };
+  }
+
+  const acknowledgeableBlockingWarnings = unacknowledgedWarnings.filter(
+    (warning) =>
+      warning.severity === "blocking" &&
+      warning.reviewGate === "acknowledgeable",
+  );
+  if (acknowledgeableBlockingWarnings.length > 0) {
+    return {
+      id: "impact",
+      label: "Impact warnings",
+      state: "fail",
+      summary: impactSummary(unacknowledgedWarnings),
+      nextCommand: `resolve blocking review warning IDs (${ids(acknowledgeableBlockingWarnings)}) or record review with greenhouse-spec tend --ack ${spaceIds(acknowledgeableBlockingWarnings)}`,
     };
   }
 

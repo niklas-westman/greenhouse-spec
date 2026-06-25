@@ -1,6 +1,6 @@
 schema_version: 1
 managed_by: greenhouse-spec
-generated_at: 2026-06-06T07:52:35.747Z
+generated_at: 2026-06-25T17:58:26.592Z
 policy:
   purpose: Generated map of repo areas, inferred purpose, validation coverage, and tending gaps.
   authority: Area purpose is observed status, not authored truth. Use it to propose roots, docs, memory, or validation updates.
@@ -64,6 +64,9 @@ areas:
         - src/doctor/**
         - src/discovery/**
         - src/inspect/**
+        - src/context/**
+        - src/impact/**
+        - src/tree-of-knowledge/**
         - src/native-scripts/**
         - src/lifecycle/**
         - src/status/**
@@ -80,6 +83,8 @@ areas:
         - pnpm test:doctor
         - pnpm test:discovery
         - pnpm test:inspect
+        - pnpm test:context
+        - pnpm test:impact
         - pnpm test:native-scripts
         - pnpm test:lifecycle
         - pnpm test:evidence

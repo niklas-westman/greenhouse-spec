@@ -17,6 +17,7 @@ import { runContext } from "../src/context/run-context.js";
 import { formatTendReport } from "../src/tend/run-tend.js";
 import { runInspect } from "../src/inspect/run-inspect.js";
 import { runPlant } from "../src/plant/run-plant.js";
+import { runStatus } from "../src/status/run-status.js";
 import { runTend } from "../src/tend/run-tend.js";
 
 const tempRepos: string[] = [];
@@ -300,6 +301,67 @@ describe("tend", () => {
       "repair blocking impact warning IDs (impact.missing-package-script.test)",
     );
     expect(report.writes.evidencePath).toBeNull();
+  });
+
+  it("lets blocking docs coverage warnings proceed after targeted acknowledgement", () => {
+    const repo = createReadyRepo();
+    mkdirSync(join(repo, "src", "context"), { recursive: true });
+    writeFileSync(join(repo, "src", "context", "run-context.ts"), "export const context = 1;\n");
+    writeFileSync(join(repo, "docs", "context.md"), "# Context docs\n");
+    writeFileSync(
+      join(repo, ".greenhouse", "roots", "docs.yaml"),
+      [
+        "schema_version: 1",
+        "tracked_docs:",
+        "  - path: docs/context.md",
+        "    owns:",
+        "      - cli",
+        "    covers:",
+        "      - path: src/context/**",
+        "        reason: Context docs describe context command behavior.",
+        "        strictness: blocking",
+        "",
+      ].join("\n"),
+      "utf8",
+    );
+    runInspect({ cwd: repo });
+    initGitRepo(repo);
+    writeFileSync(join(repo, "src", "context", "run-context.ts"), "export const context = 2;\n");
+
+    const status = runStatus({ cwd: repo });
+    const blocked = runTend({ cwd: repo });
+
+    expect(status.overallStatus).toBe("fail");
+    expect(status.health).toContainEqual(
+      expect.objectContaining({
+        id: "impact",
+        state: "fail",
+        nextCommand: expect.stringContaining(
+          "greenhouse-spec tend --ack impact.docs-coverage.docs-context-md.src-context",
+        ),
+      }),
+    );
+    expect(blocked.ok).toBe(false);
+    expect(blocked.validation.executed).toBe(false);
+    expect(blocked.impactWarnings).toContainEqual(
+      expect.objectContaining({
+        id: "impact.docs-coverage.docs-context-md.src-context",
+        severity: "blocking",
+        reviewGate: "acknowledgeable",
+      }),
+    );
+
+    const acknowledged = runTend({
+      cwd: repo,
+      acknowledgements: ["impact.docs-coverage.docs-context-md.src-context"],
+    });
+
+    expect(acknowledged.ok).toBe(true);
+    expect(acknowledged.validation.executed).toBe(true);
+    expect(acknowledged.writes.evidencePath).toBeTruthy();
+    expect(readFileSync(acknowledged.writes.evidencePath ?? "", "utf8")).toContain(
+      "| impact.docs-coverage.docs-context-md.src-context | reviewed |",
+    );
   });
 
   it("fails when selected validation fails and still writes evidence", () => {

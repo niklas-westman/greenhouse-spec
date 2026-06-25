@@ -16,6 +16,7 @@ import { discoverRepoMap } from "../src/discovery/repo-map.js";
 import { discoverRepoShape } from "../src/discovery/repo-shape.js";
 import { discoverRiskIndex } from "../src/discovery/risks.js";
 import { discoverCommandIndex } from "../src/discovery/scripts.js";
+import { buildTreeOfKnowledge } from "../src/tree-of-knowledge/tree-of-knowledge.js";
 
 const tempRepos: string[] = [];
 
@@ -161,6 +162,90 @@ describe("discovery", () => {
         }),
         risks: ["official-source-change"],
         gaps: ["Risk area has no manual review check in matching validation routes."],
+      }),
+    );
+  });
+
+  it("builds tree-of-knowledge areas from subsystem roots and docs coverage", () => {
+    const repo = createTempRepo();
+    mkdirSync(join(repo, "src", "context"), { recursive: true });
+    mkdirSync(join(repo, "src", "validation"), { recursive: true });
+    mkdirSync(join(repo, ".greenhouse", "tree-of-knowledge"), { recursive: true });
+    mkdirSync(join(repo, "docs"), { recursive: true });
+    writeFileSync(join(repo, "README.md"), "# Fixture\n");
+    writeFileSync(join(repo, "src", "context", "run-context.ts"), "export {}\n");
+    writeFileSync(join(repo, "src", "validation", "path-match.ts"), "export {}\n");
+    writePackageJson(repo, {
+      scripts: {
+        test: "vitest run",
+        "test:context": "vitest run tests/context.test.ts",
+      },
+      devDependencies: {
+        typescript: "5.6.3",
+        vitest: "2.1.4",
+      },
+    });
+    const validation = {
+      schema_version: 1 as const,
+      paths: {
+        "src/context/**": {
+          mode: "patch" as const,
+          required: [{ id: "test:context", command: "pnpm test:context" }],
+          recommended: [],
+          manual: [],
+        },
+      },
+    };
+    const repoMap = discoverRepoMap(repo);
+    const repoShape = discoverRepoShape(repo);
+    const areaIndex = buildAreaIndex({
+      repoMap,
+      repoShape,
+      validation,
+    });
+
+    const tree = buildTreeOfKnowledge({
+      cwd: repo,
+      repoMap,
+      repoShape,
+      areaIndex,
+      validation,
+      docsRoot: {
+        schema_version: 1,
+        tracked_docs: [
+          {
+            path: "docs/commands.md",
+            owns: ["cli"],
+            covers: [
+              {
+                path: "src/context/**",
+                reason: "Context command behavior is documented here.",
+                strictness: "guarded",
+              },
+            ],
+          },
+        ],
+      },
+    });
+
+    expect(tree.areas.map((area) => area.path)).toContain("src/context/");
+    expect(tree.areas.map((area) => area.path)).not.toContain(
+      ".greenhouse/tree-of-knowledge/",
+    );
+    expect(tree.areas).toContainEqual(
+      expect.objectContaining({
+        path: "src/context/",
+        docs: [
+          {
+            path: "docs/commands.md",
+            reason: "Context command behavior is documented here.",
+            strictness: "guarded",
+          },
+        ],
+        validation: expect.objectContaining({
+          routes: ["src/context/**"],
+          commands: ["pnpm test:context"],
+        }),
       }),
     );
   });

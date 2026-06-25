@@ -25,6 +25,7 @@ import { validationSchema } from "../schemas/validation.js";
 import { validationProposalsSchema } from "../schemas/validation-proposals.js";
 import { memoryIndexSchema, skillIndexSchema } from "../schemas/knowledge-index.js";
 import { semanticIndexSchema } from "../schemas/semantic-index.js";
+import { treeOfKnowledgeSchema } from "../schemas/tree-of-knowledge.js";
 import { GREENHOUSE_TEMPLATE_VERSION } from "../version.js";
 import {
   mvpInstalledDirectories,
@@ -80,6 +81,10 @@ const schemaFiles: Array<{ path: string; schema: ZodType<unknown> }> = [
   {
     path: "grown/area-index.yaml",
     schema: areaIndexSchema,
+  },
+  {
+    path: "grown/tree-of-knowledge.yaml",
+    schema: treeOfKnowledgeSchema,
   },
   {
     path: "grown/command-index.yaml",

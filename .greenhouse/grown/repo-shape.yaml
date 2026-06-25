@@ -1,6 +1,6 @@
 schema_version: 1
 managed_by: greenhouse-spec
-generated_at: 2026-06-06T07:52:35.721Z
+generated_at: 2026-06-25T17:58:26.567Z
 confidence: high
 shape:
   - single-package
@@ -31,6 +31,9 @@ generated:
     confidence: high
   - path: .greenhouse/reports/
     reason: Greenhouse generated reports
+    confidence: high
+  - path: .greenhouse/tree-of-knowledge/
+    reason: Greenhouse generated knowledge tree pages
     confidence: high
   - path: dist/
     reason: JavaScript build output

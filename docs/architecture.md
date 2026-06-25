@@ -19,6 +19,10 @@ src/plant/*
 src/inspect/*
   Discovers repo shape and writes generated indexes under .greenhouse/grown/**.
 
+src/tree-of-knowledge/*
+  Builds generated AI-facing navigation from repo areas to docs, validation,
+  risks, evidence, memory, and skills.
+
 src/context/*
   Builds Markdown-first memory/skill indexes and compiles task context briefs.
 
@@ -131,6 +135,7 @@ Status / observed state:
   .greenhouse/grown/repo-shape.yaml
   .greenhouse/grown/repo-map.yaml
   .greenhouse/grown/area-index.yaml
+  .greenhouse/grown/tree-of-knowledge.yaml
   .greenhouse/grown/command-index.yaml
   .greenhouse/grown/risk-index.yaml
   .greenhouse/grown/evidence-index.yaml
@@ -161,6 +166,13 @@ lists tending gaps. It must stay generated; if an inferred purpose or gap should
 become policy, that change belongs in authored roots, memory, skills, docs, or
 validation routes.
 
+`tree-of-knowledge.yaml` and `.greenhouse/tree-of-knowledge/**` are the
+AI-facing navigation layer built from the same generated status plus authored
+docs coverage. The tree points agents at the area page, docs, validation,
+risks, evidence, memory, and skills that matter for a task. It remains generated
+status: if a tree page reveals stale docs or missing rules, the durable fix
+belongs in `roots`, docs, memory, skills, or validation routes.
+
 ## Ownership Zones
 
 Greenhouse has three practical ownership zones:
@@ -168,6 +180,7 @@ Greenhouse has three practical ownership zones:
 ```text
 Generated and disposable:
   .greenhouse/grown/**
+  .greenhouse/tree-of-knowledge/**
 
 Agent-readable knowledge:
   .greenhouse/memory/**
@@ -202,6 +215,10 @@ Documentation drift hints live in `.greenhouse/roots/docs.yaml`. That root is
 authored policy, not generated intelligence; it lets Greenhouse route impact
 warnings to the docs that own setup, package scripts, validation, CLI, API, env,
 desktop, generated-output, workspace, or CI assumptions.
+
+Tracked docs may also declare `covers` path globs with a reason and strictness.
+Those coverage rules feed the tree-of-knowledge and can create path-specific
+documentation drift warnings when important code areas change.
 
 ## Route Metadata
 

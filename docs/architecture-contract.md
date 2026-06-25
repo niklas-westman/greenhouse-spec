@@ -17,6 +17,8 @@ greenhouse-spec plant
   +-- .greenhouse/templates/   local report templates
   +-- .greenhouse/scripts/     local helper scripts
   +-- .greenhouse/grown/       generated repo intelligence
+  +-- .greenhouse/tree-of-knowledge/
+  |                             generated agent-readable repo map
   +-- .greenhouse/evidence/    validation evidence
   +-- .greenhouse/reports/     generated reports
 
@@ -48,9 +50,11 @@ Greenhouse has three ownership zones.
 ```text
 Generated:
   .greenhouse/grown/**
+  .greenhouse/tree-of-knowledge/**
 
   Greenhouse may rewrite this freely. These files are disposable indexes and
-  proposal snapshots.
+  proposal snapshots. The tree-of-knowledge is generated navigation status, not
+  authored truth.
 
 Evidence and reports:
   .greenhouse/evidence/**
@@ -81,7 +85,9 @@ validation.yaml
 docs.yaml
   Owns documentation drift hints. It maps documentation files to repo facts they
   describe, so impact warnings can point to the right setup, CLI, API, env,
-  desktop, generated-output, workspace, or CI docs.
+  desktop, generated-output, workspace, or CI docs. It may also declare path
+  coverage rules with reasons and strictness for tree-of-knowledge links and
+  path-specific docs drift warnings.
 ```
 ```
 

@@ -1,0 +1,35 @@
+schema_version: 1
+managed_by: greenhouse-spec
+generated_at: 2026-06-25T00:00:00.000Z
+policy:
+  purpose: Generated AI-facing map from repo areas to docs, rules, validation, risks, evidence, memory, and skills.
+  authority: Generated tree pages are navigation status, not authored truth.
+  agent_reading: Start at .greenhouse/tree-of-knowledge/index.md.
+generated_tree:
+  index: .greenhouse/tree-of-knowledge/index.md
+  areas_dir: .greenhouse/tree-of-knowledge/areas/
+areas:
+  - id: knowledge.area.src-context
+    path: src/context/
+    page_path: .greenhouse/tree-of-knowledge/areas/src-context.md
+    kind: source-area
+    purpose: Application or CLI source subsystem.
+    summary: src/context/ is application source with documented coverage.
+    confidence: high
+    docs:
+      - path: docs/commands.md
+        reason: Context command behavior is documented here.
+        strictness: warning
+    validation:
+      status: covered
+      routes:
+        - src/context/**
+      commands:
+        - pnpm test:context
+      manual_checks: []
+    risks: []
+    memory_sources: []
+    skill_sources: []
+    evidence: []
+    agent_actions:
+      - Read this page before editing files in this area.

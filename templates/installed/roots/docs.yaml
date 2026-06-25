@@ -9,6 +9,16 @@ tracked_docs:
     owns:
       - cli
       - validation
+    covers:
+      - path: src/cli.ts
+        reason: Command registration changes can alter documented CLI behavior.
+        strictness: warning
+      - path: src/commands/**
+        reason: Command adapter changes can alter documented CLI behavior.
+        strictness: warning
+      - path: src/context/**
+        reason: Context command behavior and report shape are documented here.
+        strictness: warning
   - path: docs/installation.md
     owns:
       - setup
@@ -17,3 +27,16 @@ tracked_docs:
     owns:
       - validation
       - generated
+    covers:
+      - path: src/validation/**
+        reason: Validation routing behavior is documented here.
+        strictness: guarded
+      - path: src/verify/**
+        reason: Verify output and routing behavior are documented here.
+        strictness: guarded
+      - path: src/tend/**
+        reason: Tend finish-gate behavior is documented here.
+        strictness: guarded
+      - path: src/status/**
+        reason: Status impact and health behavior are documented here.
+        strictness: guarded

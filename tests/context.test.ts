@@ -80,7 +80,9 @@ describe("context", () => {
     expect(matches.map((match) => match.id)).toContain(
       "memory.navigation.accessibility",
     );
-    expect(report.sources[0]?.reason).toContain("sqlite fts");
+    expect(
+      report.sources.find((source) => source.id === "memory.navigation.accessibility")?.reason,
+    ).toContain("sqlite fts");
   });
 
   it("keeps semantic retrieval opt-in and source-backed", () => {
@@ -188,6 +190,50 @@ describe("context", () => {
     );
     expect(report.writtenReportPath).toMatch(/\.greenhouse\/reports\/context\/.+-context\.md$/);
     expect(existsSync(report.writtenReportPath ?? "")).toBe(true);
+  });
+
+  it("surfaces matching tree-of-knowledge areas in context reports", () => {
+    const repo = createContextRepo();
+    mkdirSync(join(repo, "src", "navigation"), { recursive: true });
+    mkdirSync(join(repo, "docs"), { recursive: true });
+    writeFileSync(join(repo, "src", "navigation", "menu.tsx"), "export {}\n");
+    writeFileSync(join(repo, "docs", "navigation.md"), "# Navigation docs\n");
+    writeFileSync(
+      join(repo, ".greenhouse", "roots", "docs.yaml"),
+      [
+        "schema_version: 1",
+        "tracked_docs:",
+        "  - path: docs/navigation.md",
+        "    owns:",
+        "      - cli",
+        "    covers:",
+        "      - path: src/navigation/**",
+        "        reason: Navigation docs describe menu behavior.",
+        "        strictness: blocking",
+        "",
+      ].join("\n"),
+      "utf8",
+    );
+    runInspect({ cwd: repo });
+
+    const report = runContext({
+      cwd: repo,
+      task: "Improve navigation menu",
+      paths: ["src/navigation/menu.tsx"],
+    });
+    const markdown = formatContextReport(report);
+
+    expect(report.sources).toContainEqual(
+      expect.objectContaining({
+        id: "knowledge.area.src.navigation",
+        kind: "knowledge",
+        path: ".greenhouse/tree-of-knowledge/areas/src-navigation.md",
+        reason: "matched supplied path src/navigation/menu.tsx",
+        freshness: "blocking-doc-coverage",
+      }),
+    );
+    expect(markdown).toContain("## Relevant Knowledge Areas");
+    expect(markdown).toContain("knowledge.area.src.navigation");
   });
 
   it("surfaces proposed memory and skills as candidates", () => {

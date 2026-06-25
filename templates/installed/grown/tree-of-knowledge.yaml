@@ -1,0 +1,11 @@
+schema_version: 1
+managed_by: greenhouse-spec
+generated_at: 1970-01-01T00:00:00Z
+policy:
+  purpose: Generated AI-facing map from repo areas to docs, rules, validation, risks, evidence, memory, and skills.
+  authority: Generated tree pages are navigation status, not authored truth. Promote durable policy into .greenhouse/roots, docs, memory, or skills.
+  agent_reading: Start at .greenhouse/tree-of-knowledge/index.md, then open only area pages relevant to the task or changed paths.
+generated_tree:
+  index: .greenhouse/tree-of-knowledge/index.md
+  areas_dir: .greenhouse/tree-of-knowledge/areas/
+areas: []

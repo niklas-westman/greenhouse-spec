@@ -12,6 +12,7 @@ import { projectSchema } from "../src/schemas/project.js";
 import { commandIndexSchema } from "../src/schemas/command-index.js";
 import { areaIndexSchema } from "../src/schemas/area-index.js";
 import { repoMapSchema } from "../src/schemas/repo-map.js";
+import { treeOfKnowledgeSchema } from "../src/schemas/tree-of-knowledge.js";
 import { validationSchema } from "../src/schemas/validation.js";
 import {
   mvpInstalledDirectories,
@@ -68,6 +69,8 @@ describe("installed templates", () => {
       "roots",
       "why-greenhouse-spec",
       "grown",
+      "tree-of-knowledge",
+      "tree-of-knowledge/areas",
       "context",
       "memory",
       "memory/decisions",
@@ -108,6 +111,12 @@ describe("installed templates", () => {
     ).not.toThrow();
     expect(() =>
       parseYamlWithSchema(readTemplate("grown/area-index.yaml"), areaIndexSchema),
+    ).not.toThrow();
+    expect(() =>
+      parseYamlWithSchema(
+        readTemplate("grown/tree-of-knowledge.yaml"),
+        treeOfKnowledgeSchema,
+      ),
     ).not.toThrow();
     expect(() =>
       parseYamlWithSchema(

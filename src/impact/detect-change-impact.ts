@@ -1,5 +1,6 @@
 import type { RepoShape } from "../schemas/repo-shape.js";
 import type { DocsOwnership, DocsRoot } from "../schemas/docs-root.js";
+import { matchesPath } from "../validation/path-match.js";
 
 export type ImpactSeverity = "advisory" | "warning" | "guarded" | "blocking";
 
@@ -17,6 +18,7 @@ export type ImpactWarning = {
   reason: string;
   resolution: string;
   agentAction?: string;
+  reviewGate?: "acknowledgeable" | "repair-required";
 };
 
 export function detectChangeImpact(options: {
@@ -52,6 +54,7 @@ export function detectChangeImpact(options: {
       "Review affected setup/validation docs and validation roots; update stale command references or leave evidence that behavior did not change.",
     agentAction:
       "Compare the package script change with affected docs and validation roots. Update stale references, or acknowledge this warning in tend evidence after confirming behavior is unchanged.",
+    reviewGate: "acknowledgeable",
   });
 
   add({
@@ -65,6 +68,7 @@ export function detectChangeImpact(options: {
       "Review affected CLI docs and help examples if command behavior or flags changed.",
     agentAction:
       "Check whether CLI flags, help text, or output changed. Update affected docs/examples, or acknowledge this warning after confirming public CLI behavior is unchanged.",
+    reviewGate: "acknowledgeable",
   });
 
   add({
@@ -82,6 +86,7 @@ export function detectChangeImpact(options: {
       "Regenerate or review generated API outputs and API docs before treating the change as fully tended.",
     agentAction:
       "Regenerate or inspect API clients, server stubs, and docs. Keep this guarded until compatibility impact is understood and recorded.",
+    reviewGate: "acknowledgeable",
   });
 
   add({
@@ -96,6 +101,7 @@ export function detectChangeImpact(options: {
       "Review `.env.example` and affected setup/deployment docs for required variable or config changes.",
     agentAction:
       "Review configuration examples and setup/deployment docs. Update required variables or acknowledge that runtime setup guidance did not change.",
+    reviewGate: "acknowledgeable",
   });
 
   add({
@@ -114,6 +120,7 @@ export function detectChangeImpact(options: {
       "Run `greenhouse-spec inspect` and review validation proposals or route ownership for changed workspace scope.",
     agentAction:
       "Run inspect, review generated proposals, and update validation routes or docs when workspace scope changed.",
+    reviewGate: "acknowledgeable",
   });
 
   add({
@@ -131,6 +138,7 @@ export function detectChangeImpact(options: {
       "Review affected validation docs and Greenhouse routes against the updated CI workflow.",
     agentAction:
       "Compare CI changes with local validation routes and docs. Update Greenhouse routing or acknowledge that local and CI validation still align.",
+    reviewGate: "acknowledgeable",
   });
 
   add({
@@ -144,6 +152,7 @@ export function detectChangeImpact(options: {
       "Review desktop/runtime docs if packaging, permissions, or native runtime behavior changed.",
     agentAction:
       "Check packaging, permissions, and native runtime impact. Update desktop docs or acknowledge that user/runtime behavior is unchanged.",
+    reviewGate: "acknowledgeable",
   });
 
   add({
@@ -160,9 +169,49 @@ export function detectChangeImpact(options: {
       "Regenerate from the source generator or document why this generated output change is intentional.",
     agentAction:
       "Confirm the generated file came from its source generator. Regenerate from source or document why a direct generated-output change is intentional.",
+    reviewGate: "acknowledgeable",
   });
 
+  for (const warning of detectDocsCoverageImpacts(changedFiles, options.docsRoot)) {
+    add(warning);
+  }
+
   return uniqueWarnings(warnings);
+}
+
+function detectDocsCoverageImpacts(
+  changedFiles: string[],
+  docsRoot: DocsRoot | undefined,
+): ImpactWarning[] {
+  const warnings: ImpactWarning[] = [];
+
+  for (const doc of docsRoot?.tracked_docs ?? []) {
+    for (const coverage of doc.covers ?? []) {
+      const matchedFiles = changedFiles.filter((file) => matchesPath(coverage.path, file));
+      if (matchedFiles.length === 0) {
+        continue;
+      }
+      warnings.push({
+        id: `impact.docs-coverage.${slug(doc.path)}.${slug(coverage.path)}`,
+        severity: coverage.strictness,
+        kind: "documentation-drift",
+        changedFiles: matchedFiles,
+        affected: [
+          doc.path,
+          ".greenhouse/roots/docs.yaml",
+          ".greenhouse/tree-of-knowledge/",
+        ],
+        reason: `${coverage.reason}; ${doc.path} may be stale for ${coverage.path}.`,
+        resolution:
+          "Review the covered documentation against the changed files. Update docs if behavior changed, or record an acknowledgement after confirming the docs remain accurate.",
+        agentAction:
+          `Open ${doc.path} and the relevant tree-of-knowledge area page. Update stale guidance, or run greenhouse-spec tend --ack impact.docs-coverage.${slug(doc.path)}.${slug(coverage.path)} after confirming no docs change is needed.`,
+        reviewGate: "acknowledgeable",
+      });
+    }
+  }
+
+  return warnings;
 }
 
 function docsResolver(
@@ -244,4 +293,11 @@ function uniqueWarnings(warnings: ImpactWarning[]): ImpactWarning[] {
 
 function uniqueSorted(items: string[]): string[] {
   return [...new Set(items)].sort();
+}
+
+function slug(value: string): string {
+  return value
+    .replace(/[^a-zA-Z0-9]+/g, "-")
+    .replace(/^-|-$/g, "")
+    .toLowerCase() || "root";
 }

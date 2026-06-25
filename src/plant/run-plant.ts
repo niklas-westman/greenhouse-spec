@@ -33,6 +33,12 @@ import {
   GREENHOUSE_SPEC_VERSION,
   GREENHOUSE_TEMPLATE_VERSION,
 } from "../version.js";
+import { docsRootSchema } from "../schemas/docs-root.js";
+import {
+  buildTreeOfKnowledge,
+  formatTreeOfKnowledgePages,
+} from "../tree-of-knowledge/tree-of-knowledge.js";
+import { parseYamlWithSchema } from "../schemas/common.js";
 
 export type PlantOptions = {
   cwd: string;
@@ -125,6 +131,27 @@ function buildPlantWrites(
   const riskIndex = discoverRiskIndex(cwd);
   const validationProposals = buildValidationProposals({ cwd, repoShape });
   const validationConfig = parseYaml(validationYaml(cwd)) as ValidationConfig;
+  const docsRoot = parseYamlWithSchema(template("roots/docs.yaml"), docsRootSchema);
+  const areaIndex = buildAreaIndex({
+    repoMap,
+    repoShape,
+    validation: validationConfig,
+    riskIndex,
+  });
+  const evidenceIndex = buildEvidenceIndex(cwd);
+  const memoryIndex = buildMemoryIndex(cwd);
+  const skillIndex = buildSkillIndex(cwd);
+  const treeOfKnowledge = buildTreeOfKnowledge({
+    cwd,
+    repoMap,
+    repoShape,
+    areaIndex,
+    docsRoot,
+    validation: validationConfig,
+    memoryIndex,
+    skillIndex,
+    evidenceIndex,
+  });
   const now = new Date().toISOString();
 
   return [
@@ -139,12 +166,11 @@ function buildPlantWrites(
     authored("why-greenhouse-spec/agent-workflow.md", template("why-greenhouse-spec/agent-workflow.md")),
     generated("grown/repo-map.yaml", yaml(repoMap)),
     generated("grown/repo-shape.yaml", yaml(repoShape)),
-    generated("grown/area-index.yaml", yaml(buildAreaIndex({
-      repoMap,
-      repoShape,
-      validation: validationConfig,
-      riskIndex,
-    }))),
+    generated("grown/area-index.yaml", yaml(areaIndex)),
+    generated("grown/tree-of-knowledge.yaml", yaml(treeOfKnowledge)),
+    ...formatTreeOfKnowledgePages(treeOfKnowledge).map((page) =>
+      generated(page.relativePath, page.content),
+    ),
     generated("grown/command-index.yaml", yaml(commandIndex)),
     generated("grown/validation-proposals.yaml", yaml(validationProposals)),
     generated("grown/docs-index.yaml", yaml({
@@ -160,10 +186,10 @@ function buildPlantWrites(
       generated_at: now,
       agent_files: agentFiles,
     })),
-    generated("grown/evidence-index.yaml", yaml(buildEvidenceIndex(cwd))),
+    generated("grown/evidence-index.yaml", yaml(evidenceIndex)),
     generated("grown/failure-signatures.yaml", yaml(buildFailureSignatures(cwd))),
-    generated("grown/memory-index.yaml", yaml(buildMemoryIndex(cwd))),
-    generated("grown/skill-index.yaml", yaml(buildSkillIndex(cwd))),
+    generated("grown/memory-index.yaml", yaml(memoryIndex)),
+    generated("grown/skill-index.yaml", yaml(skillIndex)),
     generated(
       "grown/last-inspection.md",
       [
@@ -174,6 +200,7 @@ function buildPlantWrites(
         `Repo shape: ${repoShape.shape.join(", ") || "unknown"}`,
         `Repo shape gaps: ${repoShape.gaps.length}`,
         `Validation proposals: ${validationProposals.proposals.length}`,
+        `Knowledge areas: ${treeOfKnowledge.areas.length}`,
         "",
       ].join("\n"),
     ),

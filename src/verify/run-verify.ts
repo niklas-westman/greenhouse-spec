@@ -230,6 +230,9 @@ export function formatVerifyReport(report: VerifyReport): string {
       if (warning.agentAction) {
         lines.push(`  - agent action: ${warning.agentAction}`);
       }
+      if (warning.reviewGate) {
+        lines.push(`  - review gate: ${warning.reviewGate}`);
+      }
     }
   }
 
@@ -383,6 +386,7 @@ function detectMissingPackageScriptImpacts(options: {
         resolution: `Add package script "${scriptName}" to package.json or update .greenhouse/roots/validation.yaml to a command that exists.`,
         agentAction:
           "Repair the missing package script or update the validation route before tending can continue.",
+        reviewGate: "repair-required" as const,
       };
     })
     .filter((warning): warning is ImpactWarning => warning !== null);

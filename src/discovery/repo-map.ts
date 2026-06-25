@@ -9,6 +9,7 @@ import { discoverAgentFiles } from "./agent-files.js";
 import { discoverDocs } from "./docs.js";
 
 const generatedPathReasons: Record<string, string> = {
+  ".greenhouse/tree-of-knowledge/": "Greenhouse generated knowledge tree pages",
   "data/": "local/generated data; confirm before editing",
   "dist/": "build output",
   "dist-cli/": "CLI build output",

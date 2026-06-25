@@ -54,6 +54,12 @@ describe("plant", () => {
     expect(
       existsSync(join(repo, ".greenhouse", "grown", "evidence-index.yaml")),
     ).toBe(true);
+    expect(
+      existsSync(join(repo, ".greenhouse", "grown", "tree-of-knowledge.yaml")),
+    ).toBe(true);
+    expect(
+      existsSync(join(repo, ".greenhouse", "tree-of-knowledge", "index.md")),
+    ).toBe(true);
     expect(existsSync(join(repo, ".greenhouse", "reports", "doctor"))).toBe(true);
   });
 
@@ -164,6 +170,7 @@ describe("plant", () => {
       "prep-docs/",
     ]);
     expect(repoMap.generated.map((entry: { path: string }) => entry.path)).toEqual([
+      ".greenhouse/tree-of-knowledge/",
       "data/",
       "dist/",
       "dist-cli/",

@@ -129,6 +129,9 @@ Side effects:
 - Generates `.greenhouse/grown/validation-proposals.yaml`.
 - Generates `.greenhouse/grown/area-index.yaml` with observed repo areas,
   inferred purpose, validation coverage, risks, and tending gaps.
+- Generates `.greenhouse/grown/tree-of-knowledge.yaml` and
+  `.greenhouse/tree-of-knowledge/**` with agent-readable area pages that link
+  docs, validation, risks, evidence, memory, and skills.
 - Generates `.greenhouse/grown/memory-index.yaml` from `.greenhouse/memory/**/*.md`.
 - Generates `.greenhouse/grown/skill-index.yaml` from `.greenhouse/skills/**/*.md`.
 - Generates `.greenhouse/grown/memory-index.sqlite` as a disposable SQLite FTS5
@@ -146,9 +149,10 @@ greenhouse-spec context "task" --semantic
 greenhouse-spec context "task" --path src/app.ts --risk api-contract
 ```
 
-Compiles an agent-readable context brief from the task query, repo shape,
-command index, context manifest routes, memory files, adopted skills, recent
-evidence, repeated failures, and validation hints.
+Compiles an agent-readable context brief from the task query, relevant
+tree-of-knowledge areas, repo shape, command index, context manifest routes,
+memory files, adopted skills, recent evidence, repeated failures, and validation
+hints.
 
 Context manifest paths are repo-root-relative when they point to paths such as
 `.greenhouse/memory/**`; older context-relative paths are still accepted for
@@ -319,9 +323,11 @@ validation instead of a scoped route. Each warning includes a resolution hint.
 Each warning also includes an agent action that explains the next useful move:
 update affected files, repair routing, regenerate output, or record review
 evidence with `--ack` when no repository change is needed.
-Blocking warnings, including selected `pnpm` validation commands that reference
-missing package scripts, fail `status` and `tend` until the command or route is
-repaired.
+Repair-required blocking warnings, including selected `pnpm` validation commands
+that reference missing package scripts, fail `status` and `tend` until the
+command or route is repaired. Path-specific docs coverage may also be marked
+blocking, but those warnings are review-gated: update the stale docs or record a
+targeted `--ack` after confirming the docs remain accurate.
 
 Important options:
 

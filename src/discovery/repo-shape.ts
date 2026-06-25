@@ -15,6 +15,7 @@ const generatedDirectoryReasons: Record<string, string> = {
   ".greenhouse/grown/": "Greenhouse generated index output",
   ".greenhouse/evidence/": "Greenhouse generated validation evidence",
   ".greenhouse/reports/": "Greenhouse generated reports",
+  ".greenhouse/tree-of-knowledge/": "Greenhouse generated knowledge tree pages",
   "dist/": "JavaScript build output",
   "dist-cli/": "CLI build output",
 };

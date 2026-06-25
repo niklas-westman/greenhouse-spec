@@ -1,6 +1,6 @@
 schema_version: 1
 managed_by: greenhouse-spec
-generated_at: 2026-06-06T07:52:35.688Z
+generated_at: 2026-06-25T17:58:26.524Z
 confidence: medium
 source:
   - path: src/
@@ -16,6 +16,8 @@ docs:
   - path: docs/
     authority: medium
 generated:
+  - path: .greenhouse/tree-of-knowledge/
+    reason: Greenhouse generated knowledge tree pages
   - path: dist/
     reason: build output
 agent_files:

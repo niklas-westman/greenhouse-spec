@@ -5,6 +5,10 @@ tracked_docs:
       - setup
       - package-scripts
       - validation
+    covers:
+      - path: src/context/**
+        reason: README describes context workflow.
+        strictness: warning
   - path: docs/cli.md
     owns:
       - cli

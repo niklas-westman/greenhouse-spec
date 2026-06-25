@@ -1,6 +1,6 @@
 {
   "name": "greenhouse-spec",
-  "version": "0.2.0-alpha.0",
+  "version": "0.3.0",
   "description": "Repo-local tending infrastructure for safer agentic engineering.",
   "license": "MIT",
   "type": "module",
@@ -50,6 +50,7 @@
     "test": "vitest run",
     "test:alignment": "vitest run tests/alignment.test.ts",
     "test:cli": "vitest run tests/cli.test.ts",
+    "test:context": "vitest run tests/context.test.ts",
     "test:discovery": "vitest run tests/discovery.test.ts",
     "test:doctor": "vitest run tests/doctor.test.ts",
     "test:impact": "vitest run tests/impact.test.ts",

@@ -17,11 +17,16 @@ import {
   type SafeWriteResult,
 } from "../filesystem/safe-write.js";
 import { buildMemoryIndex, buildSkillIndex } from "../context/knowledge-index.js";
+import { readDocsRoot } from "../impact/docs-root.js";
 import { writeSqliteKnowledgeIndex } from "../context/sqlite-index.js";
 import { proposePackageScripts } from "../native-scripts/package-script-proposals.js";
 import { buildValidationProposals } from "../proposals/build-proposals.js";
 import { parseYamlWithSchema } from "../schemas/common.js";
 import { validationSchema } from "../schemas/validation.js";
+import {
+  buildTreeOfKnowledge,
+  formatTreeOfKnowledgePages,
+} from "../tree-of-knowledge/tree-of-knowledge.js";
 
 export type InspectOptions = {
   cwd: string;
@@ -133,6 +138,26 @@ function buildGrownPlan(cwd: string): {
   const riskIndex = discoverRiskIndex(cwd);
   const validation = readValidation(cwd);
   const validationProposals = buildValidationProposals({ cwd, repoShape });
+  const areaIndex = buildAreaIndex({
+    repoMap,
+    repoShape,
+    validation,
+    riskIndex,
+  });
+  const evidenceIndex = buildEvidenceIndex(cwd);
+  const memoryIndex = buildMemoryIndex(cwd);
+  const skillIndex = buildSkillIndex(cwd);
+  const treeOfKnowledge = buildTreeOfKnowledge({
+    cwd,
+    repoMap,
+    repoShape,
+    areaIndex,
+    docsRoot: readDocsRoot(cwd),
+    validation,
+    memoryIndex,
+    skillIndex,
+    evidenceIndex,
+  });
   const now = new Date().toISOString();
 
   return {
@@ -140,12 +165,13 @@ function buildGrownPlan(cwd: string): {
     writes: [
       grownWrite("repo-map.yaml", yaml(repoMap)),
       grownWrite("repo-shape.yaml", yaml(repoShape)),
-      grownWrite("area-index.yaml", yaml(buildAreaIndex({
-        repoMap,
-        repoShape,
-        validation,
-        riskIndex,
-      }))),
+      grownWrite("area-index.yaml", yaml(areaIndex)),
+      grownWrite("tree-of-knowledge.yaml", yaml(treeOfKnowledge)),
+      ...formatTreeOfKnowledgePages(treeOfKnowledge).map((page) => ({
+        relativePath: `.greenhouse/${page.relativePath}`,
+        content: page.content,
+        kind: "generated" as const,
+      })),
       grownWrite("command-index.yaml", yaml(commandIndex)),
       grownWrite("validation-proposals.yaml", yaml(validationProposals)),
       grownWrite("docs-index.yaml", yaml({
@@ -161,10 +187,10 @@ function buildGrownPlan(cwd: string): {
         generated_at: now,
         agent_files: discoverAgentFiles(cwd),
       })),
-      grownWrite("evidence-index.yaml", yaml(buildEvidenceIndex(cwd))),
+      grownWrite("evidence-index.yaml", yaml(evidenceIndex)),
       grownWrite("failure-signatures.yaml", yaml(buildFailureSignatures(cwd))),
-      grownWrite("memory-index.yaml", yaml(buildMemoryIndex(cwd))),
-      grownWrite("skill-index.yaml", yaml(buildSkillIndex(cwd))),
+      grownWrite("memory-index.yaml", yaml(memoryIndex)),
+      grownWrite("skill-index.yaml", yaml(skillIndex)),
       grownWrite(
         "last-inspection.md",
         [
@@ -178,6 +204,7 @@ function buildGrownPlan(cwd: string): {
           `Command entries: ${commandIndex.commands.length}`,
           `Validation proposals: ${validationProposals.proposals.length}`,
           `Risk entries: ${riskIndex.risks.length}`,
+          `Knowledge areas: ${treeOfKnowledge.areas.length}`,
           "",
         ].join("\n"),
       ),

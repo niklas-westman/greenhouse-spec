@@ -25,6 +25,10 @@ import {
 } from "./sqlite-index.js";
 import { readSemanticRetrieval } from "./semantic-index.js";
 import type { SemanticIndexMatch } from "../schemas/semantic-index.js";
+import {
+  matchKnowledgeAreas,
+  readTreeOfKnowledge,
+} from "../tree-of-knowledge/tree-of-knowledge.js";
 
 export type ContextOptions = {
   cwd: string;
@@ -99,6 +103,23 @@ export function runContext(options: ContextOptions): ContextReport {
   });
   const paths = options.paths ?? [];
   const risks = options.risks ?? [];
+  const knowledgeTree = readTreeOfKnowledge(options.cwd);
+  const knowledgeSources = matchKnowledgeAreas({
+    tree: knowledgeTree,
+    task: options.task,
+    paths,
+  }).map((area): ContextSource => ({
+    id: area.id,
+    kind: "knowledge",
+    path: area.page_path,
+    reason: area.reason,
+    status: area.validation.status,
+    freshness: area.docs.some((doc) => doc.strictness === "blocking")
+      ? "blocking-doc-coverage"
+      : undefined,
+    summary: area.summary,
+    excerpt: area.agent_actions.join(" "),
+  }));
   const manifestSources = manifest.context
     .map((entry) => manifestSource(options.cwd, entry, options.task, paths, risks))
     .filter((source): source is ContextSource => Boolean(source));
@@ -139,6 +160,7 @@ export function runContext(options: ContextOptions): ContextReport {
       commands: commandIndex.commands.map((command) => command.command).slice(0, 12),
     },
     sources: uniqueSources([
+      ...knowledgeSources,
       ...manifestSources,
       ...semanticSources,
       ...(sqliteSources.length > 0 ? sqliteSources : lexicalSources),
@@ -175,6 +197,7 @@ export function formatContextReport(report: ContextReport): string {
   const rules = report.sources.filter((source) =>
     ["rule", "doc", "report"].includes(source.kind),
   );
+  const knowledgeAreas = report.sources.filter((source) => source.kind === "knowledge");
   const memories = report.sources.filter(
     (source) =>
       source.kind === "memory" &&
@@ -209,6 +232,9 @@ export function formatContextReport(report: ContextReport): string {
   ];
 
   appendSources(lines, rules);
+
+  lines.push("", "## Relevant Knowledge Areas", "");
+  appendSources(lines, knowledgeAreas);
 
   lines.push("", "## Relevant Memory", "");
   appendSources(lines, memories);

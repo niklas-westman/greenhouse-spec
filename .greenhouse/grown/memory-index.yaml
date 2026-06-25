@@ -1,6 +1,6 @@
 schema_version: 1
 managed_by: greenhouse-spec
-generated_at: 2026-06-06T07:52:35.756Z
+generated_at: 2026-06-25T17:58:26.594Z
 policy:
   canonical_source: .greenhouse/memory/**/*.md
   generated_index: Generated from Markdown. Safe to refresh with greenhouse-spec inspect.

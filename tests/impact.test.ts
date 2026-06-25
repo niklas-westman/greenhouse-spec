@@ -54,6 +54,43 @@ describe("change-impact detection", () => {
     );
   });
 
+  it("uses docs coverage roots for path-specific documentation drift", () => {
+    const warnings = detectChangeImpact({
+      changedFiles: ["src/context/run-context.ts"],
+      docsRoot: {
+        schema_version: 1,
+        tracked_docs: [
+          {
+            path: "docs/commands.md",
+            owns: ["cli"],
+            covers: [
+              {
+                path: "src/context/**",
+                reason: "Context command behavior is documented here.",
+                strictness: "blocking",
+              },
+            ],
+          },
+        ],
+      },
+    });
+
+    expect(warnings).toContainEqual(
+      expect.objectContaining({
+        id: "impact.docs-coverage.docs-commands-md.src-context",
+        severity: "blocking",
+        kind: "documentation-drift",
+        changedFiles: ["src/context/run-context.ts"],
+        affected: expect.arrayContaining([
+          "docs/commands.md",
+          ".greenhouse/roots/docs.yaml",
+          ".greenhouse/tree-of-knowledge/",
+        ]),
+        reviewGate: "acknowledgeable",
+      }),
+    );
+  });
+
   it("keeps CLI documentation drift advisory", () => {
     const warnings = detectChangeImpact({
       changedFiles: ["src/cli/main.ts"],

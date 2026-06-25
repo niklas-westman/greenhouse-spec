@@ -183,7 +183,7 @@ export function runTend(options: {
     skipGreenhouseCommands: true,
   });
   report.impactWarnings = dryRun.impactWarnings;
-  if (hasBlockingImpactWarnings(report.impactWarnings)) {
+  if (hasUnresolvedBlockingImpactWarnings(report)) {
     report.verify = dryRun;
     report.ok = false;
     report.state = "fail";
@@ -234,7 +234,7 @@ export function runTend(options: {
     });
     report.verify = verify;
     report.impactWarnings = verify.impactWarnings;
-    report.ok = verify.ok && !hasBlockingImpactWarnings(verify.impactWarnings);
+    report.ok = verify.ok && !hasUnresolvedBlockingImpactWarnings(report);
     report.state = finalTendState(report);
     const evidence = writeEvidence({
       cwd: options.cwd,
@@ -312,8 +312,15 @@ function unacknowledgedImpactWarnings(report: TendReport): ImpactWarning[] {
   );
 }
 
-function hasBlockingImpactWarnings(warnings: ImpactWarning[]): boolean {
-  return warnings.some((warning) => warning.severity === "blocking");
+function hasUnresolvedBlockingImpactWarnings(report: TendReport): boolean {
+  const acknowledgements = new Set(report.acknowledgements);
+  return report.impactWarnings.some((warning) =>
+    warning.severity === "blocking" &&
+    (
+      warning.reviewGate !== "acknowledgeable" ||
+      !acknowledgements.has(warning.id)
+    ),
+  );
 }
 
 function maybeWriteProposalReport(
@@ -456,7 +463,7 @@ function firstBlockingCause(report: TendReport): string {
   if (report.selfTending && report.selfTending.blocking.length > 0) {
     return "structural drift blocks tending.";
   }
-  if (hasBlockingImpactWarnings(report.impactWarnings)) {
+  if (hasUnresolvedBlockingImpactWarnings(report)) {
     return "blocking impact warnings must be resolved.";
   }
   if (report.validation.executed && !report.ok) {
@@ -484,12 +491,25 @@ function nextActions(report: TendReport): string[] {
     return ["fix failed validation command(s), then rerun greenhouse-spec tend"];
   }
 
-  if (report.impactWarnings.some((warning) => warning.severity === "blocking")) {
-    const blockingWarnings = report.impactWarnings.filter(
-      (warning) => warning.severity === "blocking",
-    );
+  const repairRequiredBlockingWarnings = report.impactWarnings.filter(
+    (warning) =>
+      warning.severity === "blocking" &&
+      warning.reviewGate !== "acknowledgeable",
+  );
+  if (repairRequiredBlockingWarnings.length > 0) {
     return [
-      `repair blocking impact warning IDs (${ids(blockingWarnings)}) before rerunning greenhouse-spec tend`,
+      `repair blocking impact warning IDs (${ids(repairRequiredBlockingWarnings)}) before rerunning greenhouse-spec tend`,
+    ];
+  }
+
+  const acknowledgeableBlockingWarnings = unacknowledgedImpactWarnings(report).filter(
+    (warning) =>
+      warning.severity === "blocking" &&
+      warning.reviewGate === "acknowledgeable",
+  );
+  if (acknowledgeableBlockingWarnings.length > 0) {
+    return [
+      `resolve blocking review warning IDs (${ids(acknowledgeableBlockingWarnings)}) or record review with greenhouse-spec tend --ack ${spaceIds(acknowledgeableBlockingWarnings)}`,
     ];
   }
 

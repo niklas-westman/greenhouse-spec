@@ -10,6 +10,7 @@ import { contextManifestSchema } from "../src/schemas/context-manifest.js";
 import { evidenceSchema } from "../src/schemas/evidence.js";
 import { memoryIndexSchema, skillIndexSchema } from "../src/schemas/knowledge-index.js";
 import { semanticIndexSchema } from "../src/schemas/semantic-index.js";
+import { treeOfKnowledgeSchema } from "../src/schemas/tree-of-knowledge.js";
 import { docsRootSchema } from "../src/schemas/docs-root.js";
 import { parseYamlWithSchema } from "../src/schemas/common.js";
 import { projectSchema } from "../src/schemas/project.js";
@@ -61,6 +62,12 @@ describe("greenhouse schemas", () => {
 
     expect(docs.tracked_docs[0]?.path).toBe("README.md");
     expect(docs.tracked_docs[0]?.owns).toContain("package-scripts");
+    expect(docs.tracked_docs[0]?.covers[0]).toEqual(
+      expect.objectContaining({
+        path: "src/context/**",
+        strictness: "warning",
+      }),
+    );
   });
 
   it("validates grown repo-map.yaml", () => {
@@ -89,6 +96,16 @@ describe("greenhouse schemas", () => {
 
     expect(areaIndex.areas[0]?.path).toBe("src/");
     expect(areaIndex.areas[0]?.validation.status).toBe("covered");
+  });
+
+  it("validates grown tree-of-knowledge.yaml", () => {
+    const tree = parseYamlWithSchema(
+      readFixture("tree-of-knowledge.valid.yaml"),
+      treeOfKnowledgeSchema,
+    );
+
+    expect(tree.areas[0]?.path).toBe("src/context/");
+    expect(tree.areas[0]?.docs[0]?.strictness).toBe("warning");
   });
 
   it("validates grown repo-shape.yaml", () => {

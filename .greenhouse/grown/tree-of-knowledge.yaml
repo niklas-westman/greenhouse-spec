@@ -1,0 +1,1129 @@
+schema_version: 1
+managed_by: greenhouse-spec
+generated_at: 2026-06-25T17:58:26.597Z
+policy:
+  purpose: Generated AI-facing map from repo areas to docs, rules, validation, risks, evidence, memory, and skills.
+  authority: Generated tree pages are navigation status, not authored truth. Promote durable policy into .greenhouse/roots, docs, memory, or skills.
+  agent_reading: Start at .greenhouse/tree-of-knowledge/index.md, then open only area pages relevant to the task or changed paths.
+generated_tree:
+  index: .greenhouse/tree-of-knowledge/index.md
+  areas_dir: .greenhouse/tree-of-knowledge/areas/
+areas:
+  - id: knowledge.area.greenhouse.context
+    path: .greenhouse/context/
+    page_path: .greenhouse/tree-of-knowledge/areas/greenhouse-context.md
+    kind: greenhouse-context-area
+    purpose: Greenhouse authored contract or context surface.
+    summary: .greenhouse/context/ is greenhouse authored contract or context surface. It has no documented coverage and missing validation.
+    confidence: low
+    docs: []
+    validation:
+      status: missing
+      routes: []
+      commands: []
+      manual_checks: []
+    risks: []
+    memory_sources: []
+    skill_sources: []
+    evidence: []
+    agent_actions:
+      - Add or propose a validation route if this area receives recurring changes.
+      - Read this page before editing files in this area.
+  - id: knowledge.area.greenhouse.roots
+    path: .greenhouse/roots/
+    page_path: .greenhouse/tree-of-knowledge/areas/greenhouse-roots.md
+    kind: greenhouse-root-area
+    purpose: Greenhouse authored contract or context surface.
+    summary: .greenhouse/roots/ is greenhouse authored contract or context surface. It has no documented coverage and missing validation.
+    confidence: low
+    docs: []
+    validation:
+      status: missing
+      routes: []
+      commands: []
+      manual_checks: []
+    risks: []
+    memory_sources: []
+    skill_sources: []
+    evidence:
+      - path: .greenhouse/evidence/2026-05-24T17-01-28-083Z-verify.md
+        summary: "Verification: verify-2026-05-24; mode guarded; files README.md, docs/README.md, docs/commands.md, docs/installation.md, docs/operating-playbook.md, src/cli.ts, src/commands/doctor.ts, src/commands/tend.ts, src/commands/verify.ts, src/doctor"
+        status: pass
+        reason: recent evidence touched this area
+      - path: .greenhouse/evidence/2026-05-24T16-32-33-409Z-verify.md
+        summary: "Verification: verify-2026-05-24; mode guarded; files README.md, docs/README.md, docs/commands.md, docs/installation.md, docs/operating-playbook.md, src/cli.ts, src/commands/doctor.ts, src/commands/tend.ts, src/commands/verify.ts, src/doctor"
+        status: pass
+        reason: recent evidence touched this area
+    agent_actions:
+      - Add or propose a validation route if this area receives recurring changes.
+      - Read this page before editing files in this area.
+  - id: knowledge.area.readme.md
+    path: README.md
+    page_path: .greenhouse/tree-of-knowledge/areas/readme-md.md
+    kind: documentation-area
+    purpose: Documentation and repo knowledge surface.
+    summary: README.md is documentation and repo knowledge surface. It has no documented coverage and covered validation.
+    confidence: high
+    docs: []
+    validation:
+      status: covered
+      routes:
+        - README.md
+      commands:
+        - pnpm test:templates
+        - pnpm typecheck
+      manual_checks: []
+    risks: []
+    memory_sources: []
+    skill_sources: []
+    evidence:
+      - path: .greenhouse/evidence/2026-05-26T11-13-56-637Z-verify.md
+        summary: "Verification: verify-2026-05-26; mode guarded; files IMPLEMENTATION_GUIDE.md, README.md, docs/installation.md, greenhouse-summary.md, src/cli.ts, src/doctor/run-doctor.ts, src/native-scripts/package-script-proposals.ts, src/schemas/project."
+        status: pass
+        reason: recent evidence touched this area
+      - path: .greenhouse/evidence/2026-05-26T09-52-32-031Z-verify.md
+        summary: "Verification: verify-2026-05-26; mode patch; files README.md, assets/logo-icon.png"
+        status: pass
+        reason: recent evidence touched this area
+      - path: .greenhouse/evidence/2026-05-24T17-01-28-083Z-verify.md
+        summary: "Verification: verify-2026-05-24; mode guarded; files README.md, docs/README.md, docs/commands.md, docs/installation.md, docs/operating-playbook.md, src/cli.ts, src/commands/doctor.ts, src/commands/tend.ts, src/commands/verify.ts, src/doctor"
+        status: pass
+        reason: recent evidence touched this area
+      - path: .greenhouse/evidence/2026-05-24T16-32-33-409Z-verify.md
+        summary: "Verification: verify-2026-05-24; mode guarded; files README.md, docs/README.md, docs/commands.md, docs/installation.md, docs/operating-playbook.md, src/cli.ts, src/commands/doctor.ts, src/commands/tend.ts, src/commands/verify.ts, src/doctor"
+        status: pass
+        reason: recent evidence touched this area
+    agent_actions:
+      - Read this page before editing files in this area.
+  - id: knowledge.area.docs
+    path: docs/
+    page_path: .greenhouse/tree-of-knowledge/areas/docs.md
+    kind: documentation-area
+    purpose: Documentation and repo knowledge surface.
+    summary: docs/ is documentation and repo knowledge surface. It has no documented coverage and covered validation.
+    confidence: high
+    docs: []
+    validation:
+      status: covered
+      routes:
+        - docs/**
+      commands:
+        - pnpm test:templates
+        - pnpm typecheck
+      manual_checks: []
+    risks: []
+    memory_sources: []
+    skill_sources: []
+    evidence:
+      - path: .greenhouse/evidence/2026-05-29T19-23-30-507Z-verify.md
+        summary: "Verification: verify-2026-05-29; mode patch; files docs/installation.md, src/doctor/run-doctor.ts, src/lifecycle/package-script-onboarding.ts, src/lifecycle/run-update.ts, src/native-scripts/package-script-proposals.ts, src/proposals/build-"
+        status: pass
+        reason: recent evidence touched this area
+      - path: .greenhouse/evidence/2026-05-26T11-13-56-637Z-verify.md
+        summary: "Verification: verify-2026-05-26; mode guarded; files IMPLEMENTATION_GUIDE.md, README.md, docs/installation.md, greenhouse-summary.md, src/cli.ts, src/doctor/run-doctor.ts, src/native-scripts/package-script-proposals.ts, src/schemas/project."
+        status: pass
+        reason: recent evidence touched this area
+      - path: .greenhouse/evidence/2026-05-24T17-01-28-083Z-verify.md
+        summary: "Verification: verify-2026-05-24; mode guarded; files README.md, docs/README.md, docs/commands.md, docs/installation.md, docs/operating-playbook.md, src/cli.ts, src/commands/doctor.ts, src/commands/tend.ts, src/commands/verify.ts, src/doctor"
+        status: pass
+        reason: recent evidence touched this area
+      - path: .greenhouse/evidence/2026-05-24T16-32-33-409Z-verify.md
+        summary: "Verification: verify-2026-05-24; mode guarded; files README.md, docs/README.md, docs/commands.md, docs/installation.md, docs/operating-playbook.md, src/cli.ts, src/commands/doctor.ts, src/commands/tend.ts, src/commands/verify.ts, src/doctor"
+        status: pass
+        reason: recent evidence touched this area
+    agent_actions:
+      - Read this page before editing files in this area.
+  - id: knowledge.area.package.json
+    path: package.json
+    page_path: .greenhouse/tree-of-knowledge/areas/package-json.md
+    kind: repo-area
+    purpose: Repository area at package.json.
+    summary: package.json is repository area at package.json. It has no documented coverage and covered validation.
+    confidence: medium
+    docs: []
+    validation:
+      status: covered
+      routes:
+        - package.json
+      commands:
+        - pnpm check
+      manual_checks:
+        - greenhouse-self-config-review
+    risks: []
+    memory_sources: []
+    skill_sources: []
+    evidence:
+      - path: .greenhouse/evidence/2026-05-27T05-17-04-657Z-verify.md
+        summary: "Verification: verify-2026-05-27; mode guarded; files src/cli.ts, src/version.ts, templates/installed/project.yaml, tests/cli.test.ts, tests/lifecycle.test.ts, package.json"
+        status: pass
+        reason: recent evidence touched this area
+      - path: .greenhouse/evidence/2026-05-26T11-13-56-637Z-verify.md
+        summary: "Verification: verify-2026-05-26; mode guarded; files IMPLEMENTATION_GUIDE.md, README.md, docs/installation.md, greenhouse-summary.md, src/cli.ts, src/doctor/run-doctor.ts, src/native-scripts/package-script-proposals.ts, src/schemas/project."
+        status: pass
+        reason: recent evidence touched this area
+      - path: .greenhouse/evidence/2026-05-24T17-01-28-083Z-verify.md
+        summary: "Verification: verify-2026-05-24; mode guarded; files README.md, docs/README.md, docs/commands.md, docs/installation.md, docs/operating-playbook.md, src/cli.ts, src/commands/doctor.ts, src/commands/tend.ts, src/commands/verify.ts, src/doctor"
+        status: pass
+        reason: recent evidence touched this area
+      - path: .greenhouse/evidence/2026-05-24T16-32-33-409Z-verify.md
+        summary: "Verification: verify-2026-05-24; mode guarded; files README.md, docs/README.md, docs/commands.md, docs/installation.md, docs/operating-playbook.md, src/cli.ts, src/commands/doctor.ts, src/commands/tend.ts, src/commands/verify.ts, src/doctor"
+        status: pass
+        reason: recent evidence touched this area
+      - path: .greenhouse/evidence/2026-05-24T15-28-21-384Z-verify.md
+        summary: "Verification: verify-2026-05-24; mode guarded; files src/doctor/run-doctor.ts, src/native-scripts/package-script-proposals.ts, src/proposals/build-proposals.ts, src/tend/run-tend.ts, tests/doctor.test.ts, tests/native-scripts.test.ts, tests"
+        status: pass
+        reason: recent evidence touched this area
+    agent_actions:
+      - Read this page before editing files in this area.
+  - id: knowledge.area.pnpm.lock.yaml
+    path: pnpm-lock.yaml
+    page_path: .greenhouse/tree-of-knowledge/areas/pnpm-lock-yaml.md
+    kind: repo-area
+    purpose: Repository area at pnpm-lock.yaml.
+    summary: pnpm-lock.yaml is repository area at pnpm-lock.yaml. It has no documented coverage and covered validation.
+    confidence: medium
+    docs: []
+    validation:
+      status: covered
+      routes:
+        - pnpm-lock.yaml
+      commands:
+        - pnpm check
+      manual_checks:
+        - greenhouse-self-config-review
+    risks: []
+    memory_sources: []
+    skill_sources: []
+    evidence: []
+    agent_actions:
+      - Read this page before editing files in this area.
+  - id: knowledge.area.src
+    path: src/
+    page_path: .greenhouse/tree-of-knowledge/areas/src.md
+    kind: source-area
+    purpose: Application or repository source area.
+    summary: src/ is application or repository source area. It has no documented coverage and covered validation.
+    confidence: high
+    docs: []
+    validation:
+      status: covered
+      routes:
+        - src/cli.ts
+        - src/commands/**
+        - src/schemas/**
+        - src/proposals/**
+        - src/validation/**
+        - src/verify/**
+        - src/plant/**
+        - src/templates/**
+        - src/tend/**
+        - src/doctor/**
+        - src/discovery/**
+        - src/inspect/**
+        - src/context/**
+        - src/impact/**
+        - src/tree-of-knowledge/**
+        - src/native-scripts/**
+        - src/lifecycle/**
+        - src/status/**
+        - src/evidence/**
+      commands:
+        - pnpm test:cli
+        - pnpm test:context
+        - pnpm test:discovery
+        - pnpm test:doctor
+        - pnpm test:evidence
+        - pnpm test:impact
+        - pnpm test:inspect
+        - pnpm test:lifecycle
+        - pnpm test:native-scripts
+        - pnpm test:plant
+        - pnpm test:proposals
+        - pnpm test:schemas
+        - pnpm test:templates
+        - pnpm test:tend
+        - pnpm test:validation
+        - pnpm typecheck
+      manual_checks: []
+    risks: &a1 []
+    memory_sources: []
+    skill_sources: []
+    evidence:
+      - path: .greenhouse/evidence/2026-05-29T19-23-30-507Z-verify.md
+        summary: "Verification: verify-2026-05-29; mode patch; files docs/installation.md, src/doctor/run-doctor.ts, src/lifecycle/package-script-onboarding.ts, src/lifecycle/run-update.ts, src/native-scripts/package-script-proposals.ts, src/proposals/build-"
+        status: pass
+        reason: recent evidence touched this area
+      - path: .greenhouse/evidence/2026-05-29T11-04-23-403Z-verify.md
+        summary: "Verification: verify-2026-05-29; mode patch; files src/lifecycle/run-update.ts, tests/lifecycle.test.ts"
+        status: pass
+        reason: recent evidence touched this area
+      - path: .greenhouse/evidence/2026-05-29T10-20-56-438Z-verify.md
+        summary: "Verification: verify-2026-05-29; mode patch; files src/discovery/agent-files.ts, src/filesystem/safe-write.ts, src/lifecycle/run-update.ts, src/plant/run-plant.ts, src/proposals/apply-proposals.ts, src/proposals/read-proposals.ts, src/propo"
+        status: pass
+        reason: recent evidence touched this area
+      - path: .greenhouse/evidence/2026-05-28T15-12-42-981Z-verify.md
+        summary: "Verification: verify-2026-05-28; mode patch; files src/lifecycle/run-update.ts, src/plant/run-plant.ts, src/proposals/apply-proposals.ts, src/proposals/read-proposals.ts, src/proposals/run-proposals.ts, src/templates/installed-tree.ts, src/"
+        status: pass
+        reason: recent evidence touched this area
+      - path: .greenhouse/evidence/2026-05-28T08-01-57-716Z-verify.md
+        summary: "Verification: verify-2026-05-28; mode patch; files src/lifecycle/run-update.ts, src/plant/run-plant.ts, src/templates/installed-tree.ts, tests/lifecycle.test.ts, tests/templates.test.ts, .greenhouse/why-greenhouse-spec/, templates/installed"
+        status: pass
+        reason: recent evidence touched this area
+    agent_actions:
+      - Read this page before editing files in this area.
+  - id: knowledge.area.src.alignment
+    path: src/alignment/
+    page_path: .greenhouse/tree-of-knowledge/areas/src-alignment.md
+    kind: source-area
+    purpose: Application or repository source area.
+    summary: src/alignment/ is application or repository source area. It has no documented coverage and covered validation.
+    confidence: high
+    docs: []
+    validation: &a2
+      status: covered
+      routes:
+        - src/cli.ts
+        - src/commands/**
+        - src/schemas/**
+        - src/proposals/**
+        - src/validation/**
+        - src/verify/**
+        - src/plant/**
+        - src/templates/**
+        - src/tend/**
+        - src/doctor/**
+        - src/discovery/**
+        - src/inspect/**
+        - src/context/**
+        - src/impact/**
+        - src/tree-of-knowledge/**
+        - src/native-scripts/**
+        - src/lifecycle/**
+        - src/status/**
+        - src/evidence/**
+      commands:
+        - pnpm test:cli
+        - pnpm typecheck
+        - pnpm test:schemas
+        - pnpm test:proposals
+        - pnpm test:validation
+        - pnpm test:plant
+        - pnpm test:templates
+        - pnpm test:tend
+        - pnpm test:doctor
+        - pnpm test:discovery
+        - pnpm test:inspect
+        - pnpm test:context
+        - pnpm test:impact
+        - pnpm test:native-scripts
+        - pnpm test:lifecycle
+        - pnpm test:evidence
+      manual_checks: []
+    risks: *a1
+    memory_sources: []
+    skill_sources: []
+    evidence: []
+    agent_actions:
+      - Read this page before editing files in this area.
+  - id: knowledge.area.src.cli.ts
+    path: src/cli.ts
+    page_path: .greenhouse/tree-of-knowledge/areas/src-cli-ts.md
+    kind: source-area
+    purpose: Application or repository source area.
+    summary: src/cli.ts is application or repository source area. It has 1 documented coverage link and covered validation.
+    confidence: high
+    docs:
+      - path: docs/commands.md
+        reason: Command registration changes can alter documented CLI behavior.
+        strictness: warning
+    validation:
+      status: covered
+      routes:
+        - src/cli.ts
+      commands:
+        - pnpm test:cli
+        - pnpm typecheck
+      manual_checks: []
+    risks: *a1
+    memory_sources: []
+    skill_sources: []
+    evidence:
+      - path: .greenhouse/evidence/2026-05-27T05-17-04-657Z-verify.md
+        summary: "Verification: verify-2026-05-27; mode guarded; files src/cli.ts, src/version.ts, templates/installed/project.yaml, tests/cli.test.ts, tests/lifecycle.test.ts, package.json"
+        status: pass
+        reason: recent evidence touched this area
+      - path: .greenhouse/evidence/2026-05-26T11-13-56-637Z-verify.md
+        summary: "Verification: verify-2026-05-26; mode guarded; files IMPLEMENTATION_GUIDE.md, README.md, docs/installation.md, greenhouse-summary.md, src/cli.ts, src/doctor/run-doctor.ts, src/native-scripts/package-script-proposals.ts, src/schemas/project."
+        status: pass
+        reason: recent evidence touched this area
+      - path: .greenhouse/evidence/2026-05-24T17-01-28-083Z-verify.md
+        summary: "Verification: verify-2026-05-24; mode guarded; files README.md, docs/README.md, docs/commands.md, docs/installation.md, docs/operating-playbook.md, src/cli.ts, src/commands/doctor.ts, src/commands/tend.ts, src/commands/verify.ts, src/doctor"
+        status: pass
+        reason: recent evidence touched this area
+      - path: .greenhouse/evidence/2026-05-24T16-32-33-409Z-verify.md
+        summary: "Verification: verify-2026-05-24; mode guarded; files README.md, docs/README.md, docs/commands.md, docs/installation.md, docs/operating-playbook.md, src/cli.ts, src/commands/doctor.ts, src/commands/tend.ts, src/commands/verify.ts, src/doctor"
+        status: pass
+        reason: recent evidence touched this area
+    agent_actions:
+      - Read this page before editing files in this area.
+      - Review linked docs when behavior or public contracts change.
+  - id: knowledge.area.src.commands
+    path: src/commands/
+    page_path: .greenhouse/tree-of-knowledge/areas/src-commands.md
+    kind: source-area
+    purpose: Application or repository source area.
+    summary: src/commands/ is application or repository source area. It has 1 documented coverage link and covered validation.
+    confidence: high
+    docs:
+      - path: docs/commands.md
+        reason: Command adapter changes can alter documented CLI behavior.
+        strictness: warning
+    validation:
+      status: covered
+      routes:
+        - src/commands/**
+      commands:
+        - pnpm test:cli
+        - pnpm typecheck
+      manual_checks: []
+    risks: *a1
+    memory_sources: []
+    skill_sources: []
+    evidence:
+      - path: .greenhouse/evidence/2026-05-24T17-01-28-083Z-verify.md
+        summary: "Verification: verify-2026-05-24; mode guarded; files README.md, docs/README.md, docs/commands.md, docs/installation.md, docs/operating-playbook.md, src/cli.ts, src/commands/doctor.ts, src/commands/tend.ts, src/commands/verify.ts, src/doctor"
+        status: pass
+        reason: recent evidence touched this area
+      - path: .greenhouse/evidence/2026-05-24T16-32-33-409Z-verify.md
+        summary: "Verification: verify-2026-05-24; mode guarded; files README.md, docs/README.md, docs/commands.md, docs/installation.md, docs/operating-playbook.md, src/cli.ts, src/commands/doctor.ts, src/commands/tend.ts, src/commands/verify.ts, src/doctor"
+        status: pass
+        reason: recent evidence touched this area
+    agent_actions:
+      - Read this page before editing files in this area.
+      - Review linked docs when behavior or public contracts change.
+  - id: knowledge.area.src.context
+    path: src/context/
+    page_path: .greenhouse/tree-of-knowledge/areas/src-context.md
+    kind: source-area
+    purpose: Application or repository source area.
+    summary: src/context/ is application or repository source area. It has 1 documented coverage link and covered validation.
+    confidence: high
+    docs:
+      - path: docs/commands.md
+        reason: Context command behavior and report shape are documented here.
+        strictness: warning
+    validation:
+      status: covered
+      routes:
+        - src/context/**
+      commands:
+        - pnpm test:context
+        - pnpm typecheck
+      manual_checks: []
+    risks: *a1
+    memory_sources: []
+    skill_sources: []
+    evidence: []
+    agent_actions:
+      - Read this page before editing files in this area.
+      - Review linked docs when behavior or public contracts change.
+  - id: knowledge.area.src.discovery
+    path: src/discovery/
+    page_path: .greenhouse/tree-of-knowledge/areas/src-discovery.md
+    kind: source-area
+    purpose: Application or repository source area.
+    summary: src/discovery/ is application or repository source area. It has 1 documented coverage link and covered validation.
+    confidence: high
+    docs:
+      - path: docs/architecture.md
+        reason: Architecture docs describe discovery as the source of generated repo intelligence.
+        strictness: warning
+    validation:
+      status: covered
+      routes:
+        - src/discovery/**
+      commands:
+        - pnpm test:discovery
+        - pnpm typecheck
+      manual_checks: []
+    risks: *a1
+    memory_sources: []
+    skill_sources: []
+    evidence:
+      - path: .greenhouse/evidence/2026-05-29T10-20-56-438Z-verify.md
+        summary: "Verification: verify-2026-05-29; mode patch; files src/discovery/agent-files.ts, src/filesystem/safe-write.ts, src/lifecycle/run-update.ts, src/plant/run-plant.ts, src/proposals/apply-proposals.ts, src/proposals/read-proposals.ts, src/propo"
+        status: pass
+        reason: recent evidence touched this area
+    agent_actions:
+      - Read this page before editing files in this area.
+      - Review linked docs when behavior or public contracts change.
+  - id: knowledge.area.src.doctor
+    path: src/doctor/
+    page_path: .greenhouse/tree-of-knowledge/areas/src-doctor.md
+    kind: source-area
+    purpose: Application or repository source area.
+    summary: src/doctor/ is application or repository source area. It has no documented coverage and covered validation.
+    confidence: high
+    docs: []
+    validation:
+      status: covered
+      routes:
+        - src/doctor/**
+      commands:
+        - pnpm test:doctor
+        - pnpm typecheck
+      manual_checks: []
+    risks: *a1
+    memory_sources: []
+    skill_sources: []
+    evidence:
+      - path: .greenhouse/evidence/2026-05-29T19-23-30-507Z-verify.md
+        summary: "Verification: verify-2026-05-29; mode patch; files docs/installation.md, src/doctor/run-doctor.ts, src/lifecycle/package-script-onboarding.ts, src/lifecycle/run-update.ts, src/native-scripts/package-script-proposals.ts, src/proposals/build-"
+        status: pass
+        reason: recent evidence touched this area
+      - path: .greenhouse/evidence/2026-05-27T12-02-05-087Z-verify.md
+        summary: "Verification: verify-2026-05-27; mode patch; files src/doctor/run-doctor.ts, src/lifecycle/run-init.ts, src/schemas/docs-root.ts, tests/doctor.test.ts, tests/lifecycle.test.ts"
+        status: pass
+        reason: recent evidence touched this area
+      - path: .greenhouse/evidence/2026-05-26T11-13-56-637Z-verify.md
+        summary: "Verification: verify-2026-05-26; mode guarded; files IMPLEMENTATION_GUIDE.md, README.md, docs/installation.md, greenhouse-summary.md, src/cli.ts, src/doctor/run-doctor.ts, src/native-scripts/package-script-proposals.ts, src/schemas/project."
+        status: pass
+        reason: recent evidence touched this area
+      - path: .greenhouse/evidence/2026-05-24T17-01-28-083Z-verify.md
+        summary: "Verification: verify-2026-05-24; mode guarded; files README.md, docs/README.md, docs/commands.md, docs/installation.md, docs/operating-playbook.md, src/cli.ts, src/commands/doctor.ts, src/commands/tend.ts, src/commands/verify.ts, src/doctor"
+        status: pass
+        reason: recent evidence touched this area
+      - path: .greenhouse/evidence/2026-05-24T16-32-33-409Z-verify.md
+        summary: "Verification: verify-2026-05-24; mode guarded; files README.md, docs/README.md, docs/commands.md, docs/installation.md, docs/operating-playbook.md, src/cli.ts, src/commands/doctor.ts, src/commands/tend.ts, src/commands/verify.ts, src/doctor"
+        status: pass
+        reason: recent evidence touched this area
+    agent_actions:
+      - Read this page before editing files in this area.
+  - id: knowledge.area.src.evidence
+    path: src/evidence/
+    page_path: .greenhouse/tree-of-knowledge/areas/src-evidence.md
+    kind: source-area
+    purpose: Application or repository source area.
+    summary: src/evidence/ is application or repository source area. It has no documented coverage and covered validation.
+    confidence: high
+    docs: []
+    validation:
+      status: covered
+      routes:
+        - src/evidence/**
+      commands:
+        - pnpm test:evidence
+        - pnpm typecheck
+      manual_checks: []
+    risks: *a1
+    memory_sources: []
+    skill_sources: []
+    evidence:
+      - path: .greenhouse/evidence/2026-05-24T17-01-28-083Z-verify.md
+        summary: "Verification: verify-2026-05-24; mode guarded; files README.md, docs/README.md, docs/commands.md, docs/installation.md, docs/operating-playbook.md, src/cli.ts, src/commands/doctor.ts, src/commands/tend.ts, src/commands/verify.ts, src/doctor"
+        status: pass
+        reason: recent evidence touched this area
+      - path: .greenhouse/evidence/2026-05-24T16-32-33-409Z-verify.md
+        summary: "Verification: verify-2026-05-24; mode guarded; files README.md, docs/README.md, docs/commands.md, docs/installation.md, docs/operating-playbook.md, src/cli.ts, src/commands/doctor.ts, src/commands/tend.ts, src/commands/verify.ts, src/doctor"
+        status: pass
+        reason: recent evidence touched this area
+    agent_actions:
+      - Read this page before editing files in this area.
+  - id: knowledge.area.src.filesystem
+    path: src/filesystem/
+    page_path: .greenhouse/tree-of-knowledge/areas/src-filesystem.md
+    kind: source-area
+    purpose: Application or repository source area.
+    summary: src/filesystem/ is application or repository source area. It has no documented coverage and covered validation.
+    confidence: high
+    docs: []
+    validation: *a2
+    risks: *a1
+    memory_sources: []
+    skill_sources: []
+    evidence:
+      - path: .greenhouse/evidence/2026-05-29T10-20-56-438Z-verify.md
+        summary: "Verification: verify-2026-05-29; mode patch; files src/discovery/agent-files.ts, src/filesystem/safe-write.ts, src/lifecycle/run-update.ts, src/plant/run-plant.ts, src/proposals/apply-proposals.ts, src/proposals/read-proposals.ts, src/propo"
+        status: pass
+        reason: recent evidence touched this area
+    agent_actions:
+      - Read this page before editing files in this area.
+  - id: knowledge.area.src.impact
+    path: src/impact/
+    page_path: .greenhouse/tree-of-knowledge/areas/src-impact.md
+    kind: source-area
+    purpose: Application or repository source area.
+    summary: src/impact/ is application or repository source area. It has no documented coverage and covered validation.
+    confidence: high
+    docs: []
+    validation:
+      status: covered
+      routes:
+        - src/impact/**
+      commands:
+        - pnpm test:impact
+        - pnpm typecheck
+      manual_checks: []
+    risks: *a1
+    memory_sources: []
+    skill_sources: []
+    evidence: []
+    agent_actions:
+      - Read this page before editing files in this area.
+  - id: knowledge.area.src.inspect
+    path: src/inspect/
+    page_path: .greenhouse/tree-of-knowledge/areas/src-inspect.md
+    kind: source-area
+    purpose: Application or repository source area.
+    summary: src/inspect/ is application or repository source area. It has 1 documented coverage link and covered validation.
+    confidence: high
+    docs:
+      - path: docs/architecture.md
+        reason: Architecture docs describe inspect as the generated status refresh flow.
+        strictness: warning
+    validation:
+      status: covered
+      routes:
+        - src/inspect/**
+      commands:
+        - pnpm test:inspect
+        - pnpm typecheck
+      manual_checks: []
+    risks: *a1
+    memory_sources: []
+    skill_sources: []
+    evidence: []
+    agent_actions:
+      - Read this page before editing files in this area.
+      - Review linked docs when behavior or public contracts change.
+  - id: knowledge.area.src.lifecycle
+    path: src/lifecycle/
+    page_path: .greenhouse/tree-of-knowledge/areas/src-lifecycle.md
+    kind: source-area
+    purpose: Application or repository source area.
+    summary: src/lifecycle/ is application or repository source area. It has no documented coverage and covered validation.
+    confidence: high
+    docs: []
+    validation:
+      status: covered
+      routes:
+        - src/lifecycle/**
+      commands:
+        - pnpm test:lifecycle
+        - pnpm typecheck
+      manual_checks: []
+    risks: *a1
+    memory_sources: []
+    skill_sources: []
+    evidence:
+      - path: .greenhouse/evidence/2026-05-29T19-23-30-507Z-verify.md
+        summary: "Verification: verify-2026-05-29; mode patch; files docs/installation.md, src/doctor/run-doctor.ts, src/lifecycle/package-script-onboarding.ts, src/lifecycle/run-update.ts, src/native-scripts/package-script-proposals.ts, src/proposals/build-"
+        status: pass
+        reason: recent evidence touched this area
+      - path: .greenhouse/evidence/2026-05-29T11-04-23-403Z-verify.md
+        summary: "Verification: verify-2026-05-29; mode patch; files src/lifecycle/run-update.ts, tests/lifecycle.test.ts"
+        status: pass
+        reason: recent evidence touched this area
+      - path: .greenhouse/evidence/2026-05-29T10-20-56-438Z-verify.md
+        summary: "Verification: verify-2026-05-29; mode patch; files src/discovery/agent-files.ts, src/filesystem/safe-write.ts, src/lifecycle/run-update.ts, src/plant/run-plant.ts, src/proposals/apply-proposals.ts, src/proposals/read-proposals.ts, src/propo"
+        status: pass
+        reason: recent evidence touched this area
+      - path: .greenhouse/evidence/2026-05-28T15-12-42-981Z-verify.md
+        summary: "Verification: verify-2026-05-28; mode patch; files src/lifecycle/run-update.ts, src/plant/run-plant.ts, src/proposals/apply-proposals.ts, src/proposals/read-proposals.ts, src/proposals/run-proposals.ts, src/templates/installed-tree.ts, src/"
+        status: pass
+        reason: recent evidence touched this area
+      - path: .greenhouse/evidence/2026-05-28T08-01-57-716Z-verify.md
+        summary: "Verification: verify-2026-05-28; mode patch; files src/lifecycle/run-update.ts, src/plant/run-plant.ts, src/templates/installed-tree.ts, tests/lifecycle.test.ts, tests/templates.test.ts, .greenhouse/why-greenhouse-spec/, templates/installed"
+        status: pass
+        reason: recent evidence touched this area
+    agent_actions:
+      - Read this page before editing files in this area.
+  - id: knowledge.area.src.native.scripts
+    path: src/native-scripts/
+    page_path: .greenhouse/tree-of-knowledge/areas/src-native-scripts.md
+    kind: source-area
+    purpose: Application or repository source area.
+    summary: src/native-scripts/ is application or repository source area. It has no documented coverage and covered validation.
+    confidence: high
+    docs: []
+    validation:
+      status: covered
+      routes:
+        - src/native-scripts/**
+      commands:
+        - pnpm test:native-scripts
+        - pnpm typecheck
+      manual_checks: []
+    risks: *a1
+    memory_sources: []
+    skill_sources: []
+    evidence:
+      - path: .greenhouse/evidence/2026-05-29T19-23-30-507Z-verify.md
+        summary: "Verification: verify-2026-05-29; mode patch; files docs/installation.md, src/doctor/run-doctor.ts, src/lifecycle/package-script-onboarding.ts, src/lifecycle/run-update.ts, src/native-scripts/package-script-proposals.ts, src/proposals/build-"
+        status: pass
+        reason: recent evidence touched this area
+      - path: .greenhouse/evidence/2026-05-26T11-13-56-637Z-verify.md
+        summary: "Verification: verify-2026-05-26; mode guarded; files IMPLEMENTATION_GUIDE.md, README.md, docs/installation.md, greenhouse-summary.md, src/cli.ts, src/doctor/run-doctor.ts, src/native-scripts/package-script-proposals.ts, src/schemas/project."
+        status: pass
+        reason: recent evidence touched this area
+      - path: .greenhouse/evidence/2026-05-24T17-01-28-083Z-verify.md
+        summary: "Verification: verify-2026-05-24; mode guarded; files README.md, docs/README.md, docs/commands.md, docs/installation.md, docs/operating-playbook.md, src/cli.ts, src/commands/doctor.ts, src/commands/tend.ts, src/commands/verify.ts, src/doctor"
+        status: pass
+        reason: recent evidence touched this area
+      - path: .greenhouse/evidence/2026-05-24T16-32-33-409Z-verify.md
+        summary: "Verification: verify-2026-05-24; mode guarded; files README.md, docs/README.md, docs/commands.md, docs/installation.md, docs/operating-playbook.md, src/cli.ts, src/commands/doctor.ts, src/commands/tend.ts, src/commands/verify.ts, src/doctor"
+        status: pass
+        reason: recent evidence touched this area
+      - path: .greenhouse/evidence/2026-05-24T15-28-21-384Z-verify.md
+        summary: "Verification: verify-2026-05-24; mode guarded; files src/doctor/run-doctor.ts, src/native-scripts/package-script-proposals.ts, src/proposals/build-proposals.ts, src/tend/run-tend.ts, tests/doctor.test.ts, tests/native-scripts.test.ts, tests"
+        status: pass
+        reason: recent evidence touched this area
+    agent_actions:
+      - Read this page before editing files in this area.
+  - id: knowledge.area.src.plant
+    path: src/plant/
+    page_path: .greenhouse/tree-of-knowledge/areas/src-plant.md
+    kind: source-area
+    purpose: Application or repository source area.
+    summary: src/plant/ is application or repository source area. It has no documented coverage and covered validation.
+    confidence: high
+    docs: []
+    validation:
+      status: covered
+      routes:
+        - src/plant/**
+      commands:
+        - pnpm test:plant
+        - pnpm typecheck
+      manual_checks: []
+    risks: *a1
+    memory_sources: []
+    skill_sources: []
+    evidence:
+      - path: .greenhouse/evidence/2026-05-29T10-20-56-438Z-verify.md
+        summary: "Verification: verify-2026-05-29; mode patch; files src/discovery/agent-files.ts, src/filesystem/safe-write.ts, src/lifecycle/run-update.ts, src/plant/run-plant.ts, src/proposals/apply-proposals.ts, src/proposals/read-proposals.ts, src/propo"
+        status: pass
+        reason: recent evidence touched this area
+      - path: .greenhouse/evidence/2026-05-28T15-12-42-981Z-verify.md
+        summary: "Verification: verify-2026-05-28; mode patch; files src/lifecycle/run-update.ts, src/plant/run-plant.ts, src/proposals/apply-proposals.ts, src/proposals/read-proposals.ts, src/proposals/run-proposals.ts, src/templates/installed-tree.ts, src/"
+        status: pass
+        reason: recent evidence touched this area
+      - path: .greenhouse/evidence/2026-05-28T08-01-57-716Z-verify.md
+        summary: "Verification: verify-2026-05-28; mode patch; files src/lifecycle/run-update.ts, src/plant/run-plant.ts, src/templates/installed-tree.ts, tests/lifecycle.test.ts, tests/templates.test.ts, .greenhouse/why-greenhouse-spec/, templates/installed"
+        status: pass
+        reason: recent evidence touched this area
+      - path: .greenhouse/evidence/2026-05-24T17-01-28-083Z-verify.md
+        summary: "Verification: verify-2026-05-24; mode guarded; files README.md, docs/README.md, docs/commands.md, docs/installation.md, docs/operating-playbook.md, src/cli.ts, src/commands/doctor.ts, src/commands/tend.ts, src/commands/verify.ts, src/doctor"
+        status: pass
+        reason: recent evidence touched this area
+      - path: .greenhouse/evidence/2026-05-24T16-32-33-409Z-verify.md
+        summary: "Verification: verify-2026-05-24; mode guarded; files README.md, docs/README.md, docs/commands.md, docs/installation.md, docs/operating-playbook.md, src/cli.ts, src/commands/doctor.ts, src/commands/tend.ts, src/commands/verify.ts, src/doctor"
+        status: pass
+        reason: recent evidence touched this area
+    agent_actions:
+      - Read this page before editing files in this area.
+  - id: knowledge.area.src.proposal.lanes
+    path: src/proposal-lanes/
+    page_path: .greenhouse/tree-of-knowledge/areas/src-proposal-lanes.md
+    kind: source-area
+    purpose: Application or repository source area.
+    summary: src/proposal-lanes/ is application or repository source area. It has no documented coverage and covered validation.
+    confidence: high
+    docs: []
+    validation: *a2
+    risks: *a1
+    memory_sources: []
+    skill_sources: []
+    evidence: []
+    agent_actions:
+      - Read this page before editing files in this area.
+  - id: knowledge.area.src.proposals
+    path: src/proposals/
+    page_path: .greenhouse/tree-of-knowledge/areas/src-proposals.md
+    kind: source-area
+    purpose: Application or repository source area.
+    summary: src/proposals/ is application or repository source area. It has no documented coverage and covered validation.
+    confidence: high
+    docs: []
+    validation:
+      status: covered
+      routes:
+        - src/proposals/**
+      commands:
+        - pnpm test:proposals
+        - pnpm typecheck
+      manual_checks: []
+    risks: *a1
+    memory_sources: []
+    skill_sources: []
+    evidence:
+      - path: .greenhouse/evidence/2026-05-29T19-23-30-507Z-verify.md
+        summary: "Verification: verify-2026-05-29; mode patch; files docs/installation.md, src/doctor/run-doctor.ts, src/lifecycle/package-script-onboarding.ts, src/lifecycle/run-update.ts, src/native-scripts/package-script-proposals.ts, src/proposals/build-"
+        status: pass
+        reason: recent evidence touched this area
+      - path: .greenhouse/evidence/2026-05-29T10-20-56-438Z-verify.md
+        summary: "Verification: verify-2026-05-29; mode patch; files src/discovery/agent-files.ts, src/filesystem/safe-write.ts, src/lifecycle/run-update.ts, src/plant/run-plant.ts, src/proposals/apply-proposals.ts, src/proposals/read-proposals.ts, src/propo"
+        status: pass
+        reason: recent evidence touched this area
+      - path: .greenhouse/evidence/2026-05-28T15-12-42-981Z-verify.md
+        summary: "Verification: verify-2026-05-28; mode patch; files src/lifecycle/run-update.ts, src/plant/run-plant.ts, src/proposals/apply-proposals.ts, src/proposals/read-proposals.ts, src/proposals/run-proposals.ts, src/templates/installed-tree.ts, src/"
+        status: pass
+        reason: recent evidence touched this area
+      - path: .greenhouse/evidence/2026-05-24T17-01-28-083Z-verify.md
+        summary: "Verification: verify-2026-05-24; mode guarded; files README.md, docs/README.md, docs/commands.md, docs/installation.md, docs/operating-playbook.md, src/cli.ts, src/commands/doctor.ts, src/commands/tend.ts, src/commands/verify.ts, src/doctor"
+        status: pass
+        reason: recent evidence touched this area
+      - path: .greenhouse/evidence/2026-05-24T16-32-33-409Z-verify.md
+        summary: "Verification: verify-2026-05-24; mode guarded; files README.md, docs/README.md, docs/commands.md, docs/installation.md, docs/operating-playbook.md, src/cli.ts, src/commands/doctor.ts, src/commands/tend.ts, src/commands/verify.ts, src/doctor"
+        status: pass
+        reason: recent evidence touched this area
+    agent_actions:
+      - Read this page before editing files in this area.
+  - id: knowledge.area.src.schemas
+    path: src/schemas/
+    page_path: .greenhouse/tree-of-knowledge/areas/src-schemas.md
+    kind: source-area
+    purpose: Application or repository source area.
+    summary: src/schemas/ is application or repository source area. It has no documented coverage and covered validation.
+    confidence: high
+    docs: []
+    validation:
+      status: covered
+      routes:
+        - src/schemas/**
+      commands:
+        - pnpm test:schemas
+        - pnpm typecheck
+      manual_checks: []
+    risks: *a1
+    memory_sources: []
+    skill_sources: []
+    evidence:
+      - path: .greenhouse/evidence/2026-05-27T12-02-05-087Z-verify.md
+        summary: "Verification: verify-2026-05-27; mode patch; files src/doctor/run-doctor.ts, src/lifecycle/run-init.ts, src/schemas/docs-root.ts, tests/doctor.test.ts, tests/lifecycle.test.ts"
+        status: pass
+        reason: recent evidence touched this area
+      - path: .greenhouse/evidence/2026-05-26T11-13-56-637Z-verify.md
+        summary: "Verification: verify-2026-05-26; mode guarded; files IMPLEMENTATION_GUIDE.md, README.md, docs/installation.md, greenhouse-summary.md, src/cli.ts, src/doctor/run-doctor.ts, src/native-scripts/package-script-proposals.ts, src/schemas/project."
+        status: pass
+        reason: recent evidence touched this area
+      - path: .greenhouse/evidence/2026-05-24T17-01-28-083Z-verify.md
+        summary: "Verification: verify-2026-05-24; mode guarded; files README.md, docs/README.md, docs/commands.md, docs/installation.md, docs/operating-playbook.md, src/cli.ts, src/commands/doctor.ts, src/commands/tend.ts, src/commands/verify.ts, src/doctor"
+        status: pass
+        reason: recent evidence touched this area
+      - path: .greenhouse/evidence/2026-05-24T16-32-33-409Z-verify.md
+        summary: "Verification: verify-2026-05-24; mode guarded; files README.md, docs/README.md, docs/commands.md, docs/installation.md, docs/operating-playbook.md, src/cli.ts, src/commands/doctor.ts, src/commands/tend.ts, src/commands/verify.ts, src/doctor"
+        status: pass
+        reason: recent evidence touched this area
+    agent_actions:
+      - Read this page before editing files in this area.
+  - id: knowledge.area.src.status
+    path: src/status/
+    page_path: .greenhouse/tree-of-knowledge/areas/src-status.md
+    kind: source-area
+    purpose: Application or repository source area.
+    summary: src/status/ is application or repository source area. It has 1 documented coverage link and covered validation.
+    confidence: high
+    docs:
+      - path: docs/validation-routing.md
+        reason: Status impact and health behavior are documented here.
+        strictness: guarded
+    validation:
+      status: covered
+      routes:
+        - src/status/**
+      commands:
+        - pnpm test:lifecycle
+        - pnpm typecheck
+      manual_checks: []
+    risks: *a1
+    memory_sources: []
+    skill_sources: []
+    evidence:
+      - path: .greenhouse/evidence/2026-05-24T17-01-28-083Z-verify.md
+        summary: "Verification: verify-2026-05-24; mode guarded; files README.md, docs/README.md, docs/commands.md, docs/installation.md, docs/operating-playbook.md, src/cli.ts, src/commands/doctor.ts, src/commands/tend.ts, src/commands/verify.ts, src/doctor"
+        status: pass
+        reason: recent evidence touched this area
+      - path: .greenhouse/evidence/2026-05-24T16-32-33-409Z-verify.md
+        summary: "Verification: verify-2026-05-24; mode guarded; files README.md, docs/README.md, docs/commands.md, docs/installation.md, docs/operating-playbook.md, src/cli.ts, src/commands/doctor.ts, src/commands/tend.ts, src/commands/verify.ts, src/doctor"
+        status: pass
+        reason: recent evidence touched this area
+    agent_actions:
+      - Read this page before editing files in this area.
+      - Review linked docs when behavior or public contracts change.
+  - id: knowledge.area.src.templates
+    path: src/templates/
+    page_path: .greenhouse/tree-of-knowledge/areas/src-templates.md
+    kind: source-area
+    purpose: Application or repository source area.
+    summary: src/templates/ is application or repository source area. It has no documented coverage and covered validation.
+    confidence: high
+    docs: []
+    validation:
+      status: covered
+      routes:
+        - src/templates/**
+      commands:
+        - pnpm test:templates
+        - pnpm typecheck
+      manual_checks: []
+    risks: *a1
+    memory_sources: []
+    skill_sources: []
+    evidence:
+      - path: .greenhouse/evidence/2026-05-29T10-20-56-438Z-verify.md
+        summary: "Verification: verify-2026-05-29; mode patch; files src/discovery/agent-files.ts, src/filesystem/safe-write.ts, src/lifecycle/run-update.ts, src/plant/run-plant.ts, src/proposals/apply-proposals.ts, src/proposals/read-proposals.ts, src/propo"
+        status: pass
+        reason: recent evidence touched this area
+      - path: .greenhouse/evidence/2026-05-28T15-12-42-981Z-verify.md
+        summary: "Verification: verify-2026-05-28; mode patch; files src/lifecycle/run-update.ts, src/plant/run-plant.ts, src/proposals/apply-proposals.ts, src/proposals/read-proposals.ts, src/proposals/run-proposals.ts, src/templates/installed-tree.ts, src/"
+        status: pass
+        reason: recent evidence touched this area
+      - path: .greenhouse/evidence/2026-05-28T08-01-57-716Z-verify.md
+        summary: "Verification: verify-2026-05-28; mode patch; files src/lifecycle/run-update.ts, src/plant/run-plant.ts, src/templates/installed-tree.ts, tests/lifecycle.test.ts, tests/templates.test.ts, .greenhouse/why-greenhouse-spec/, templates/installed"
+        status: pass
+        reason: recent evidence touched this area
+    agent_actions:
+      - Read this page before editing files in this area.
+  - id: knowledge.area.src.tend
+    path: src/tend/
+    page_path: .greenhouse/tree-of-knowledge/areas/src-tend.md
+    kind: source-area
+    purpose: Application or repository source area.
+    summary: src/tend/ is application or repository source area. It has 1 documented coverage link and covered validation.
+    confidence: high
+    docs:
+      - path: docs/validation-routing.md
+        reason: Tend finish-gate behavior is documented here.
+        strictness: guarded
+    validation:
+      status: covered
+      routes:
+        - src/tend/**
+      commands:
+        - pnpm test:tend
+        - pnpm typecheck
+      manual_checks: []
+    risks: *a1
+    memory_sources: []
+    skill_sources: []
+    evidence:
+      - path: .greenhouse/evidence/2026-05-29T10-20-56-438Z-verify.md
+        summary: "Verification: verify-2026-05-29; mode patch; files src/discovery/agent-files.ts, src/filesystem/safe-write.ts, src/lifecycle/run-update.ts, src/plant/run-plant.ts, src/proposals/apply-proposals.ts, src/proposals/read-proposals.ts, src/propo"
+        status: pass
+        reason: recent evidence touched this area
+      - path: .greenhouse/evidence/2026-05-28T15-12-42-981Z-verify.md
+        summary: "Verification: verify-2026-05-28; mode patch; files src/lifecycle/run-update.ts, src/plant/run-plant.ts, src/proposals/apply-proposals.ts, src/proposals/read-proposals.ts, src/proposals/run-proposals.ts, src/templates/installed-tree.ts, src/"
+        status: pass
+        reason: recent evidence touched this area
+      - path: .greenhouse/evidence/2026-05-24T17-01-28-083Z-verify.md
+        summary: "Verification: verify-2026-05-24; mode guarded; files README.md, docs/README.md, docs/commands.md, docs/installation.md, docs/operating-playbook.md, src/cli.ts, src/commands/doctor.ts, src/commands/tend.ts, src/commands/verify.ts, src/doctor"
+        status: pass
+        reason: recent evidence touched this area
+      - path: .greenhouse/evidence/2026-05-24T16-32-33-409Z-verify.md
+        summary: "Verification: verify-2026-05-24; mode guarded; files README.md, docs/README.md, docs/commands.md, docs/installation.md, docs/operating-playbook.md, src/cli.ts, src/commands/doctor.ts, src/commands/tend.ts, src/commands/verify.ts, src/doctor"
+        status: pass
+        reason: recent evidence touched this area
+      - path: .greenhouse/evidence/2026-05-24T15-28-21-384Z-verify.md
+        summary: "Verification: verify-2026-05-24; mode guarded; files src/doctor/run-doctor.ts, src/native-scripts/package-script-proposals.ts, src/proposals/build-proposals.ts, src/tend/run-tend.ts, tests/doctor.test.ts, tests/native-scripts.test.ts, tests"
+        status: pass
+        reason: recent evidence touched this area
+    agent_actions:
+      - Read this page before editing files in this area.
+      - Review linked docs when behavior or public contracts change.
+  - id: knowledge.area.src.tree.of.knowledge
+    path: src/tree-of-knowledge/
+    page_path: .greenhouse/tree-of-knowledge/areas/src-tree-of-knowledge.md
+    kind: source-area
+    purpose: Application or repository source area.
+    summary: src/tree-of-knowledge/ is application or repository source area. It has 1 documented coverage link and covered validation.
+    confidence: high
+    docs:
+      - path: docs/architecture.md
+        reason: Architecture docs describe generated status, authority boundaries, and the tree-of-knowledge role.
+        strictness: warning
+    validation:
+      status: covered
+      routes:
+        - src/tree-of-knowledge/**
+      commands:
+        - pnpm test:context
+        - pnpm test:discovery
+        - pnpm test:schemas
+        - pnpm typecheck
+      manual_checks: []
+    risks: *a1
+    memory_sources: []
+    skill_sources: []
+    evidence: []
+    agent_actions:
+      - Read this page before editing files in this area.
+      - Review linked docs when behavior or public contracts change.
+  - id: knowledge.area.src.validation
+    path: src/validation/
+    page_path: .greenhouse/tree-of-knowledge/areas/src-validation.md
+    kind: source-area
+    purpose: Application or repository source area.
+    summary: src/validation/ is application or repository source area. It has 1 documented coverage link and covered validation.
+    confidence: high
+    docs:
+      - path: docs/validation-routing.md
+        reason: Validation routing behavior is documented here.
+        strictness: guarded
+    validation:
+      status: covered
+      routes:
+        - src/validation/**
+      commands:
+        - pnpm test:validation
+        - pnpm typecheck
+      manual_checks: []
+    risks: *a1
+    memory_sources: []
+    skill_sources: []
+    evidence:
+      - path: .greenhouse/evidence/2026-05-29T10-20-56-438Z-verify.md
+        summary: "Verification: verify-2026-05-29; mode patch; files src/discovery/agent-files.ts, src/filesystem/safe-write.ts, src/lifecycle/run-update.ts, src/plant/run-plant.ts, src/proposals/apply-proposals.ts, src/proposals/read-proposals.ts, src/propo"
+        status: pass
+        reason: recent evidence touched this area
+    agent_actions:
+      - Read this page before editing files in this area.
+      - Review linked docs when behavior or public contracts change.
+  - id: knowledge.area.src.verify
+    path: src/verify/
+    page_path: .greenhouse/tree-of-knowledge/areas/src-verify.md
+    kind: source-area
+    purpose: Application or repository source area.
+    summary: src/verify/ is application or repository source area. It has 1 documented coverage link and covered validation.
+    confidence: high
+    docs:
+      - path: docs/validation-routing.md
+        reason: Verify output and routing behavior are documented here.
+        strictness: guarded
+    validation:
+      status: covered
+      routes:
+        - src/verify/**
+      commands:
+        - pnpm test:validation
+        - pnpm typecheck
+      manual_checks: []
+    risks: *a1
+    memory_sources: []
+    skill_sources: []
+    evidence:
+      - path: .greenhouse/evidence/2026-05-24T17-01-28-083Z-verify.md
+        summary: "Verification: verify-2026-05-24; mode guarded; files README.md, docs/README.md, docs/commands.md, docs/installation.md, docs/operating-playbook.md, src/cli.ts, src/commands/doctor.ts, src/commands/tend.ts, src/commands/verify.ts, src/doctor"
+        status: pass
+        reason: recent evidence touched this area
+      - path: .greenhouse/evidence/2026-05-24T16-32-33-409Z-verify.md
+        summary: "Verification: verify-2026-05-24; mode guarded; files README.md, docs/README.md, docs/commands.md, docs/installation.md, docs/operating-playbook.md, src/cli.ts, src/commands/doctor.ts, src/commands/tend.ts, src/commands/verify.ts, src/doctor"
+        status: pass
+        reason: recent evidence touched this area
+    agent_actions:
+      - Read this page before editing files in this area.
+      - Review linked docs when behavior or public contracts change.
+  - id: knowledge.area.templates
+    path: templates/
+    page_path: .greenhouse/tree-of-knowledge/areas/templates.md
+    kind: repo-area
+    purpose: Repository area at templates/.
+    summary: templates/ is repository area at templates/. It has no documented coverage and covered validation.
+    confidence: medium
+    docs: []
+    validation:
+      status: covered
+      routes:
+        - templates/**
+      commands:
+        - pnpm test:templates
+        - pnpm typecheck
+      manual_checks: []
+    risks: []
+    memory_sources: []
+    skill_sources: []
+    evidence:
+      - path: .greenhouse/evidence/2026-05-29T10-20-56-438Z-verify.md
+        summary: "Verification: verify-2026-05-29; mode patch; files src/discovery/agent-files.ts, src/filesystem/safe-write.ts, src/lifecycle/run-update.ts, src/plant/run-plant.ts, src/proposals/apply-proposals.ts, src/proposals/read-proposals.ts, src/propo"
+        status: pass
+        reason: recent evidence touched this area
+      - path: .greenhouse/evidence/2026-05-28T15-12-42-981Z-verify.md
+        summary: "Verification: verify-2026-05-28; mode patch; files src/lifecycle/run-update.ts, src/plant/run-plant.ts, src/proposals/apply-proposals.ts, src/proposals/read-proposals.ts, src/proposals/run-proposals.ts, src/templates/installed-tree.ts, src/"
+        status: pass
+        reason: recent evidence touched this area
+      - path: .greenhouse/evidence/2026-05-28T08-01-57-716Z-verify.md
+        summary: "Verification: verify-2026-05-28; mode patch; files src/lifecycle/run-update.ts, src/plant/run-plant.ts, src/templates/installed-tree.ts, tests/lifecycle.test.ts, tests/templates.test.ts, .greenhouse/why-greenhouse-spec/, templates/installed"
+        status: pass
+        reason: recent evidence touched this area
+      - path: .greenhouse/evidence/2026-05-27T05-17-04-657Z-verify.md
+        summary: "Verification: verify-2026-05-27; mode guarded; files src/cli.ts, src/version.ts, templates/installed/project.yaml, tests/cli.test.ts, tests/lifecycle.test.ts, package.json"
+        status: pass
+        reason: recent evidence touched this area
+      - path: .greenhouse/evidence/2026-05-26T11-13-56-637Z-verify.md
+        summary: "Verification: verify-2026-05-26; mode guarded; files IMPLEMENTATION_GUIDE.md, README.md, docs/installation.md, greenhouse-summary.md, src/cli.ts, src/doctor/run-doctor.ts, src/native-scripts/package-script-proposals.ts, src/schemas/project."
+        status: pass
+        reason: recent evidence touched this area
+    agent_actions:
+      - Read this page before editing files in this area.
+  - id: knowledge.area.tests
+    path: tests/
+    page_path: .greenhouse/tree-of-knowledge/areas/tests.md
+    kind: test-area
+    purpose: Automated test coverage and fixtures.
+    summary: tests/ is automated test coverage and fixtures. It has no documented coverage and missing validation.
+    confidence: medium
+    docs: []
+    validation:
+      status: missing
+      routes: []
+      commands: []
+      manual_checks: []
+    risks: []
+    memory_sources: []
+    skill_sources: []
+    evidence:
+      - path: .greenhouse/evidence/2026-05-29T19-23-30-507Z-verify.md
+        summary: "Verification: verify-2026-05-29; mode patch; files docs/installation.md, src/doctor/run-doctor.ts, src/lifecycle/package-script-onboarding.ts, src/lifecycle/run-update.ts, src/native-scripts/package-script-proposals.ts, src/proposals/build-"
+        status: pass
+        reason: recent evidence touched this area
+      - path: .greenhouse/evidence/2026-05-29T11-04-23-403Z-verify.md
+        summary: "Verification: verify-2026-05-29; mode patch; files src/lifecycle/run-update.ts, tests/lifecycle.test.ts"
+        status: pass
+        reason: recent evidence touched this area
+      - path: .greenhouse/evidence/2026-05-29T10-20-56-438Z-verify.md
+        summary: "Verification: verify-2026-05-29; mode patch; files src/discovery/agent-files.ts, src/filesystem/safe-write.ts, src/lifecycle/run-update.ts, src/plant/run-plant.ts, src/proposals/apply-proposals.ts, src/proposals/read-proposals.ts, src/propo"
+        status: pass
+        reason: recent evidence touched this area
+      - path: .greenhouse/evidence/2026-05-28T15-12-42-981Z-verify.md
+        summary: "Verification: verify-2026-05-28; mode patch; files src/lifecycle/run-update.ts, src/plant/run-plant.ts, src/proposals/apply-proposals.ts, src/proposals/read-proposals.ts, src/proposals/run-proposals.ts, src/templates/installed-tree.ts, src/"
+        status: pass
+        reason: recent evidence touched this area
+      - path: .greenhouse/evidence/2026-05-28T08-01-57-716Z-verify.md
+        summary: "Verification: verify-2026-05-28; mode patch; files src/lifecycle/run-update.ts, src/plant/run-plant.ts, src/templates/installed-tree.ts, tests/lifecycle.test.ts, tests/templates.test.ts, .greenhouse/why-greenhouse-spec/, templates/installed"
+        status: pass
+        reason: recent evidence touched this area
+    agent_actions:
+      - Add or propose a validation route if this area receives recurring changes.
+      - Read this page before editing files in this area.
+  - id: knowledge.area.tsconfig.json
+    path: tsconfig.json
+    page_path: .greenhouse/tree-of-knowledge/areas/tsconfig-json.md
+    kind: repo-area
+    purpose: Repository area at tsconfig.json.
+    summary: tsconfig.json is repository area at tsconfig.json. It has no documented coverage and covered validation.
+    confidence: medium
+    docs: []
+    validation:
+      status: covered
+      routes:
+        - tsconfig.json
+      commands:
+        - pnpm check
+      manual_checks:
+        - greenhouse-self-config-review
+    risks: []
+    memory_sources: []
+    skill_sources: []
+    evidence: []
+    agent_actions:
+      - Read this page before editing files in this area.

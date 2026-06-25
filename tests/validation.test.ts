@@ -813,6 +813,24 @@ describe("validation routing and evidence", () => {
     expect(formatVerifyReport(report)).toContain("- skipped:");
   });
 
+  it("treats tree-of-knowledge pages as generated Greenhouse output", () => {
+    const repo = createVerifyRepo();
+    writeValidationConfig(repo, "node -e \"process.exit(0)\"");
+
+    const report = runVerify({
+      cwd: repo,
+      paths: [".greenhouse/tree-of-knowledge/areas/src-context.md"],
+      dryRun: true,
+    });
+
+    expect(report.ok).toBe(true);
+    expect(report.route.changedFiles).toEqual([]);
+    expect(report.classification.groups["greenhouse-generated"]).toEqual([
+      ".greenhouse/tree-of-knowledge/areas/src-context.md",
+    ]);
+    expect(report.route.skippedValidation).toContain("no non-generated files");
+  });
+
   it("prints impact warnings in dry-run reports", () => {
     const repo = createVerifyRepo();
     writeValidationConfig(repo, "node -e \"process.exit(0)\"");

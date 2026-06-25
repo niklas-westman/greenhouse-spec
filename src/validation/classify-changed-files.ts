@@ -52,9 +52,11 @@ export function classifyChangedFile(file: string): ChangedFileCategory {
     file.startsWith(".greenhouse/grown/") ||
     file.startsWith(".greenhouse/evidence/") ||
     file.startsWith(".greenhouse/reports/") ||
+    file.startsWith(".greenhouse/tree-of-knowledge/") ||
     file === ".greenhouse/grown" ||
     file === ".greenhouse/evidence" ||
     file === ".greenhouse/reports" ||
+    file === ".greenhouse/tree-of-knowledge" ||
     file === ".greenhouse/"
   ) {
     return "greenhouse-generated";

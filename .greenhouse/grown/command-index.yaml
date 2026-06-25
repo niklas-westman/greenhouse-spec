@@ -1,6 +1,6 @@
 schema_version: 1
 managed_by: greenhouse-spec
-generated_at: 2026-06-06T07:52:35.721Z
+generated_at: 2026-06-25T17:58:26.568Z
 package_manager: pnpm
 commands:
   - id: build
@@ -98,6 +98,11 @@ commands:
     source: package.json
     purpose: CLI smoke validation
     confidence: high
+  - id: test:context
+    command: pnpm test:context
+    source: package.json
+    purpose: "package script: vitest run tests/context.test.ts"
+    confidence: medium
   - id: test:discovery
     command: pnpm test:discovery
     source: package.json

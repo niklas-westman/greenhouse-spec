@@ -194,8 +194,10 @@ greenhouse-spec tend --ack impact.package-scripts-docs docs-reviewed
 
 Acknowledgements are evidence, not rule changes. They record that a warning or
 manual check was reviewed for the current route so Greenhouse can stop reporting
-reviewed work as pending. Blocking impact warnings still require fixing the
-underlying route, package script, or repo contract.
+reviewed work as pending. Repair-required blocking impact warnings still
+require fixing the underlying route, package script, or repo contract. Blocking
+documentation coverage warnings are review-gated: update the covered docs, or
+acknowledge the warning only after checking the docs against the changed files.
 
 Every warning includes a resolution hint. `blocking` warnings fail `status` and
 the default `tend` finish gate. One practical blocking case is a selected
@@ -203,8 +205,10 @@ validation command such as `pnpm test` when `package.json` no longer defines the
 `test` script; Greenhouse stops before executing validation and asks for either
 the package script or the validation route to be repaired.
 
-`docs.yaml` does not authorize silent prose edits. It only improves impact
-targeting so an agent can see which docs deserve review.
+`docs.yaml` does not authorize silent prose edits. It improves impact targeting
+and can declare `covers` rules that link docs to code paths with a reason and
+strictness. Those rules feed the generated tree-of-knowledge so an agent can see
+which docs deserve review and why.
 
 ## Repeated Failures
 

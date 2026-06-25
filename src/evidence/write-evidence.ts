@@ -155,18 +155,18 @@ function formatEvidence(options: {
     "",
     "## Impact warnings",
     "",
-    "| Severity | Kind | Changed files | Affected | Reason | Resolution |",
-    "|---|---|---|---|---|---|",
+    "| Severity | Kind | Changed files | Affected | Reason | Resolution | Agent action |",
+    "|---|---|---|---|---|---|---|",
   );
 
   for (const warning of options.impactWarnings ?? []) {
     lines.push(
-      `| ${warning.severity} | ${warning.kind} | ${warning.changedFiles.join(", ") || "none"} | ${warning.affected.join(", ") || "none"} | ${sanitizeCell(warning.reason)} | ${sanitizeCell(warning.resolution)} |`,
+      `| ${warning.severity} | ${warning.kind} | ${warning.changedFiles.join(", ") || "none"} | ${warning.affected.join(", ") || "none"} | ${sanitizeCell(warning.reason)} | ${sanitizeCell(warning.resolution)} | ${sanitizeCell(warning.agentAction ?? warning.resolution)} |`,
     );
   }
 
   if ((options.impactWarnings ?? []).length === 0) {
-    lines.push("| none | none | none | none | No impact warnings detected. | none |");
+    lines.push("| none | none | none | none | No impact warnings detected. | none | none |");
   }
 
   lines.push(

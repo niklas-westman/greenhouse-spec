@@ -276,7 +276,7 @@ describe("lifecycle commands", () => {
       expect.objectContaining({
         id: "impact",
         state: "fail",
-        nextCommand: "review blocking impact warnings before finishing work",
+        nextCommand: "repair blocking impact warning IDs: impact.missing-package-script.test",
       }),
     );
     expect(report.verify.impactWarnings).toContainEqual(

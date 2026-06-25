@@ -12,8 +12,8 @@ observed state, and `tend`/`inspect` reconcile the two.
   `--env all` for `verify` and `tend`.
 - Added command capability metadata for validation routes, including local
   server, network, home-write, CI-only, and bound-port hints.
-- Added manual review acknowledgements with `--ack`, recorded in evidence and
-  used to clear reviewed manual checks or non-blocking impact warnings.
+- Added review acknowledgements with `--ack`, recorded in evidence and used to
+  clear reviewed manual checks or non-blocking impact warnings.
 - Added environment-aware failure hints for local server bind failures such as
   `listen EPERM`.
 - Added nested Greenhouse command suppression during `tend` validation so

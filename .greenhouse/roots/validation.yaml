@@ -32,7 +32,7 @@ modes:
       - *a5
     manual:
       - id: human-risk-review
-        prompt: Human must review guarded risk notes before merge.
+        prompt: Complete guarded risk review before merge.
 paths:
   README.md:
     managed_by: greenhouse-spec

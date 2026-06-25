@@ -379,6 +379,9 @@ export function formatTendReport(report: TendReport): string {
       lines.push(`  - changed: ${warning.changedFiles.join(", ")}`);
       lines.push(`  - affected: ${warning.affected.join(", ")}`);
       lines.push(`  - resolution: ${warning.resolution}`);
+      if (warning.agentAction) {
+        lines.push(`  - agent action: ${warning.agentAction}`);
+      }
     }
   }
 
@@ -482,19 +485,35 @@ function nextActions(report: TendReport): string[] {
   }
 
   if (report.impactWarnings.some((warning) => warning.severity === "blocking")) {
-    return ["resolve blocking impact warnings before rerunning greenhouse-spec tend"];
+    const blockingWarnings = report.impactWarnings.filter(
+      (warning) => warning.severity === "blocking",
+    );
+    return [
+      `repair blocking impact warning IDs (${ids(blockingWarnings)}) before rerunning greenhouse-spec tend`,
+    ];
   }
 
   if (unacknowledgedManualChecks(report).length > 0) {
-    return ["review manual checks, then rerun greenhouse-spec tend if code changes"];
+    const checks = unacknowledgedManualChecks(report);
+    return [
+      `complete manual check IDs (${ids(checks)}) or record review with greenhouse-spec tend --ack ${spaceIds(checks)}`,
+    ];
   }
 
-  if (unacknowledgedImpactWarnings(report).some((warning) => warning.severity === "guarded")) {
-    return ["review guarded impact warnings before finishing"];
+  const guardedWarnings = unacknowledgedImpactWarnings(report).filter(
+    (warning) => warning.severity === "guarded",
+  );
+  if (guardedWarnings.length > 0) {
+    return [
+      `resolve guarded impact warning IDs (${ids(guardedWarnings)}) or record review with greenhouse-spec tend --ack ${spaceIds(guardedWarnings)}`,
+    ];
   }
 
-  if (unacknowledgedImpactWarnings(report).length > 0) {
-    return ["review impact warnings before finishing"];
+  const impactWarnings = unacknowledgedImpactWarnings(report);
+  if (impactWarnings.length > 0) {
+    return [
+      `resolve impact warning IDs (${ids(impactWarnings)}) or record review with greenhouse-spec tend --ack ${spaceIds(impactWarnings)}`,
+    ];
   }
 
   if (report.repeatedFailures.length > 0) {
@@ -512,6 +531,14 @@ function nextActions(report: TendReport): string[] {
   return report.validation.evidenceWritten
     ? ["no action needed"]
     : ["run greenhouse-spec tend when ready to finish work"];
+}
+
+function ids(items: Array<{ id: string }>): string {
+  return items.map((item) => item.id).join(", ");
+}
+
+function spaceIds(items: Array<{ id: string }>): string {
+  return items.map((item) => item.id).join(" ");
 }
 
 function buildSelfTendingCheck(cwd: string): NonNullable<TendReport["selfTending"]> {

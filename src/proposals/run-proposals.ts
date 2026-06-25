@@ -86,6 +86,10 @@ export function formatProposalsReport(report: ProposalsReport): string {
           lines.push(
             `- ${proposal.id} (${proposal.kind}, ${proposal.target}) - ${proposal.reason}`,
           );
+          const agentAction = proposalAgentAction(proposal);
+          if (agentAction) {
+            lines.push(`  - agent action: ${agentAction}`);
+          }
           lines.push(`  - idempotency: ${proposal.idempotencyKey}`);
           if (proposal.preconditions.length > 0) {
             lines.push(`  - preconditions: ${proposal.preconditions.join("; ")}`);
@@ -106,4 +110,26 @@ export function formatProposalsReport(report: ProposalsReport): string {
 
   lines.push("");
   return lines.join("\n");
+}
+
+function proposalAgentAction(
+  proposal: ProposalsReport["proposals"][number],
+): string | null {
+  if (proposal.status === "pending") {
+    return "run `greenhouse-spec apply-proposals --safe --dry-run`, then apply if the planned write matches the reason and preconditions.";
+  }
+
+  if (proposal.status === "adoptable") {
+    return `adopt with \`greenhouse-spec adopt-proposals --id ${proposal.id}\` after confirming the existing route matches the proposal reason.`;
+  }
+
+  if (proposal.status === "conflict") {
+    return "review the human-owned collision, then keep it with a dismissal reason or edit/adopt the matching Greenhouse route.";
+  }
+
+  if (proposal.status === "skipped") {
+    return null;
+  }
+
+  return null;
 }

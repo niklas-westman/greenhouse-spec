@@ -336,7 +336,7 @@ describe("failure signatures", () => {
 
     expect(evidence).toContain("## Impact warnings");
     expect(evidence).toContain(
-      "| Severity | Kind | Changed files | Affected | Reason | Resolution |",
+      "| Severity | Kind | Changed files | Affected | Reason | Resolution | Agent action |",
     );
     expect(evidence).toContain("| warning | documentation-drift | package.json");
     expect(evidence).toContain("Review setup docs and validation roots.");

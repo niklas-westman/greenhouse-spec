@@ -50,6 +50,11 @@ ledger:
 .greenhouse/roots/proposal-decisions.yaml
 ```
 
+Each listed proposal includes an `agent action` line. Pending proposals point to
+safe dry-run/apply, adoptable proposals point to the exact adoption command,
+conflicts explain the review choice, and applied/skipped proposals stay quiet
+unless their current decision should be revisited.
+
 ## Safe Apply
 
 Run dry-run first:

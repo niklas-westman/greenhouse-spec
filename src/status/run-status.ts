@@ -208,6 +208,9 @@ export function formatStatusVerboseReport(report: StatusReport): string {
       lines.push(`  - changed: ${warning.changedFiles.join(", ")}`);
       lines.push(`  - affected: ${warning.affected.join(", ")}`);
       lines.push(`  - resolution: ${warning.resolution}`);
+      if (warning.agentAction) {
+        lines.push(`  - agent action: ${warning.agentAction}`);
+      }
     }
   }
 
@@ -439,22 +442,28 @@ function impactHealth(
   );
 
   if (warnings.some((warning) => warning.severity === "blocking")) {
+    const blockingWarnings = warnings.filter(
+      (warning) => warning.severity === "blocking",
+    );
     return {
       id: "impact",
       label: "Impact warnings",
       state: "fail",
       summary: impactSummary(warnings),
-      nextCommand: "review blocking impact warnings before finishing work",
+      nextCommand: `repair blocking impact warning IDs: ${ids(blockingWarnings)}`,
     };
   }
 
-  if (unacknowledgedWarnings.some((warning) => warning.severity === "guarded")) {
+  const guardedWarnings = unacknowledgedWarnings.filter(
+    (warning) => warning.severity === "guarded",
+  );
+  if (guardedWarnings.length > 0) {
     return {
       id: "impact",
       label: "Impact warnings",
       state: "degraded",
       summary: impactSummary(unacknowledgedWarnings),
-      nextCommand: "review guarded impact warnings before finishing work",
+      nextCommand: `resolve guarded impact warning IDs (${ids(guardedWarnings)}) or record review with greenhouse-spec tend --ack ${spaceIds(guardedWarnings)}`,
     };
   }
 
@@ -464,7 +473,7 @@ function impactHealth(
       label: "Impact warnings",
       state: "degraded",
       summary: impactSummary(unacknowledgedWarnings),
-      nextCommand: "review impact warnings before finishing work",
+      nextCommand: `resolve impact warning IDs (${ids(unacknowledgedWarnings)}) or record review with greenhouse-spec tend --ack ${spaceIds(unacknowledgedWarnings)}`,
     };
   }
 
@@ -492,6 +501,14 @@ function impactSummary(warnings: VerifyReport["impactWarnings"]): string {
   return Object.entries(counts)
     .map(([severity, count]) => `${count} ${severity}`)
     .join(", ");
+}
+
+function ids(items: Array<{ id: string }>): string {
+  return items.map((item) => item.id).join(", ");
+}
+
+function spaceIds(items: Array<{ id: string }>): string {
+  return items.map((item) => item.id).join(" ");
 }
 
 function evidenceHealth(

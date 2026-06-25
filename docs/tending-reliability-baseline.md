@@ -276,10 +276,11 @@ warnings affect repo health:
 Impact:
   blocking: selected validation command "pnpm test" references missing package script "test".
     resolution: Add package script "test" to package.json or update .greenhouse/roots/validation.yaml.
+    agent action: Repair the missing package script or update the validation route before tending can continue.
 
 Status:
   State: fail
-  Next: review blocking impact warnings before finishing work
+  Next: repair blocking impact warning IDs: impact.missing-package-script.test
 
 Tend:
   State: fail

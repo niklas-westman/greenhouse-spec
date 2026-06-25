@@ -10,7 +10,7 @@ export function registerTendCommand(program: Command): void {
     .option("--check", "Fail when structural Greenhouse tending is required.")
     .option("--context <report>", "Link a context report path, or use \"latest\".")
     .option("--env <environment>", "Select validation environment: local, ci, or all.", "local")
-    .option("--ack <ids...>", "Record manual review acknowledgement IDs in written evidence.")
+    .option("--ack <ids...>", "Record reviewed warning/manual-check IDs in written evidence.")
     .option("--no-prune", "Do not prune old generated evidence/report files after writing a tend report.")
     .action((options: { cwd: string; check?: boolean; context?: string; env?: "local" | "ci" | "all"; ack?: string[]; prune?: boolean }) => {
       const report = runTend({
